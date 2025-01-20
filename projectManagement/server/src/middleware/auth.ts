@@ -1,4 +1,4 @@
-import { CookieOptions, NextFunction, Request, Response } from "express";
+import {NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import Employee from "../models/employee";
 import { asyncHandler, ApiError, ErrorCodes } from "../utils/root";

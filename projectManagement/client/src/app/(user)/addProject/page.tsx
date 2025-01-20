@@ -9,7 +9,7 @@ export default function Page() {
 
           <form className="grid grid-cols-1 gap-6" action="/dashboard">
             <p className='text-white'>Fill-up all Information and create a new project successfully! </p>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className='text-white mb-2'>Project Type</label>
@@ -18,14 +18,13 @@ export default function Page() {
                   name="project-type"
                   className="block w-full rounded-md border-gray-300 shadow-sm focus:border-[#8c0327] focus:ring-[#8c0327] focus:ring-opacity-50 p-2 bg-gray-100 mt-2"
                 >
-                  <option value="">Select a category</option>
-                  <option>Music</option>
-                  <option>Sports</option>
-                  <option>Arts</option>
-                  <option>Technology</option>
+                  <option value="">Select a project type</option>
+                  <option>Low</option>
+                  <option>Standard</option>
+                  <option>Premium</option>
                 </select>
               </div>
-              
+
               <div>
                 <label className='text-white mb-2'>Project Name</label>
                 <input
@@ -39,7 +38,7 @@ export default function Page() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              
+
 
               <div>
                 <label className='text-white mb-2'>Total Built-up Area (sft)</label>
@@ -85,7 +84,7 @@ export default function Page() {
                 />
               </div>
 
-              
+
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -111,13 +110,35 @@ export default function Page() {
                 />
               </div>
 
-              
+              <div>
+                <label className='text-white mb-2'>Creator Name </label>
+                <input
+                  type="text"
+                  id="creator-name"
+                  name="creator-name"
+                  disabled
+                  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-[#8c0327] focus:ring-[#8c0327] focus:ring-opacity-50 p-2 bg-gray-100 mt-2"
+                />
+              </div>
 
-              
+              <div>
+                <label className='text-white mb-2'>Creator Email</label>
+                <input
+                  type="email"
+                  id="creator-email"
+                  name="creator-email"
+                  disabled
+                  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-[#8c0327] focus:ring-[#8c0327] focus:ring-opacity-50 p-2 bg-gray-100 mt-2"
+                />
+              </div>
+
+
+
+
             </div>
 
             <div>
-            <div>
+              <div>
                 <label className='text-white mb-2'>Requirement Details</label>
                 <textarea
                   id="requirement-details"
@@ -127,7 +148,7 @@ export default function Page() {
                   className="block w-full rounded-md border-gray-300 shadow-sm focus:border-[#8c0327] focus:ring-[#8c0327] focus:ring-opacity-50 p-2 bg-gray-100 mt-2"
                 ></textarea>
               </div>
-              
+
             </div>
 
             <div className="col-span-full mt-6 p-2">
