@@ -1,7 +1,7 @@
 import { CookieOptions, NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import Employee from "../models/employee";
-import { asyncHandler, ApiError, ApiResponse, ErrorCodes } from "../utils/root";
+import { asyncHandler, ApiError, ErrorCodes } from "../utils/root";
 
 const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET;
 
@@ -15,7 +15,6 @@ export const verifyJWT = asyncHandler(
         const token =
             req.cookies?.accessToken ||
             req.header("Authorization")?.replace("Bearer ", "");
-
         if (!token) {
             return next(
                 new ApiError(

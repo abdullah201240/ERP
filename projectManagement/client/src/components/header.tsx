@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { useSelectedLayoutSegment } from 'next/navigation';
 import useScroll from '@/hooks/use-scroll';
@@ -8,10 +8,49 @@ import { cn } from '@/lib/utils';
 import Image from 'next/image';
 import Logo from '@/app/assets/img/Logo.webp';
 import { MdNotifications, MdPerson, MdExitToApp } from 'react-icons/md'; // Example icons from React-Icons
+import { useRouter } from "next/navigation";
+import { toast } from 'react-hot-toast';
 
 const Header = () => {
   const scrolled = useScroll(5);
   const selectedLayout = useSelectedLayoutSegment();
+  const router = useRouter();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  const handleLogout = async () => {
+    if (isLoggingOut) return; // Prevent multiple clicks
+    setIsLoggingOut(true);
+    const accessToken = localStorage.getItem('accessToken');
+
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}employee/auth/logout`, {
+        method: "POST",
+        credentials: "include", // Ensure cookies are sent
+        headers: {
+          'Authorization': `${accessToken}`, // Send token in the Authorization header
+        },
+      });
+
+      if (response.ok) {
+        // Remove token from localStorage
+        localStorage.removeItem("accessToken");
+        toast.success('Log out successful');
+
+        // Redirect to the login page
+        router.push("/");
+      } else {
+        toast.error('Logout failed');
+      }
+    } catch (error) {
+      if (error) {
+        toast.error('Logout failed');
+
+      }
+    } finally {
+      setIsLoggingOut(false);
+    }
+  };
+
 
   return (
     <div
@@ -55,7 +94,8 @@ const Header = () => {
           {/* Logout Button */}
           <button
             className="h-8 w-8 rounded-full bg-red-500 flex items-center justify-center text-center text-white"
-            onClick={() => console.log('Logout')}
+            onClick={handleLogout}
+            disabled={isLoggingOut}
           >
             <MdExitToApp size={20} />
           </button>
