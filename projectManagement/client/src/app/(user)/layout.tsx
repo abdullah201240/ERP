@@ -10,6 +10,8 @@ import PageWrapper from '@/components/page-wrapper';
 import SideNav from '@/components/side-nav';
 import Footer from '@/components/footer';
 const inter = Inter({ subsets: ['latin'] });
+import { Toaster } from "react-hot-toast";
+
 
 export const metadata: Metadata = {
   title: 'IQ',
@@ -20,7 +22,11 @@ export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
-}) {
+})
+
+{
+  
+
   return (
     <html lang="en">
       <body className={`bg-white ${inter.className}`}>
@@ -30,7 +36,10 @@ export default function RootLayout({
             <MarginWidthWrapper>
               <Header />
               <HeaderMobile />
-              <PageWrapper>{children}
+              <PageWrapper>
+              <Toaster position="top-center" />
+
+                {children}
                 
               </PageWrapper>
               <Footer/>

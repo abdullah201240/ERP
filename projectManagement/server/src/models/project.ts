@@ -15,6 +15,10 @@ interface ProjectAttributes {
   creatorName: string;
   creatorEmail: string;
   requirementDetails: string;
+  supervisorName?: string; // Optional
+  supervisorEmail?: string; // Optional
+  startDate?: string; // Optional
+  endDate?: string; // Optional
 }
 
 interface ProjectCreationAttributes extends Optional<ProjectAttributes, 'id'> {}
@@ -33,6 +37,10 @@ class Project extends Model<ProjectAttributes, ProjectCreationAttributes> implem
   public creatorName!: string;
   public creatorEmail!: string;
   public requirementDetails!: string;
+  public supervisorName?: string; // Optional
+  public supervisorEmail?: string; // Optional
+  public startDate?: string; // Optional
+  public endDate?: string; // Optional
 }
 
 Project.init(
@@ -86,6 +94,22 @@ Project.init(
     requirementDetails: {
       type: DataTypes.TEXT,
       allowNull: false,
+    },
+    supervisorName: {
+      type: DataTypes.STRING,
+      allowNull: true, // Optional
+    },
+    supervisorEmail: {
+      type: DataTypes.STRING,
+      allowNull: true, // Optional
+    },
+    startDate: {
+      type: DataTypes.STRING,
+      allowNull: true, // Optional
+    },
+    endDate: {
+      type: DataTypes.STRING,
+      allowNull: true, // Optional
     },
   },
   {

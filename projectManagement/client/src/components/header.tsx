@@ -7,7 +7,7 @@ import useScroll from '@/hooks/use-scroll';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
 import Logo from '@/app/assets/img/Logo.webp';
-import { MdNotifications, MdPerson, MdExitToApp } from 'react-icons/md'; // Example icons from React-Icons
+import {  MdPerson, MdExitToApp } from 'react-icons/md'; // Example icons from React-Icons
 import { useRouter } from "next/navigation";
 import { toast } from 'react-hot-toast';
 
@@ -80,11 +80,7 @@ const Header = () => {
               <MdPerson size={20} />
             </div>
           </Link>
-          <Link href="/notifications">
-            <div className="h-8 w-8 rounded-full bg-zinc-300 flex items-center justify-center text-center">
-              <MdNotifications size={20} />
-            </div>
-          </Link>
+         
           <Link href="/access">
             <div className="h-8 w-8 rounded-full bg-zinc-300 flex items-center justify-center text-center">
               <MdPerson size={20} />

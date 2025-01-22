@@ -60,6 +60,9 @@ export const createEmployee = asyncHandler(
       gender,
     });
 
+
+
+
     if (!newEmployee) {
       throw new ApiError(
         ERROR_MESSAGES.INTERNAL_ERROR,
@@ -122,7 +125,7 @@ export const loginEmployee = asyncHandler(
 
     // Generate access token
     const accessToken = jwt.sign(
-      { id: employee.id, email: employee.email },
+      { id: employee.id, email: employee.email, name: employee.name },
       ACCESS_TOKEN_SECRET as string,
       { expiresIn: process.env.ACCESS_TOKEN_EXPIRY || "1h" }
     );
@@ -138,7 +141,7 @@ export const loginEmployee = asyncHandler(
     };
     res.cookie("accessToken", accessToken, cookieOptions);
 
-    // Return success response with tokens
+   
     return res.status(200).json(
       ApiResponse.success(
         { accessToken },
@@ -200,5 +203,15 @@ export const logoutEmployee = asyncHandler(
         "Employee logged out successfully"
       )
     );
+  }
+);
+
+export const getAllEmployee = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+
+      const employee = await Employee.findAll();
+
+
+      return res.status(200).json(ApiResponse.success(employee, "employee retrieved successfully"));
   }
 );
