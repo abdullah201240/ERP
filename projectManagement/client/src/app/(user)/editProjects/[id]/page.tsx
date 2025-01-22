@@ -18,6 +18,9 @@ interface FormData {
   startDate: string;
   endDate: string;
   assignedTo: string[];
+  supervisorName: string;
+  supervisorEmail: string;
+
 }
 export default function UpdateProjectPage() {
   const router = useRouter();
@@ -39,6 +42,8 @@ export default function UpdateProjectPage() {
     projectDeadline: '',
     startDate: '',
     endDate: '',
+    supervisorName: '',
+    supervisorEmail: '',
     assignedTo: [], // Stores selected employees
   });
   const [employees, setEmployees] = useState<{ id: string; name: string }[]>([]);
@@ -302,6 +307,18 @@ export default function UpdateProjectPage() {
                 value={formData.totalArea}
                 onChange={handleInputChange}
                 placeholder="Total Area"
+                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-[#8c0327] focus:ring-[#8c0327] focus:ring-opacity-50 p-2 bg-gray-100 mt-2"
+              />
+            </div>
+            <div>
+              <label className='text-white mb-2'>Supervisor Name</label>
+              <input
+                type="text"
+                id="supervisorName"
+                name="supervisorName"
+                value={formData.supervisorName}
+                onChange={handleInputChange}
+                placeholder="Supervisor Name"
                 className="block w-full rounded-md border-gray-300 shadow-sm focus:border-[#8c0327] focus:ring-[#8c0327] focus:ring-opacity-50 p-2 bg-gray-100 mt-2"
               />
             </div>

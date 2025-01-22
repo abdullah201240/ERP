@@ -181,6 +181,7 @@ export const updateProject = asyncHandler(
             supervisorEmail, // Add optional fields
             startDate,
             endDate,
+            projectDeadline,
         } = req.body;
 
         // Update the project fields
@@ -199,6 +200,9 @@ export const updateProject = asyncHandler(
         project.supervisorEmail = supervisorEmail || project.supervisorEmail;
         project.startDate = startDate || project.startDate;
         project.endDate = endDate || project.endDate;
+        project.projectDeadline = projectDeadline || project.projectDeadline;
+
+        
 
 
         // Save the updated project to the database

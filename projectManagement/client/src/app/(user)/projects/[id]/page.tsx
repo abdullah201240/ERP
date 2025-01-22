@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { FaArrowLeft, FaEdit } from 'react-icons/fa';
 import Link from 'next/link';
-import { useRouter,useParams } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 
 interface Project {
   id: number;
@@ -18,8 +18,9 @@ interface Project {
   creatorEmail: string;
   requirementDetails: string;
   supervisorName: string;
-  projectTimeline: string;
-  
+  startDate: string;
+  endDate: string;
+  projectDeadline: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -32,7 +33,8 @@ export default function Page() {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
-
+  const [daysRemaining, setDaysRemaining] = useState<number | null>(null);
+  const [daysPassed, setDaysPassed] = useState<number | null>(null);
   useEffect(() => {
     if (!token) {
       router.push('/'); // Redirect to login page if token doesn't exist
@@ -50,6 +52,7 @@ export default function Page() {
           const data = await response.json();
           console.log(data.data); // Log the response data
 
+
           setProject(data.data || null); // Set the project data
         } catch (err) {
           setError((err as Error).message);
@@ -60,7 +63,27 @@ export default function Page() {
 
       fetchProject();
     }
-  }, [router, token,id]);
+  }, [router, token, id]);
+
+  useEffect(() => {
+    if (project) {
+      // Convert string dates to Date objects
+      const startDate = new Date(project.startDate); // Ensure valid date conversion
+      const endDate = new Date(project.endDate); // Ensure valid date conversion
+      const currentDate = new Date(); // Get the current date
+
+      // Calculate days remaining
+      const remainingTime = endDate.getTime() - currentDate.getTime();
+      setDaysRemaining(Math.max(0, Math.floor(remainingTime / (1000 * 60 * 60 * 24)))); // Ensure non-negative result
+
+      // Calculate days passed
+      const passedTime = currentDate.getTime() - startDate.getTime();
+      setDaysPassed(Math.max(0, Math.floor(passedTime / (1000 * 60 * 60 * 24)))); // Ensure non-negative result
+
+
+
+    }
+  }, [project]);
 
   if (loading) {
     return <div>Loading...</div>;
@@ -98,23 +121,21 @@ export default function Page() {
               <p><strong className='text-[#4472C4] pr-2'>Supervisor Name:</strong> {project.supervisorName || 'N/A'}</p>
               <p><strong className='text-[#4472C4] pr-2'>Project Type:</strong>
                 <button className="bg-gradient-to-r from-blue-500 to-indigo-600 px-4 py-2 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 ease-in-out transform hover:scale-105 hover:bg-gradient-to-r hover:from-indigo-600 hover:to-blue-500 focus:outline-none focus:ring-2 focus:ring-indigo-300">
-               
-                {project.projectType || 'N/A'}
+
+                  {project.projectType || 'N/A'}
                 </button>
               </p>
-              <p><strong className='text-[#4472C4] pr-2'>Project Timeline:</strong>  {project.projectTimeline || 'N/A'}</p>
+              <p><strong className='text-[#4472C4] pr-2'>Project Timeline:</strong>  {project.projectDeadline || 'N/A'}</p>
               <p><strong className='text-[#4472C4] pr-2'>Project Name:</strong> {project.projectName || 'N/A'}</p>
-              <p><strong className='text-[#4472C4] pr-2'>Days Passed:</strong> 20 Days</p>
+              <p><strong className='text-[#4472C4] pr-2'>Days Passed:</strong> {daysPassed || 'N/A'}</p>
               <p><strong className='text-[#4472C4] pr-2'>Project Details:</strong> Project Details xyz</p>
-              <p><strong className='text-[#4472C4] pr-2'>Days Remaining:</strong> 10 Days</p>
+              <p><strong className='text-[#4472C4] pr-2'>Days Remaining:</strong> {daysRemaining || 'N/A'}</p>
               <p><strong className='text-[#4472C4] pr-2'>Total Built-up Area:</strong> {project.totalArea || 'N/A'}</p>
-              <p><strong className='text-[#4472C4] pr-2'>Current Stage:</strong> Design Development</p>
-              <p><strong className='text-[#4472C4] pr-2'>Project Address:</strong> Satarkul, Uttor-Badda, Dhaka-9586</p>
-              <p><strong className='text-[#4472C4] pr-2'>Current Work in Progress:</strong> 3D Design Development</p>
-              <p><strong className='text-[#4472C4] pr-2'>Client Name:</strong> Nazmul Hoda</p>
-              <p><strong className='text-[#4472C4] pr-2'>Client Contact:</strong> +8801770 006782</p>
-              <p><strong className='text-[#4472C4] pr-2'>Client Address:</strong> Satarkul, Uttor-Badda</p>
-              <p><strong className='text-[#4472C4] pr-2'>Client Email:</strong> nhoda201224@gmail.com</p>
+              <p><strong className='text-[#4472C4] pr-2'>Project Address:</strong> {project.projectAddress || 'N/A'} </p>
+              <p><strong className='text-[#4472C4] pr-2'>Client Name:</strong> {project.clientName || 'N/A'}</p>
+              <p><strong className='text-[#4472C4] pr-2'>Client Contact:</strong> {project.clientContact || 'N/A'}</p>
+              <p><strong className='text-[#4472C4] pr-2'>Client Address:</strong> {project.clientAddress || 'N/A'}</p>
+              <p><strong className='text-[#4472C4] pr-2'>Client Email:</strong> {project.clientEmail || 'N/A'}</p>
               <p><strong className='text-[#4472C4] pr-2'>Assigned to:</strong> ******</p>
               <div>
                 <p><strong className='text-[#4472C4]'>Remaining Tasks:</strong></p>
@@ -134,7 +155,7 @@ export default function Page() {
                 <h3 className="font-bold text-lg mb-2">DAYS REMAINING</h3>
               </div>
               <div className="flex justify-center items-center">
-                <p className="text-5xl font-extrabold mt-12 mb-12">10</p>
+                <p className="text-5xl font-extrabold mt-12 mb-12">{daysRemaining || 'N/A'}</p>
               </div>
             </div>
           </div>
@@ -146,7 +167,7 @@ export default function Page() {
             <span>Update</span>
           </Link>
         </div>
-        
+
       </div>
 
     </div>

@@ -1,5 +1,5 @@
 'use client';
-import React, { useEffect, useState } from 'react';
+import React, {  useState } from 'react';
 import Image from 'next/image';
 import Logo from '@/app/assets/img/Logo.webp';
 import { toast } from 'react-hot-toast';
@@ -11,18 +11,7 @@ export default function Page() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const router = useRouter();
-    useEffect(() => {
-
-        // Check if the access token exists in localStorage
-        const token = localStorage.getItem('accessToken');
-
-        // If the token does not exist, redirect to the login page
-        if (token) {
-            router.push('/dashboard'); // Adjust the path to your login page
-            return; // Exit the function early
-        }
-
-    }, [router]);
+   
 
     const handleLogin = async (e: { preventDefault: () => void; }) => {
         e.preventDefault();
