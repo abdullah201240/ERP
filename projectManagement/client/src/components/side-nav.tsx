@@ -30,8 +30,8 @@ const SideNav = () => {
           
         </Link>
 
-        <div className="flex flex-col space-y-2  md:px-6 ">
-          {SIDENAV_ITEMS.map((item, idx) => {
+        <div className="flex flex-col space-y-2 md:px-6 overflow-y-auto h-full scrollbar-thin scrollbar-thumb-[#bababa] scrollbar-track-[#f0f0f0]">
+        {SIDENAV_ITEMS.map((item, idx) => {
             return <MenuItem key={idx} item={item} />;
           })}
         </div>
@@ -55,22 +55,22 @@ const MenuItem = ({ item }: { item: SideNavItem }) => {
         <>
           <button
             onClick={toggleSubMenu}
-            className={`flex flex-row items-center p-2 rounded-lg hover-bg-[#2A5158] w-full justify-between hover:bg-[#2A5158] hover:text-white ${
+            className={`flex flex-row items-start p-2 rounded-lg hover-bg-[#2A5158] w-full justify-between hover:bg-[#2A5158] hover:text-white ${
               pathname.includes(item.path) ? 'bg-white text-black' : ''
             }`}
           >
-            <div className="flex flex-row space-x-4 items-center">
-              {item.icon}
-              <span className="font-semibold text-lg  flex">{item.title}</span>
+            <div className="flex flex-row space-x-2 items-start text-left">
+                 <span className='pt-0.5'>{item.icon}</span> 
+              <span className="font-semibold text-xm  flex">{item.title}</span>
             </div>
 
             <div className={`${subMenuOpen ? 'rotate-180' : ''} flex`}>
-              <Icon icon="lucide:chevron-down" width="24" height="24" />
+              <Icon icon="lucide:chevron-down" width="18" height="18" />
             </div>
           </button>
 
           {subMenuOpen && (
-            <div className="my-2 ml-12 flex flex-col space-y-4">
+            <div className="my-2 ml-12 flex flex-col space-y-4 text-xm">
               {item.subMenuItems?.map((subItem, idx) => {
                 return (
                   <Link
@@ -90,14 +90,20 @@ const MenuItem = ({ item }: { item: SideNavItem }) => {
       ) : (
         <Link
           href={item.path}
-          className={`flex flex-row space-x-4 items-center p-2 rounded-lg hover:bg-[#2A5158] hover:text-white ${
+          className={`flex flex-row space-x-2 items-start p-2 rounded-lg hover:bg-[#2A5158] hover:text-white ${
             item.path === pathname ? 'bg-[#2A5158] text-white' : ''
           }`}
         >
-          {item.icon}
-          <span className="font-semibold text-lg flex">{item.title}</span>
+                 <span className='pt-0.5'>{item.icon}</span> 
+                 <span className="font-semibold text-xm flex">{item.title}</span>
         </Link>
       )}
+
+
+
+
+
+
     </div>
   );
 };

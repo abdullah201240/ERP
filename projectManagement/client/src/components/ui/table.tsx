@@ -27,13 +27,20 @@ TableHeader.displayName = "TableHeader"
 const TableBody = React.forwardRef<
   HTMLTableSectionElement,
   React.HTMLAttributes<HTMLTableSectionElement>
->(({ className, ...props }, ref) => (
+>(({ className, children, ...props }, ref) => (
   <tbody
     ref={ref}
     className={cn("[&_tr:last-child]:border-0", className)}
     {...props}
-  />
-))
+  >
+    {React.Children.map(children, (child, index) =>
+      React.isValidElement(child)
+        ? React.cloneElement(child as React.ReactElement<{ index?: number }>, { index })
+        : child // Return the child as-is if it's not a valid React element
+    )}
+  </tbody>
+));
+
 TableBody.displayName = "TableBody"
 
 const TableFooter = React.forwardRef<
@@ -53,17 +60,20 @@ TableFooter.displayName = "TableFooter"
 
 const TableRow = React.forwardRef<
   HTMLTableRowElement,
-  React.HTMLAttributes<HTMLTableRowElement>
->(({ className, ...props }, ref) => (
+  React.HTMLAttributes<HTMLTableRowElement> & { index?: number }
+>(({ className, index, ...props }, ref) => (
   <tr
     ref={ref}
     className={cn(
-      "border-b transition-colors  data-[state=selected]:bg-muted",
+      "border-b transition-colors data-[state=selected]:bg-muted",
+      index !== undefined && index % 2 === 0 ? "bg-[#f5f6f8]" : "",
       className
     )}
     {...props}
   />
-))
+));
+
+
 TableRow.displayName = "TableRow"
 
 const TableHead = React.forwardRef<

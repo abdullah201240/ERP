@@ -315,7 +315,7 @@ export default function Page() {
               <button
                 type="submit"
                 disabled={loading} // Disable button while loading
-                className={`block w-full border border-white text-white font-bold py-3 px-4 rounded-full ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                className={`block w-full border border-white text-white font-bold py-3 px-4 rounded-md ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
                 {loading ? 'Adding Project...' : 'Add Project'}
               </button>

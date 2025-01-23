@@ -3,8 +3,10 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Design from '@/components/table/DesignDevelopmentTable';
 
+
 export default function Home() {
   const router = useRouter();
+  
 
   useEffect(() => {
     const checkTokenAndFetchProfile = async () => {
@@ -47,9 +49,9 @@ export default function Home() {
         <div className="bg-white mt-8 p-4 rounded-xl">
           <h1 className="text-center text-xl mb-4">Design & Development</h1>
 
-          <div className="w-[98vw] md:w-full">
+          {/* <div className="w-[98vw] md:w-full">
             <Design />
-          </div>
+          </div> */}
 
         </div>
       </div>

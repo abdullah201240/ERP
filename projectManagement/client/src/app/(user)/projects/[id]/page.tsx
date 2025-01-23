@@ -21,6 +21,8 @@ interface Project {
   startDate: string;
   endDate: string;
   projectDeadline: string;
+  estimatedBudget: string;
+  assigned: { eName: string; eid: string; id: string }[]; // Stores selected employees
   createdAt: string;
   updatedAt: string;
 }
@@ -100,13 +102,14 @@ export default function Page() {
 
 
   return (
-    <div className="bg-gray-100  min-h-screen ">
-      <h1 className="text-3xl font-bold text-gray-800 mb-6">Project Details</h1>
+    <div className="bg-gray-100  min-h-screen mt-2 ">
+      <h1 className="text-2xl text-black mb-6">Project Details</h1>
+
 
       {/* Project Title Section */}
       <div className="bg-teal-700 flex items-center p-4 rounded-lg mb-8 ">
-        <FaArrowLeft className="text-white mr-3 text-2xl cursor-pointer" />
-        <h1 className="text-2xl text-white font-semibold">{project.projectName || 'Loading...'}</h1>
+        <Link href="/dashboard"> <FaArrowLeft className="text-white mr-3 text-2xl cursor-pointer" /></Link>
+        <h1 className="text-2xl text-white ">{project.projectName || 'Loading...'}</h1>
       </div>
 
       {/* Main Content Section */}
@@ -117,7 +120,7 @@ export default function Page() {
           <div className="flex-1">
             <h2 className="text-xl font-semibold text-gray-800 mb-4">Project Information</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <p><strong className='text-[#4472C4] pr-2'>Project Owner:</strong> {project.clientName || 'N/A'}</p>
+              <p><strong className='text-[#4472C4] pr-2'>Project Owner:</strong> {project.creatorName || 'N/A'}</p>
               <p><strong className='text-[#4472C4] pr-2'>Supervisor Name:</strong> {project.supervisorName || 'N/A'}</p>
               <p><strong className='text-[#4472C4] pr-2'>Project Type:</strong>
                 <button className="bg-gradient-to-r from-blue-500 to-indigo-600 px-4 py-2 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 ease-in-out transform hover:scale-105 hover:bg-gradient-to-r hover:from-indigo-600 hover:to-blue-500 focus:outline-none focus:ring-2 focus:ring-indigo-300">
@@ -136,7 +139,10 @@ export default function Page() {
               <p><strong className='text-[#4472C4] pr-2'>Client Contact:</strong> {project.clientContact || 'N/A'}</p>
               <p><strong className='text-[#4472C4] pr-2'>Client Address:</strong> {project.clientAddress || 'N/A'}</p>
               <p><strong className='text-[#4472C4] pr-2'>Client Email:</strong> {project.clientEmail || 'N/A'}</p>
-              <p><strong className='text-[#4472C4] pr-2'>Assigned to:</strong> ******</p>
+              <p><strong className='text-[#4472C4] pr-2'>Requirements:</strong> {project.requirementDetails}</p>
+              <p><strong className='text-[#4472C4] pr-2'>Estimated Budget:</strong> {project.estimatedBudget}</p>
+
+              <p><strong className='text-[#4472C4] pr-2'>Assigned to:</strong> {project.assigned && project.assigned.length > 0 ? project.assigned.map(a => a.eName).join(', ') : 'N/A'} </p>
               <div>
                 <p><strong className='text-[#4472C4]'>Remaining Tasks:</strong></p>
                 <ul className="list-disc pl-6 mt-2">

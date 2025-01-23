@@ -13,26 +13,37 @@ import { useRouter } from 'next/navigation';
 
 interface Project {
     id: number;
+    projectType: string;
     projectName: string;
-    assignedTo: string;
+    totalArea: string;
+    projectAddress: string;
+    clientName: string;
+    clientAddress: string;
+    clientContact: string;
+    clientEmail: string;
+    creatorName: string;
+    creatorEmail: string;
+    requirementDetails: string;
     supervisorName: string;
-    currentStage: string;
     startDate: string;
-    projectTimeline: number;
-    daysPassed: number;
-    daysRemaining: number;
-    currentWork: string;
-    remainingTasks: string;
-    completion: number;
-}
+    endDate: string;
+    projectDeadline: string;
+    estimatedBudget: string;
+    assigned: { eName: string; eid: string; id: string }[]; // Stores selected employees
+    createdAt: string;
+    updatedAt: string;
+    daysRemaining?: number; // Added optional property
+    daysPassed?: number; 
+  }
+
 
 export default function DesignDevelopmentTable() {
     const router = useRouter();
     const [projects, setProjects] = useState<Project[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
-    const token = localStorage.getItem('accessToken');
-
+    const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+   
     useEffect(() => {
         if (!token) {
             router.push('/'); // Redirect to login page if token doesn't exist
@@ -64,6 +75,32 @@ export default function DesignDevelopmentTable() {
             fetchProjects();
         }
     }, [router, token]);
+   useEffect(() => {
+    if (projects.length > 0) {
+        // Assuming you want to calculate days for each project
+        projects.forEach(project => {
+            // Convert string dates to Date objects
+            const startDate = new Date(project.startDate); // Ensure valid date conversion
+            const endDate = new Date(project.endDate); // Ensure valid date conversion
+            const currentDate = new Date(); // Get the current date
+
+            // Calculate days remaining
+            const remainingTime = endDate.getTime() - currentDate.getTime();
+            const daysRemaining = Math.max(0, Math.floor(remainingTime / (1000 * 60 * 60 * 24))); // Ensure non-negative result
+
+            // Calculate days passed
+            const passedTime = currentDate.getTime() - startDate.getTime();
+            const daysPassed = Math.max(0, Math.floor(passedTime / (1000 * 60 * 60 * 24))); // Ensure non-negative result
+
+            // You can store these values in the project object or handle them as needed
+            project.daysRemaining = daysRemaining; // Add daysRemaining to the project object
+            project.daysPassed = daysPassed; // Add daysPassed to the project object
+        });
+
+        // Update the state with the modified projects
+        setProjects([...projects]);
+    }
+}, [projects]);
 
     if (loading) {
         return <div>Loading...</div>;
@@ -81,38 +118,38 @@ export default function DesignDevelopmentTable() {
         <div>
             <Table>
                 <TableHeader className='bg-[#2A515B] text-white'>
-                    <TableRow>
-                        <TableHead className='text-white'>SI. No.</TableHead>
-                        <TableHead className='text-white'>Project Name</TableHead>
-                        <TableHead className='text-white'>Assigned To</TableHead>
-                        <TableHead className='text-white'>Supervisor Name</TableHead>
-                        <TableHead className='text-white'>Current Stage</TableHead>
-                        <TableHead className='text-white'>Start Date</TableHead>
-                        <TableHead className='text-white'>Project Timeline</TableHead>
-                        <TableHead className='text-white'>Days Passed</TableHead>
-                        <TableHead className='text-white'>Days Remaining</TableHead>
-                        <TableHead className='text-white'>Current Work in Progress</TableHead>
-                        <TableHead className='text-white'>Remaining Tasks</TableHead>
-                        <TableHead className='text-white'>Completion (%)</TableHead>
-                        <TableHead className='text-white'>View Details</TableHead>
+                    <TableRow className='text-center'>
+                        <TableHead className='text-white text-center'>SI. No.</TableHead>
+                        <TableHead className='text-white text-center'>Project Name</TableHead>
+                        <TableHead className='text-white text-center'>Assigned To</TableHead>
+                        <TableHead className='text-white text-center'>Supervisor Name</TableHead>
+                        <TableHead className='text-white text-center'>Current Stage</TableHead>
+                        <TableHead className='text-white text-center'>Start Date</TableHead>
+                        <TableHead className='text-white text-center'>Project Timeline</TableHead>
+                        <TableHead className='text-white text-center'>Days Passed</TableHead>
+                        <TableHead className='text-white text-center'>Days Remaining</TableHead>
+                        <TableHead className='text-white text-center' >Current Work in Progress</TableHead>
+                        <TableHead className='text-white text-center'>Remaining Tasks</TableHead>
+                        <TableHead className='text-white text-center'>Completion (%)</TableHead>
+                        <TableHead className='text-white text-center'>View Details</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
                     {projects.map((project, index) => (
-                        <TableRow key={project.id}>
-                            <TableCell>{index + 1}</TableCell>
-                            <TableCell>{project.projectName}</TableCell>
-                            <TableCell>{project.assignedTo}</TableCell>
-                            <TableCell>{project.supervisorName}</TableCell>
-                            <TableCell>{project.currentStage}</TableCell>
-                            <TableCell>{project.startDate}</TableCell>
-                            <TableCell>{project.projectTimeline}</TableCell>
-                            <TableCell>{project.daysPassed}</TableCell>
-                            <TableCell>{project.daysRemaining}</TableCell>
-                            <TableCell>{project.currentWork}</TableCell>
-                            <TableCell>{project.remainingTasks}</TableCell>
-                            <TableCell>{project.completion}%</TableCell>
-                            <TableCell>
+                        <TableRow key={project.id} className='text-center'>
+                            <TableCell className='text-center border border-[#e5e7eb]'>{index + 1}</TableCell>
+                            <TableCell className='border border-[#e5e7eb]'>{project.projectName}</TableCell>
+                            <TableCell className='border border-[#e5e7eb]'>{project.assigned && project.assigned.length > 0 ? project.assigned.map(a => a.eName).join(', ') : 'N/A'}</TableCell>
+                            <TableCell className='border border-[#e5e7eb]'>{project.supervisorName}</TableCell>
+                            <TableCell className='border border-[#e5e7eb]'>{project.supervisorName}</TableCell>
+                            <TableCell className='border border-[#e5e7eb]'>{project.startDate}</TableCell>
+                            <TableCell className='border border-[#e5e7eb]'>{project.projectDeadline}</TableCell>
+                            <TableCell className='border border-[#e5e7eb]'>{project.daysPassed || 'N/A'}</TableCell>
+                            <TableCell className='border border-[#e5e7eb]'>{project.daysRemaining}</TableCell>
+                            <TableCell className='border border-[#e5e7eb]'>{project.supervisorName}</TableCell>
+                            <TableCell className='border border-[#e5e7eb]'>{project.supervisorName}</TableCell>
+                            <TableCell className='border border-[#e5e7eb]'>{project.supervisorName}%</TableCell>
+                            <TableCell className='border border-[#e5e7eb]'>
                                 <Link href={`/projects/${project.id}`} className="bg-gradient-to-r from-blue-500 to-indigo-600 px-4 py-2 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 ease-in-out transform hover:scale-105 hover:bg-gradient-to-r hover:from-indigo-600 hover:to-blue-500 focus:outline-none focus:ring-2 focus:ring-indigo-300">
                                     View
                                 </Link>
