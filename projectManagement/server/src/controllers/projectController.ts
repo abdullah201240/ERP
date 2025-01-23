@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import { asyncHandler, ApiError, ApiResponse } from "../utils/root";
 import { ErrorCodes } from '../utils/errors/ErrorCodes';
-import { ProjectSchema } from "../validators/projectValidators";
+import { AssignedToSchema, ProjectSchema } from "../validators/projectValidators";
 import ERROR_MESSAGES from "../utils/errors/errorMassage";
 import Project from "../models/project";
 import Employee from "../models/employee";
@@ -182,6 +182,7 @@ export const updateProject = asyncHandler(
             startDate,
             endDate,
             projectDeadline,
+            estimatedBudget,
         } = req.body;
 
         // Update the project fields
@@ -201,9 +202,11 @@ export const updateProject = asyncHandler(
         project.startDate = startDate || project.startDate;
         project.endDate = endDate || project.endDate;
         project.projectDeadline = projectDeadline || project.projectDeadline;
+        project.estimatedBudget = estimatedBudget || project.estimatedBudget;
+
 
         
-
+        
 
         // Save the updated project to the database
         await project.save();
@@ -211,5 +214,64 @@ export const updateProject = asyncHandler(
         return res
             .status(200)
             .json(ApiResponse.success(project, "Project updated successfully"));
+    }
+);
+
+
+
+// Create Project Controller
+export const createAssignedTo = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction) => {
+        const result = AssignedToSchema.safeParse(req.body);
+
+        if (!result.success) {
+            const errors = result.error.errors.map((error) => error.message).join(", ");
+            throw new ApiError(
+                "All fields are required",
+                400,
+                ErrorCodes.BAD_REQUEST.code,
+                errors
+            );
+        }
+
+        const { eid, pid, eName } = req.body;
+
+        // Create the new project in the database
+        const newAssigned = await Assigned.create({
+            eid,
+            pid,
+            eName,
+        });
+
+        if (!newAssigned) {
+            throw new ApiError(
+                "Internal error occurred",
+                500,
+                ErrorCodes.INTERNAL_SERVER_ERROR.code
+            );
+        }
+        return res.status(201).json(
+            ApiResponse.success(newAssigned, "Assigned created successfully")
+        );
+    });
+
+// Delete Project Controller
+export const deleteAssignedTo = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction) => {
+        const { id } = req.params;
+
+        const assignedTo = await Assigned.findByPk(id);
+
+        if (!assignedTo) {
+            throw new ApiError(
+                `assignedTo with ID ${id} not found`,
+                404,
+                ErrorCodes.NOT_FOUND.code
+            );
+        }
+
+        await assignedTo.destroy();
+
+        return res.status(200).json(ApiResponse.success(null, "Project deleted successfully"));
     }
 );

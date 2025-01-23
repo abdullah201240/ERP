@@ -20,6 +20,7 @@ interface ProjectAttributes {
   startDate?: string; // Optional
   endDate?: string; // Optional
   projectDeadline?: string;
+  estimatedBudget?: string;
 }
 
 interface ProjectCreationAttributes extends Optional<ProjectAttributes, 'id'> {}
@@ -43,6 +44,7 @@ class Project extends Model<ProjectAttributes, ProjectCreationAttributes> implem
   public startDate?: string; // Optional
   public endDate?: string; // Optional
   public projectDeadline?: string;
+  public estimatedBudget?: string;
 }
 
 Project.init(
@@ -116,7 +118,12 @@ Project.init(
     projectDeadline:{
       type: DataTypes.STRING,
       allowNull: true, // Optional
+    },
+    estimatedBudget:{
+      type: DataTypes.STRING,
+      allowNull: true, // Optional
     }
+
   },
   {
     sequelize: db, // Use the passed `sequelizeInstance`

@@ -15,4 +15,10 @@ const ProjectSchema = z.object({
   requirementDetails: z.string().min(1, 'Requirement Details are required'),
 });
 
-export { ProjectSchema };
+const AssignedToSchema = z.object({
+  eid: z.number().min(1, 'eid Type is required'),
+  pid: z.string().min(1, 'pid Name is required'),
+  eName: z.string().min(1, 'eName Area is required'),
+});
+
+export { ProjectSchema ,AssignedToSchema  };

@@ -1,6 +1,6 @@
 import express from "express";
 import { verifyJWT } from "../middleware/auth"; 
-import { createProject, deleteProject, getProject, getProjectById, updateProject } from "../controllers/projectController";
+import { createAssignedTo, createProject, deleteAssignedTo, deleteProject, getProject, getProjectById, updateProject } from "../controllers/projectController";
 
 const router = express.Router();
 
@@ -16,5 +16,10 @@ router.get('/project/:id', getProjectById);
 
 // Route to delete a project by ID
 router.delete('/delete-project/:id', verifyJWT, deleteProject);
+router.delete('/delete-assigned/:id', verifyJWT, deleteAssignedTo);
+router.post('/create-assignedTo', verifyJWT, createAssignedTo);
+
+
+
 
 export default router;
