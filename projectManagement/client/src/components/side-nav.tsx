@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-
+ 
 import { SIDENAV_ITEMS } from '@/constants';
 import { SideNavItem } from '@/types';
 import { Icon } from '@iconify/react';
@@ -16,7 +16,7 @@ const SideNav = () => {
     <div className="md:w-60 bg-white h-screen flex-1 fixed  hidden md:flex">
       <div className="flex flex-col space-y-6 w-full mt-4">
         <Link
-          href="/"
+          href="/dashboard"
           className="flex flex-row space-x-3 items-center justify-center md:justify-start md:px-6  h-12 w-full"
         >
             <Image 

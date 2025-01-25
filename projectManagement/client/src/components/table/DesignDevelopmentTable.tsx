@@ -1,4 +1,4 @@
-'use client'
+'use client';
 import React, { useEffect, useState } from 'react';
 import {
     Table,
@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/table";
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { FaArrowLeft, FaArrowRight } from 'react-icons/fa';
 
 interface Project {
     id: number;
@@ -29,28 +30,32 @@ interface Project {
     endDate: string;
     projectDeadline: string;
     estimatedBudget: string;
-    assigned: { eName: string; eid: string; id: string }[]; // Stores selected employees
+    assigned: { eName: string; eid: string; id: string }[];
     createdAt: string;
     updatedAt: string;
-    daysRemaining?: number; // Added optional property
-    daysPassed?: number; 
-  }
-
+    daysRemaining?: number;
+    daysPassed?: number;
+}
 
 export default function DesignDevelopmentTable() {
     const router = useRouter();
     const [projects, setProjects] = useState<Project[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
+    const [totalProjects, setTotalProjects] = useState<number>(0); // To store total number of projects
     const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
-   
+
+    // Pagination state
+    const [currentPage, setCurrentPage] = useState<number>(1);
+    const itemsPerPage = 10;
+
     useEffect(() => {
         if (!token) {
             router.push('/'); // Redirect to login page if token doesn't exist
         } else {
             const fetchProjects = async () => {
                 try {
-                    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}projects/all-projects`, {
+                    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}projects/all-projects?page=${currentPage}&limit=${itemsPerPage}`, {
                         headers: {
                             'Authorization': token
                         }
@@ -59,11 +64,30 @@ export default function DesignDevelopmentTable() {
                         throw new Error('Failed to fetch projects');
                     }
                     const data = await response.json();
-                    console.log(data.data); // Log the response data
-                    if (Array.isArray(data.data)) {
-                        setProjects(data.data); // Correctly set projects to data.data
+                    console.log(data.data);
+
+                    if (data.success && Array.isArray(data.data.projects)) {
+                        const updatedProjects = data.data.projects.map((project: Project) => {
+                            const startDate = new Date(project.startDate);
+                            const endDate = new Date(project.endDate);
+                            const currentDate = new Date();
+
+                            const remainingTime = endDate.getTime() - currentDate.getTime();
+                            const daysRemaining = Math.max(0, Math.floor(remainingTime / (1000 * 60 * 60 * 24)));
+
+                            const passedTime = currentDate.getTime() - startDate.getTime();
+                            const daysPassed = Math.max(0, Math.floor(passedTime / (1000 * 60 * 60 * 24)));
+
+                            return {
+                                ...project,
+                                daysRemaining,
+                                daysPassed,
+                            };
+                        });
+                        setProjects(updatedProjects);
+                        setTotalProjects(data.data.pagination.totalProjects); // Set total number of projects
                     } else {
-                        throw new Error('Fetched data is not an array');
+                        throw new Error('Fetched data is not in expected format');
                     }
                 } catch (err) {
                     setError((err as Error).message);
@@ -74,33 +98,22 @@ export default function DesignDevelopmentTable() {
 
             fetchProjects();
         }
-    }, [router, token]);
-   useEffect(() => {
-    if (projects.length > 0) {
-        // Assuming you want to calculate days for each project
-        projects.forEach(project => {
-            // Convert string dates to Date objects
-            const startDate = new Date(project.startDate); // Ensure valid date conversion
-            const endDate = new Date(project.endDate); // Ensure valid date conversion
-            const currentDate = new Date(); // Get the current date
+    }, [router, token, currentPage]);
 
-            // Calculate days remaining
-            const remainingTime = endDate.getTime() - currentDate.getTime();
-            const daysRemaining = Math.max(0, Math.floor(remainingTime / (1000 * 60 * 60 * 24))); // Ensure non-negative result
+    // Calculate current projects for the current page
+    const totalPages = Math.ceil(totalProjects / itemsPerPage);
 
-            // Calculate days passed
-            const passedTime = currentDate.getTime() - startDate.getTime();
-            const daysPassed = Math.max(0, Math.floor(passedTime / (1000 * 60 * 60 * 24))); // Ensure non-negative result
+    const handleNextPage = () => {
+        if (currentPage < totalPages) {
+            setCurrentPage(currentPage + 1);
+        }
+    };
 
-            // You can store these values in the project object or handle them as needed
-            project.daysRemaining = daysRemaining; // Add daysRemaining to the project object
-            project.daysPassed = daysPassed; // Add daysPassed to the project object
-        });
-
-        // Update the state with the modified projects
-        setProjects([...projects]);
-    }
-}, [projects]);
+    const handlePreviousPage = () => {
+        if (currentPage > 1) {
+            setCurrentPage(currentPage - 1);
+        }
+    };
 
     if (loading) {
         return <div>Loading...</div>;
@@ -128,7 +141,7 @@ export default function DesignDevelopmentTable() {
                         <TableHead className='text-white text-center'>Project Timeline</TableHead>
                         <TableHead className='text-white text-center'>Days Passed</TableHead>
                         <TableHead className='text-white text-center'>Days Remaining</TableHead>
-                        <TableHead className='text-white text-center' >Current Work in Progress</TableHead>
+                        <TableHead className='text-white text-center'>Current Work in Progress</TableHead>
                         <TableHead className='text-white text-center'>Remaining Tasks</TableHead>
                         <TableHead className='text-white text-center'>Completion (%)</TableHead>
                         <TableHead className='text-white text-center'>View Details</TableHead>
@@ -137,7 +150,7 @@ export default function DesignDevelopmentTable() {
                 <TableBody>
                     {projects.map((project, index) => (
                         <TableRow key={project.id} className='text-center'>
-                            <TableCell className='text-center border border-[#e5e7eb]'>{index + 1}</TableCell>
+                            <TableCell className='text-center border border-[#e5e7eb]'>{index + 1 + (currentPage - 1) * itemsPerPage}</TableCell>
                             <TableCell className='border border-[#e5e7eb]'>{project.projectName}</TableCell>
                             <TableCell className='border border-[#e5e7eb]'>{project.assigned && project.assigned.length > 0 ? project.assigned.map(a => a.eName).join(', ') : 'N/A'}</TableCell>
                             <TableCell className='border border-[#e5e7eb]'>{project.supervisorName}</TableCell>
@@ -150,14 +163,36 @@ export default function DesignDevelopmentTable() {
                             <TableCell className='border border-[#e5e7eb]'>{project.supervisorName}</TableCell>
                             <TableCell className='border border-[#e5e7eb]'>{project.supervisorName}%</TableCell>
                             <TableCell className='border border-[#e5e7eb]'>
-                                <Link href={`/projects/${project.id}`} className="bg-gradient-to-r from-blue-500 to-indigo-600 px-4 py-2 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 ease-in-out transform hover:scale-105 hover:bg-gradient-to-r hover:from-indigo-600 hover:to-blue-500 focus:outline-none focus:ring-2 focus:ring-indigo-300">
-                                    View
+                                <Link href={`/projects/${project.id}`} >
+                                    <p className="bg-gradient-to-r from-blue-500 to-indigo-600 px-4 py-2 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 ease-in-out transform hover:scale-105 hover:bg-gradient-to-r hover:from-indigo-600 hover:to-blue-500 focus:outline-none focus:ring-2 focus:ring-indigo-300">View</p>
                                 </Link>
                             </TableCell>
                         </TableRow>
                     ))}
                 </TableBody>
             </Table>
+
+
+            <div className="flex justify-end mt-4">
+                <p className="mx-4 mt-2 text-lg font-semibold text-gray-700"> <span className='font-normal'> Page </span> {currentPage} <span className='font-normal'> of </span> {totalPages}</p>
+                <button
+                    onClick={handlePreviousPage}
+                    disabled={currentPage === 1}
+                    className="bg-[#2A515B] text-white p-2 rounded-lg shadow hover:bg-[#2A515B] transition duration-200 ease-in-out disabled:opacity-50 flex items-center mr-4" // Added margin-right here
+                >
+                    <FaArrowLeft className="mr-2" />
+
+                </button>
+
+                <button
+                    onClick={handleNextPage}
+                    disabled={currentPage === totalPages}
+                    className="bg-[#2A515B] text-white p-2 rounded-lg shadow hover:bg-[#2A515B] transition duration-200 ease-in-out disabled:opacity-50 flex items-center"
+                >
+
+                    <FaArrowRight className="ml-2" />
+                </button>
+            </div>
         </div>
     );
 }

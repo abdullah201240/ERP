@@ -67,8 +67,14 @@ export const createProject = asyncHandler(
 // View Project 
 export const getProject = asyncHandler(
     async (req: Request, res: Response, next: NextFunction) => {
+        // Get the page and limit from query parameters, default to page 1 and limit 10
+        const page = parseInt(req.query.page as string) || 1;
+        const limit = parseInt(req.query.limit as string) || 10;
 
-        // Fetch all projects with their assigned data
+        // Calculate the offset for pagination
+        const offset = (page - 1) * limit;
+
+        // Fetch projects with pagination
         const projects = await Project.findAll({
             include: [
                 {
@@ -76,14 +82,29 @@ export const getProject = asyncHandler(
                     as: "assigned", // Alias defined in the relationship
                 },
             ],
+            limit: limit, // Limit to 10 records per page
+            offset: offset, // Apply offset for pagination
         });
 
-        return res
-            .status(200)
-            .json(ApiResponse.success(projects, "Projects retrieved successfully"));
+        // Get the total number of projects to calculate the total pages
+        const totalProjects = await Project.count();
 
+        return res.status(200).json({
+            success: true,
+            data: {
+                projects: projects,
+                pagination: {
+                    currentPage: page,
+                    totalPages: Math.ceil(totalProjects / limit),
+                    totalProjects: totalProjects,
+                },
+            },
+            message: "Projects retrieved successfully",
+        });
     }
 );
+
+
 // View Project by ID Controller
 export const getProjectById = asyncHandler(
     async (req: Request, res: Response, next: NextFunction) => {
