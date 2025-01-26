@@ -9,7 +9,7 @@ router.post('/create-project', verifyJWT, createProject);
 router.put("/project/:id",verifyJWT, updateProject); // Add update route
 
 // Route to fetch all projects
-router.get('/all-projects', verifyJWT, getProject);
+router.get('/all-projects', getProject);
 
 // Route to fetch a specific project by ID
 router.get('/project/:id', getProjectById);
