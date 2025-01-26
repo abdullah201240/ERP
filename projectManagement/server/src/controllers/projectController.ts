@@ -8,6 +8,7 @@ import Employee from "../models/employee";
 
 import '../models/association';
 import Assigned from "../models/assigned";
+import { Op } from "sequelize";
 
 
 // Create Project Controller
@@ -294,5 +295,72 @@ export const deleteAssignedTo = asyncHandler(
         await assignedTo.destroy();
 
         return res.status(200).json(ApiResponse.success(null, "Project deleted successfully"));
+    }
+);
+
+export const getProjectAll = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction) => {
+        
+
+        // Fetch projects with pagination
+        const projects = await Project.findAll({
+            include: [
+                {
+                    model: Assigned,
+                    as: "assigned", // Alias defined in the relationship
+                },
+            ],
+            
+        });
+
+        return res.status(200).json({
+            success: true,
+            data: {
+                projects: projects,
+            },
+            message: "Projects retrieved successfully",
+        });
+    }
+);
+
+export const getProjectsPaginated = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction) => {
+        const { page = 1, limit = 10, search = "" } = req.query;
+
+        // Parse page and limit as integers
+        const pageNumber = parseInt(page as string, 10);
+        const pageSize = parseInt(limit as string, 10);
+        const offset = (pageNumber - 1) * pageSize;
+
+        // Fetch projects with pagination and search
+        const { rows: projects, count: totalProjects } = await Project.findAndCountAll({
+            where: search
+                ? {
+                      projectName: {
+                          [Op.like]: `%${search}%`, // Case-sensitive search for MariaDB/MySQL
+                      },
+                  }
+                : {},
+            include: [
+                {
+                    model: Assigned,
+                    as: "assigned", // Alias defined in the relationship
+                },
+            ],
+            limit: pageSize,
+            offset: offset,
+            order: [["createdAt", "DESC"]], // Sort by most recent
+        });
+
+        return res.status(200).json({
+            success: true,
+            data: {
+                projects,
+                totalProjects,
+                totalPages: Math.ceil(totalProjects / pageSize),
+                currentPage: pageNumber,
+            },
+            message: "Projects retrieved successfully",
+        });
     }
 );

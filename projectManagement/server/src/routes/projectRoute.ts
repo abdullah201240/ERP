@@ -1,6 +1,6 @@
 import express from "express";
 import { verifyJWT } from "../middleware/auth"; 
-import { createAssignedTo, createProject, deleteAssignedTo, deleteProject, getProject, getProjectById, updateProject } from "../controllers/projectController";
+import { createAssignedTo, createProject, deleteAssignedTo, deleteProject, getProject, getProjectAll, getProjectById, getProjectsPaginated, updateProject } from "../controllers/projectController";
 
 const router = express.Router();
 
@@ -10,6 +10,9 @@ router.put("/project/:id",verifyJWT, updateProject); // Add update route
 
 // Route to fetch all projects
 router.get('/all-projects', getProject);
+router.get('/view-all-projects', getProjectsPaginated);
+
+
 
 // Route to fetch a specific project by ID
 router.get('/project/:id', getProjectById);

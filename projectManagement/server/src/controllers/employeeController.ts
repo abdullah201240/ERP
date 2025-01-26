@@ -6,6 +6,7 @@ import Employee from "../models/employee";
 import bcrypt from 'bcryptjs';
 import ERROR_MESSAGES from '../utils/errors/errorMassage'
 import jwt from 'jsonwebtoken';
+import { Op } from "sequelize";
 
 const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET || "LD9cv1kBfgRHVIg9GG_OGzh9TUkcyqgZAaM0o3DmVkx08MCFRSzMocyO3UtNdDNtoCJ0X0-5nLwK7fdO"; // Fallback to a hardcoded secret if not in env
 
@@ -141,7 +142,7 @@ export const loginEmployee = asyncHandler(
     };
     res.cookie("accessToken", accessToken, cookieOptions);
 
-   
+
     return res.status(200).json(
       ApiResponse.success(
         { accessToken },
@@ -206,12 +207,42 @@ export const logoutEmployee = asyncHandler(
   }
 );
 
+
+
+
 export const getAllEmployee = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
+    const { page = 1, limit = 10, search = "" } = req.query;
+    // Parse page and limit as integers
+    const pageNumber = parseInt(page as string, 10);
+    const pageSize = parseInt(limit as string, 10);
+    const offset = (pageNumber - 1) * pageSize;
 
-      const employee = await Employee.findAll();
+    // Fetch employees with pagination and search
+    const { rows: employees, count: totalEmployees } = await Employee.findAndCountAll({
+      where: search
+        ? {
+            name: {
+              [Op.like]: `%${search}%`, // Case-sensitive search for MariaDB/MySQL
+            },
+          }
+        : {},
+      limit: pageSize,
+      offset: offset,
+      order: [["createdAt", "ASC"]], // Sort by most recent
+    });
 
-
-      return res.status(200).json(ApiResponse.success(employee, "employee retrieved successfully"));
+    return res.status(200).json({
+      success: true,
+      data: {
+        employees,  // Fixed this to 'employees' instead of 'projects'
+        totalEmployees,  // Fixed this to 'totalEmployees' instead of 'totalProjects'
+        totalPages: Math.ceil(totalEmployees / pageSize),  // Fixed this to use 'totalEmployees'
+        currentPage: pageNumber,
+      },
+      message: "Employees retrieved successfully",  // Updated the message
+    });
   }
 );
+
+

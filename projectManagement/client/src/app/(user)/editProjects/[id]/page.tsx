@@ -3,7 +3,6 @@ import { useEffect, useRef, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { toast } from 'react-hot-toast';
 import { FaChevronDown } from 'react-icons/fa';
-
 interface FormData {
   projectType: string;
   projectName: string;
@@ -18,7 +17,7 @@ interface FormData {
   projectDeadline: string;
   startDate: string;
   endDate: string;
-  assignedTo: { eName: string; eid: string ;id: string }[]; // Stores selected employees
+  assignedTo: { eName: string; eid: string; id: string }[]; // Stores selected employees
   supervisorName: string;
   supervisorEmail: string;
   requirementDetails: string;
@@ -53,15 +52,58 @@ export default function UpdateProjectPage() {
     creatorName: '',
     creatorEmail: ''
   });
-  const [employees, setEmployees] = useState<{ id: string; name: string }[]>([]);
+  const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement | null>(null); // Create a ref for the dropdown
+  const dropdownRef = useRef(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [isFetching, setIsFetching] = useState(false);
 
   const toggleDropdown = () => {
     setIsDropdownOpen((prev) => !prev);
   };
+
+  // Debounce function
+  const debounce = (func, delay) => {
+    let timeoutId;
+    return (...args) => {
+      if (timeoutId) clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        func.apply(null, args);
+      }, delay);
+    };
+  };
+  const fetchEmployees = async (query, pageNumber) => {
+    if (!token) {
+      router.push('/');
+      return;
+    }
+    setIsFetching(true);
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}employee/employee?page=${pageNumber}&limit=10&search=${query}`, {
+        headers: {
+          Authorization: token,
+        },
+      });
+      if (!response.ok) throw new Error('Failed to fetch employees');
+      const employeeData = await response.json();
+      setEmployees((prev) => [...prev, ...employeeData.data.employees]);
+      setTotalPages(employeeData.data.totalPages);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsFetching(false);
+    }
+  };
+  const handleSearch = debounce((query) => {
+    setEmployees([]); // Reset employees on new search
+    setPage(1); // Reset page
+    fetchEmployees(query, 1);
+  }, 300);
+
   useEffect(() => {
     const checkTokenAndFetchProfile = async () => {
       // Check if the access token exists in localStorage
@@ -95,17 +137,27 @@ export default function UpdateProjectPage() {
   }, [router, token]);
 
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsDropdownOpen(false);
+    const handleScroll = () => {
+      if (window.innerHeight + window.scrollY >= document.body.offsetHeight && !isFetching && page < totalPages) {
+        setPage((prev) => prev + 1);
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
+    window.addEventListener('scroll', handleScroll);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      window.removeEventListener('scroll', handleScroll);
     };
-  }, []);
+  }, [isFetching, page, totalPages]);
+
+  useEffect(() => {
+    if (page > 1) {
+      fetchEmployees(searchQuery, page);
+    }
+  }, [page]);
+
+  useEffect(() => {
+    fetchEmployees(searchQuery, 1);
+  }, [searchQuery]);
 
   useEffect(() => {
 
@@ -147,7 +199,7 @@ export default function UpdateProjectPage() {
 
 
         // Fetch employee list
-        const employeeResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}employee/employee`, {
+        const employeeResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}employee/employee?page=${pageNumber}&limit=10&search=${query}`, {
           headers: {
             Authorization: token,
           },
@@ -156,7 +208,7 @@ export default function UpdateProjectPage() {
           throw new Error('Failed to fetch employees');
         }
         const employeeData = await employeeResponse.json();
-        setEmployees(employeeData.data || []);
+        setEmployees(employeeData.data.employees || []);
 
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
@@ -207,18 +259,18 @@ export default function UpdateProjectPage() {
       if (!response.ok) {
         toast.error('Failed to update project');
       }
-      else{
+      else {
         toast.success('Project updated successfully!');
 
         // If the employee was successfully added, update the formData
         setFormData((prevData) => ({
           ...prevData,
-          assignedTo: [...prevData.assignedTo, { eid: String(employee.id), eName: employee.name,id:String(employee.id) }],
+          assignedTo: [...prevData.assignedTo, { eid: String(employee.id), eName: employee.name, id: String(employee.id) }],
         }));
 
       }
 
-     
+
 
     } catch (err) {
       if (err instanceof Error) {
@@ -269,7 +321,7 @@ export default function UpdateProjectPage() {
       }
     }
   };
-  const handleRemoveEmployee = async (index: number ,id: string) => {
+  const handleRemoveEmployee = async (index: number, id: string) => {
 
     try {
       if (!token) {
@@ -286,7 +338,7 @@ export default function UpdateProjectPage() {
       if (!response.ok) {
         throw new Error('Failed to update project');
       }
-      else{
+      else {
         toast.success('Project updated successfully!');
         setFormData((prevData) => {
           return {
@@ -313,7 +365,7 @@ export default function UpdateProjectPage() {
 
 
 
-    
+
   };
 
   // The rest of your code remains unchanged
@@ -351,6 +403,31 @@ export default function UpdateProjectPage() {
               </select>
             </div>
 
+            <div>
+            <label className='text-white mb-2'>Search Employee</label>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                handleSearch(e.target.value);
+              }}
+              placeholder="Search for an employee"
+              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-[#8c0327] focus:ring-[#8c0327] focus:ring-opacity-50 p-2 bg-gray-100 mt-2"
+            />
+          </div>
+          {isDropdownOpen && (
+            <div ref={dropdownRef}>
+              {employees.map((employee) => (
+                <div key={employee.id}>
+                  <span>{employee.name}</span>
+                  <button onClick={() => handleSelectEmployee(employee)}>Add</button>
+                </div>
+              ))}
+              {isFetching && <div>Loading more employees...</div>}
+            </div>
+          )}
+
             <div >
               <div className="relative" > {/* Attach ref here */}
                 <label className='text-white mb-2'>Assigned To</label>
@@ -366,13 +443,13 @@ export default function UpdateProjectPage() {
                         className="flex items-center bg-[#3d3d3d] text-white px-2 py-1 rounded-md space-x-2"
                       >
                         <span>{assigned.eName}</span>
-                        
+
 
                         <button
                           type="button"
                           onClick={(e) => {
                             e.stopPropagation(); // Prevent dropdown toggle
-                            handleRemoveEmployee(index,assigned.id);
+                            handleRemoveEmployee(index, assigned.id);
                           }}
                           className="text-white bg-transparent hover:text-gray-300 focus:outline-none"
                         >
