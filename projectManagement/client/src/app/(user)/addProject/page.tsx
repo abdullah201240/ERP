@@ -3,7 +3,6 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-hot-toast';
 
-
 /**
  * Page component for adding a new project.
  * This component handles user input, form submission, and user authentication.
@@ -26,9 +25,9 @@ export default function Page() {
     clientEmail: '',
     requirementDetails: '',
   });
-  
- 
-  
+
+
+
 /**
  * Function to check for an access token in localStorage and fetch user profile data.
  * If the token does not exist, the user is redirected to the login page.
@@ -41,7 +40,7 @@ export default function Page() {
       router.push('/'); // Redirect to login page if token doesn't exist
     } else {
       // Fetch user profile data from the API
-       fetch(`${process.env.NEXT_PUBLIC_API_URL}employee/auth/profile`, {
+      fetch(`${process.env.NEXT_PUBLIC_API_URL}employee/auth/profile`, {
         headers: {
           'Authorization': token
         }
@@ -57,10 +56,10 @@ export default function Page() {
           if (data) {
             setCreatorName(data.data.name);
             setCreatorEmail(data.data.email);
-            
+
             setUser({ name: data.data.name, email: data.data.email, id: data.data.id });
 
-            
+
           }
         })
         .catch(err => {
@@ -110,7 +109,7 @@ export default function Page() {
         if (response.ok) {
           await response.json();
           toast.success('Project added successfully!');
-          
+
 
           setFormData({ // Clear form fields
             projectType: '',
@@ -154,6 +153,8 @@ export default function Page() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className='text-white mb-2'>Project Type</label>
+                
+
                 <select
                   id="projectType"
                   name="projectType"

@@ -71,6 +71,8 @@ export const getProject = asyncHandler(
         // Get the page and limit from query parameters, default to page 1 and limit 10
         const page = parseInt(req.query.page as string) || 1;
         const limit = parseInt(req.query.limit as string) || 10;
+        const search = req.query.search as string || '';
+
 
         // Calculate the offset for pagination
         const offset = (page - 1) * limit;
@@ -85,6 +87,7 @@ export const getProject = asyncHandler(
             ],
             limit: limit, // Limit to 10 records per page
             offset: offset, // Apply offset for pagination
+            order: [["createdAt", "DESC"]],
         });
 
         // Get the total number of projects to calculate the total pages

@@ -9,13 +9,13 @@ router.post('/create-project', verifyJWT, createProject);
 router.put("/project/:id",verifyJWT, updateProject); // Add update route
 
 // Route to fetch all projects
-router.get('/all-projects', getProject);
-router.get('/view-all-projects', getProjectsPaginated);
+router.get('/all-projects', verifyJWT,getProject);
+router.get('/view-all-projects',verifyJWT, getProjectsPaginated);
 
 
 
 // Route to fetch a specific project by ID
-router.get('/project/:id', getProjectById);
+router.get('/project/:id',verifyJWT, getProjectById);
 
 // Route to delete a project by ID
 router.delete('/delete-project/:id', verifyJWT, deleteProject);

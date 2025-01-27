@@ -42,7 +42,8 @@ export default function DesignDevelopmentTable() {
     const [projects, setProjects] = useState<Project[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
-    const [totalProjects, setTotalProjects] = useState<number>(0); // To store total number of projects
+    const [totalProjects, setTotalProjects] = useState<number>(0);
+    const [searchQuery, setSearchQuery] = useState<string>(''); // State for search query
     const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
 
     // Pagination state
@@ -55,11 +56,12 @@ export default function DesignDevelopmentTable() {
         } else {
             const fetchProjects = async () => {
                 try {
-                    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}projects/all-projects?page=${currentPage}&limit=${itemsPerPage}`, {
+                    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}projects/view-all-projects?page=${currentPage}&limit=${itemsPerPage}&search=${searchQuery}`, {
                         headers: {
                             'Authorization': token
                         }
                     });
+                    
                     if (!response.ok) {
                         throw new Error('Failed to fetch projects');
                     }
@@ -85,7 +87,7 @@ export default function DesignDevelopmentTable() {
                             };
                         });
                         setProjects(updatedProjects);
-                        setTotalProjects(data.data.pagination.totalProjects); // Set total number of projects
+                        setTotalProjects(data.data.totalProjects);
                     } else {
                         throw new Error('Fetched data is not in expected format');
                     }
@@ -98,9 +100,8 @@ export default function DesignDevelopmentTable() {
 
             fetchProjects();
         }
-    }, [router, token, currentPage]);
+    }, [router, token, currentPage, searchQuery]); // Add searchQuery to dependencies
 
-    // Calculate current projects for the current page
     const totalPages = Math.ceil(totalProjects / itemsPerPage);
 
     const handleNextPage = () => {
@@ -113,6 +114,11 @@ export default function DesignDevelopmentTable() {
         if (currentPage > 1) {
             setCurrentPage(currentPage - 1);
         }
+    };
+
+    const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        setSearchQuery(event.target.value);
+        setCurrentPage(1); // Reset to first page on new search
     };
 
     if (loading) {
@@ -129,6 +135,13 @@ export default function DesignDevelopmentTable() {
 
     return (
         <div>
+            <input
+                type="text"
+                placeholder="Search projects..."
+                value={searchQuery}
+                onChange={handleSearchChange}
+                className="border p-2 mb-4"
+            />
             <Table>
                 <TableHeader className='bg-[#2A515B] text-white'>
                     <TableRow className='text-center'>
@@ -172,16 +185,14 @@ export default function DesignDevelopmentTable() {
                 </TableBody>
             </Table>
 
-
             <div className="flex justify-end mt-4">
                 <p className="mx-4 mt-2 text-lg font-semibold text-gray-700"> <span className='font-normal'> Page </span> {currentPage} <span className='font-normal'> of </span> {totalPages}</p>
                 <button
                     onClick={handlePreviousPage}
                     disabled={currentPage === 1}
-                    className="bg-[#2A515B] text-white p-2 rounded-lg shadow hover:bg-[#2A515B] transition duration-200 ease-in-out disabled:opacity-50 flex items-center mr-4" // Added margin-right here
+                    className="bg-[#2A515B] text-white p-2 rounded-lg shadow hover:bg-[#2A515B] transition duration-200 ease-in-out disabled:opacity-50 flex items-center mr-4"
                 >
                     <FaArrowLeft className="mr-2" />
-
                 </button>
 
                 <button
@@ -189,7 +200,6 @@ export default function DesignDevelopmentTable() {
                     disabled={currentPage === totalPages}
                     className="bg-[#2A515B] text-white p-2 rounded-lg shadow hover:bg-[#2A515B] transition duration-200 ease-in-out disabled:opacity-50 flex items-center"
                 >
-
                     <FaArrowRight className="ml-2" />
                 </button>
             </div>

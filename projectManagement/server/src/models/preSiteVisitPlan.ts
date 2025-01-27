@@ -1,5 +1,6 @@
-import { DataTypes, Model, Optional } from 'sequelize';
+import { Association, DataTypes, Model, Optional } from 'sequelize';
 import db from '../config/sequelize'; // Adjust path as needed
+import AssignedPreSiteVisitPlan from './assignedPreSiteVisitPlan';
 
 // Define the attributes for the PreSiteVisitPlan model
 interface PreSiteVisitPlanAttributes {
@@ -26,6 +27,13 @@ class PreSiteVisitPlan
   public clientNumber!: string;
   public ProjectAddress!: string;
   public visitDateTime!: string;
+  // Associations
+  public assigned?: AssignedPreSiteVisitPlan[];
+
+  static associations: {
+    assigned: Association<PreSiteVisitPlan, AssignedPreSiteVisitPlan>;
+  };
+
 }
 
 PreSiteVisitPlan.init(

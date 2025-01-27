@@ -15,6 +15,17 @@ export const SIDENAV_ITEMS: SideNavItem[] = [
     icon: <Icon icon="gridicons:add" width="19" height="19" />,
   },
   {
+    title: 'Site Visit Plan',
+    path: '/',
+    icon: <Icon icon="lucide:calendar" width="19" height="19" />,
+    submenu: true,
+    subMenuItems: [
+      { title: 'Pre Project', path: '/create-pre-project-plan' },
+      { title: 'Project', path: '/create-project-plan' },
+      { title: 'Supervision', path: '/create-supervision' },
+    ],
+  },
+  {
     title: 'Design & Development',
     path: '/settings',
     icon: <Icon icon="mdi:design" width="19" height="19" />,
@@ -34,17 +45,7 @@ export const SIDENAV_ITEMS: SideNavItem[] = [
     ],
   },
 
-  {
-    title: 'Site Visit Plan',
-    path: '/',
-    icon: <Icon icon="lucide:calendar" width="19" height="19" />,
-    submenu: true,
-    subMenuItems: [
-      { title: 'Pre Project', path: '/create-pre-project-plan' },
-      { title: 'Project', path: '/create-project-plan' },
-      { title: 'Supervision', path: '/create-supervision' },
-    ],
-  },
+  
   
   {
     title: 'Production',

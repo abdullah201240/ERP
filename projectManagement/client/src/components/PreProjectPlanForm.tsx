@@ -4,7 +4,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Select from 'react-select';
 import toast from 'react-hot-toast';
-
+import PreProjectPlanTable from './table/PreProjectPlanTable';
 interface Project {
     id: number;
     projectName: string;
@@ -38,7 +38,8 @@ export default function PreProjectPlanForm() {
     const [searchQuery, setSearchQuery] = useState('');
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
-    
+    const [reloadTable, setReloadTable] = useState(false);
+
     const fetchProjects = useCallback(
         async (pageNumber = 1, query = '') => {
             setLoading(true);
@@ -51,20 +52,20 @@ export default function PreProjectPlanForm() {
                         },
                     }
                 );
-    
+
                 if (!response.ok) {
                     throw new Error('Failed to fetch projects');
                 }
-    
+
                 const data = await response.json();
-    
+
                 // If it's the first page, reset the projects; otherwise, append the new projects
                 if (pageNumber === 1) {
                     setProjects(data.data.projects);
                 } else {
                     setProjects((prevProjects) => [...prevProjects, ...data.data.projects]);
                 }
-    
+
                 setTotalPages(data.data.totalPages);
             } catch (error) {
                 console.error('Error fetching projects:', error);
@@ -82,9 +83,9 @@ export default function PreProjectPlanForm() {
             fetchProjects(1, searchQuery);
         }
     }, [token, searchQuery, router, fetchProjects]);
-    
 
-    
+
+
 
     const handleInputChange = (inputValue: string) => {
         setSearchQuery(inputValue);
@@ -137,6 +138,18 @@ export default function PreProjectPlanForm() {
                 toast.error('Failed to add Pre-Project Site Visit Plan');
             } else {
                 toast.success('Pre-Project Site Visit Plan added successfully!');
+                // Reset the form fields
+                setSelectedProject(null);
+                setProjectDetails({
+                    projectAddress: '',
+                    clientName: '',
+                    clientContact: '',
+                    projectName: '',
+                });
+                setVisitDateTime('');
+
+                // Trigger table reload
+                setReloadTable((prev) => !prev);
             }
         } catch (error) {
             console.error('Error submitting form:', error);
@@ -146,7 +159,7 @@ export default function PreProjectPlanForm() {
 
     return (
         <div>
-            <div className="container mx-auto max-w-6xl">
+            <div className="container mx-auto max-w-6xl mt-8">
                 <div className="bg-[#433878] p-8 rounded-xl">
                     <form className="grid grid-cols-1 gap-6" onSubmit={handleSubmit}>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -226,17 +239,34 @@ export default function PreProjectPlanForm() {
                         <button
                             type="submit"
                             disabled={loading}
-                            className={`block w-full border border-white text-white font-bold py-3 px-4 rounded-md ${
-                                loading ? 'opacity-50 cursor-not-allowed' : ''
-                            }`}
+                            className={`block w-full border border-white text-white font-bold py-3 px-4 rounded-md ${loading ? 'opacity-50 cursor-not-allowed' : ''
+                                }`}
                         >
                             {loading ? 'Adding Pre-Project Site Visit Plan...' : 'Add Pre-Project Site Visit Plan'}
                         </button>
                     </form>
                 </div>
 
-                
+
             </div>
+
+
+            <div className="bg-white mt-8 p-4 rounded-xl">
+                <h1 className="text-center text-xl mb-4"> Pre Project Site Visit Plan </h1>
+
+                <div className="w-[98vw] md:w-full">
+                    <PreProjectPlanTable reload={reloadTable} />
+                </div>
+
+            </div>
+
+
+
+
+
+
         </div>
+
+
     );
 }

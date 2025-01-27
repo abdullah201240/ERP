@@ -5,25 +5,12 @@ import { toast } from 'react-hot-toast';
 import { FaChevronDown } from 'react-icons/fa';
 
 interface FormData {
-  projectType: string;
   projectName: string;
-  description: string;
-  totalArea: string;
-  projectAddress: string;
+  ProjectAddress: string;
   clientName: string;
-  clientAddress: string;
-  clientEmail: string;
-  clientContact: string;
-  estimatedBudget: string;
-  projectDeadline: string;
-  startDate: string;
-  endDate: string;
+  clientNumber: string;
+  visitDateTime: string;
   assignedTo: { eName: string; eid: string; id: string }[]; // Stores selected employees
-  supervisorName: string;
-  supervisorEmail: string;
-  requirementDetails: string;
-  creatorName: string;
-  creatorEmail: string;
 }
 
 export default function UpdateProjectPage() {
@@ -33,25 +20,15 @@ export default function UpdateProjectPage() {
   const token = localStorage.getItem('accessToken');
 
   const [formData, setFormData] = useState<FormData>({
-    projectType: '',
     projectName: '',
-    description: '',
-    totalArea: '',
-    projectAddress: '',
+
+    ProjectAddress: '',
     clientName: '',
-    clientAddress: '',
-    clientEmail: '',
-    clientContact: '',
-    estimatedBudget: '',
-    projectDeadline: '',
-    startDate: '',
-    endDate: '',
-    supervisorName: '',
-    supervisorEmail: '',
+    clientNumber: '',
+    visitDateTime: '',
+
     assignedTo: [],
-    requirementDetails: '',
-    creatorName: '',
-    creatorEmail: ''
+
   });
 
   const [employees, setEmployees] = useState<{ id: string; name: string }[]>([]);
@@ -67,30 +44,30 @@ export default function UpdateProjectPage() {
   };
 
   const fetchEmployees = async (page: number) => {
-  try {
-    if (!token) {
-      router.push('/');
-      return; // Exit the function if there's no token
+    try {
+      if (!token) {
+        router.push('/');
+        return; // Exit the function if there's no token
+      }
+
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}employee/employee?page=${page}&limit=10`, {
+        headers: {
+          Authorization: token, // Ensure token is not null
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch employees');
+      }
+
+      const employeeData = await response.json();
+      setEmployees((prev) => [...prev, ...employeeData.data.employees]);
+      setHasMoreEmployees(employeeData.data.totalEmployees > employees.length);
+    } catch (error) {
+      console.error(error);
+      setError('Failed to load employees');
     }
-
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}employee/employee?page=${page}&limit=10`, {
-      headers: {
-        Authorization: token, // Ensure token is not null
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to fetch employees');
-    }
-
-    const employeeData = await response.json();
-    setEmployees((prev) => [...prev, ...employeeData.data.employees]);
-    setHasMoreEmployees(employeeData.data.totalEmployees > employees.length);
-  } catch (error) {
-    console.error(error);
-    setError('Failed to load employees');
-  }
-};
+  };
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -126,7 +103,7 @@ export default function UpdateProjectPage() {
         }
 
         // Fetch project details
-        const projectResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}projects/project/${pageId}`, {
+        const projectResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}siteVisit/pre-site-visit-plan/${pageId}`, {
           headers: {
             Authorization: token,
           },
@@ -180,13 +157,13 @@ export default function UpdateProjectPage() {
         router.push('/'); // Redirect to login page if token doesn't exist
         return;
       }
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}projects/create-assignedTo`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}siteVisit/assignedToPreProject`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': token,
         },
-        body: JSON.stringify({ pid: pageId, eid: employee.id, eName: employee.name }),
+        body: JSON.stringify({ preSiteVisitPlanId: pageId, eid: employee.id, eName: employee.name }),
       });
       if (!response.ok) {
         toast.error('Failed to update project');
@@ -210,7 +187,7 @@ export default function UpdateProjectPage() {
         router.push('/'); // Redirect to login page if token doesn't exist
         return;
       }
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}projects/delete-assigned/${id}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}siteVisit/assignedToPreProject/${id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': token,
@@ -240,7 +217,7 @@ export default function UpdateProjectPage() {
         router.push('/'); // Redirect to login page if token doesn't exist
         return;
       }
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}projects/project/${pageId}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}siteVisit/pre-site-visit-plan/${pageId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -254,7 +231,7 @@ export default function UpdateProjectPage() {
         throw new Error('Failed to update project');
       }
       toast.success('Project updated successfully!');
-      router.push('/dashboard'); // Redirect to the projects page after successful update
+      router.push('/create-pre-project-plan'); // Redirect to the projects page after successful update
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
       toast.error(errorMessage);
@@ -272,26 +249,24 @@ export default function UpdateProjectPage() {
 
   return (
     <div className="container mx-auto max-w-6xl mb-16">
-      <h1 className="text-2xl text-black mb-6">Update Project</h1>
+      <h1 className="text-2xl text-black mb-6">Update Pre Project Plan</h1>
       <div className='bg-[#433878] p-8 rounded-xl'>
         <form className="grid grid-cols-1 gap-6" onSubmit={handleSubmit}>
           <p className='text-white'>Fill-up all Information and create a update project successfully!</p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className='text-white mb-2'>Project Type</label>
-              <select
-                id="projectType"
-                name="projectType"
-                value={formData.projectType}
+              <label className='text-white mb-2'>Project Name</label>
+              <input
+                type="text"
+                id="projectName"
+                name="projectName"
+                value={formData.projectName}
                 onChange={handleInputChange}
-                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-[#8c0327] focus:ring-[#8c0327] focus:ring-opacity-50 p-2 bg-white mt-2"
-              >
-                <option value="">Select a project type</option>
-                <option value="Low">Low</option>
-                <option value="Standard">Standard</option>
-                <option value="Premium">Premium</option>
-              </select>
+                disabled
+                placeholder="Project Name"
+                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-[#8c0327] focus:ring-[#8c0327] focus:ring-opacity-50 p-2 bg-gray-100 mt-2"
+              />
             </div>
 
             <div className="relative">
@@ -359,18 +334,7 @@ export default function UpdateProjectPage() {
               )}
             </div>
 
-            <div>
-              <label className='text-white mb-2'>Project Name</label>
-              <input
-                type="text"
-                id="projectName"
-                name="projectName"
-                value={formData.projectName}
-                onChange={handleInputChange}
-                placeholder="Project Name"
-                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-[#8c0327] focus:ring-[#8c0327] focus:ring-opacity-50 p-2 bg-gray-100 mt-2"
-              />
-            </div>
+
 
             <div>
               <label className='text-white mb-2'>Client Name</label>
@@ -386,43 +350,30 @@ export default function UpdateProjectPage() {
             </div>
 
             <div>
-              <label className='text-white mb-2'>Client Email</label>
+              <label className='text-white mb-2'>Client Phone</label>
               <input
-                type="email"
-                id="clientEmail"
-                name="clientEmail"
-                value={formData.clientEmail}
+                type="test"
+                id="clientNumber"
+                name="clientNumber"
+                value={formData.clientNumber}
                 onChange={handleInputChange}
-                placeholder="Client Email"
+                placeholder="Client Phone"
                 className="block w-full rounded-md border-gray-300 shadow-sm focus:border-[#8c0327] focus:ring-[#8c0327] focus:ring-opacity-50 p-2 bg-gray-100 mt-2"
               />
             </div>
-
             <div>
-              <label className='text-white mb-2'>Client Phone</label>
+              <label className='text-white mb-2'>Visit Date Time</label>
               <input
-                type="tel"
-                id="clientContact"
-                name="clientContact"
-                value={formData.clientContact}
+                type="datetime-local"
+                id="visitDateTime"
+                name="visitDateTime"
+                value={formData.visitDateTime}
                 onChange={handleInputChange}
                 placeholder="Client Phone"
                 className="block w-full rounded-md border-gray-300 shadow-sm focus:border-[#8c0327] focus:ring-[#8c0327] focus:ring-opacity-50 p-2 bg-gray-100 mt-2"
               />
             </div>
 
-            <div>
-              <label className='text-white mb-2'>Client Address</label>
-              <input
-                type="text"
-                id="clientAddress"
-                name="clientAddress"
-                value={formData.clientAddress}
-                onChange={handleInputChange}
-                placeholder="Client Address"
-                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-[#8c0327] focus:ring-[#8c0327] focus:ring-opacity-50 p-2 bg-gray-100 mt-2"
-              />
-            </div>
 
             <div>
               <label className='text-white mb-2'>Project Address</label>
@@ -430,125 +381,24 @@ export default function UpdateProjectPage() {
                 type="text"
                 id="projectAddress"
                 name="projectAddress"
-                value={formData.projectAddress}
+                value={formData.ProjectAddress}
                 onChange={handleInputChange}
                 placeholder="Project Address"
                 className="block w-full rounded-md border-gray-300 shadow-sm focus:border-[#8c0327] focus:ring-[#8c0327] focus:ring-opacity-50 p-2 bg-gray-100 mt-2"
               />
             </div>
 
-            <div>
-              <label className='text-white mb-2'>Total Area</label>
-              <input
-                type="text"
-                id="totalArea"
-                name="totalArea"
-                value={formData.totalArea}
-                onChange={handleInputChange}
-                placeholder="Total Area"
-                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-[#8c0327] focus:ring-[#8c0327] focus:ring-opacity-50 p-2 bg-gray-100 mt-2"
-              />
-            </div>
 
-            <div>
-              <label className='text-white mb-2'>Supervisor Name</label>
-              <input
-                type="text"
-                id="supervisorName"
-                name="supervisorName"
-                value={formData.supervisorName}
-                onChange={handleInputChange}
-                placeholder="Supervisor Name"
-                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-[#8c0327] focus:ring-[#8c0327] focus:ring-opacity-50 p-2 bg-gray-100 mt-2"
-              />
-            </div>
 
-            <div>
-              <label className='text-white mb-2'>Estimated Budget</label>
-              <input
-                type="number"
-                id="estimatedBudget"
-                name="estimatedBudget"
-                value={formData.estimatedBudget}
-                onChange={handleInputChange}
-                placeholder="Estimated Budget"
-                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-[#8c0327] focus:ring-[#8c0327] focus:ring-opacity-50 p-2 bg-gray-100 mt-2"
-              />
-            </div>
 
-            <div>
-              <label className='text-white mb-2'>Project Deadline</label>
-              <input
-                type="date"
-                id="projectDeadline"
-                name="projectDeadline"
-                value={formData.projectDeadline}
-                onChange={handleInputChange}
-                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-[#8c0327] focus:ring-[#8c0327] focus:ring-opacity-50 p-2 bg-gray-100 mt-2"
-              />
-            </div>
 
-            <div>
-              <label className='text-white mb-2'>Start Date</label>
-              <input
-                type="date"
-                id="startDate"
-                name="startDate"
-                value={formData.startDate}
-                onChange={handleInputChange}
-                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-[#8c0327] focus:ring-[#8c0327] focus:ring-opacity-50 p-2 bg-gray-100 mt-2"
-              />
-            </div>
 
-            <div>
-              <label className='text-white mb-2'>End Date</label>
-              <input
-                type="date"
-                id="endDate"
-                name="endDate"
-                value={formData.endDate}
-                onChange={handleInputChange}
-                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-[#8c0327] focus:ring-[#8c0327] focus:ring-opacity-50 p-2 bg-gray-100 mt-2"
-              />
-            </div>
 
-            <div>
-              <label className='text-white mb-2'>Creator Name</label>
-              <input
-                type="text"
-                id="creatorName"
-                name="creatorName"
-                value={formData.creatorName}
-                disabled
-                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-[#8c0327] focus:ring-[#8c0327] focus:ring-opacity-50 p-2 bg-gray-100 mt-2"
-              />
-            </div>
 
-            <div>
-              <label className='text-white mb-2'>Creator Email</label>
-              <input
-                type="text"
-                id="creatorEmail"
-                name="creatorEmail"
-                value={formData.creatorEmail}
-                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-[#8c0327] focus:ring-[#8c0327] focus:ring-opacity-50 p-2 bg-gray-100 mt-2"
-              />
-            </div>
+
           </div>
 
-          <div>
-            <label className='text-white mb-2'>Requirement Details</label>
-            <textarea
-              id="requirementDetails"
-              required
-              name="requirementDetails"
-              value={formData.requirementDetails}
-              onChange={handleInputChange}
-              rows={3}
-              placeholder="Requirement Details"
-              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-[#8c0327] focus:ring-[#8c0327] focus:ring-opacity-50 p-2 bg-gray-100 mt-2"
-            ></textarea>
-          </div>
+
 
           <div className="col-span-full mt-6 p-2">
             <button
