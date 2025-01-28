@@ -32,5 +32,15 @@ const DesignPlanValidator = z.object({
   remarks: z.string().optional(), // Optional field
 });
 
+const DesignPlanUpdateValidator = z.object({
+  id: z.number().optional(), // Optional because it's auto-incremented
+  assignee: z.string().optional(),
+  stepName: z.string().min(1, "Step name is required."),
+  stepType: z.string().min(1, "Step type is required."),
+  startDate: z.string().min(1, "Start date is required."),
+  endDate: z.string().min(1, "End date is required."),
+  remarks: z.string().optional(), // Optional field
+});
 
-export { ProjectSchema ,AssignedToSchema,DesignPlanValidator  };
+
+export {DesignPlanUpdateValidator, ProjectSchema ,AssignedToSchema,DesignPlanValidator  };

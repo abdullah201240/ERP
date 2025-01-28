@@ -22,7 +22,7 @@ interface ProjectDetails {
 }
 
 export default function ProjectPlanForm() {
-    const token = localStorage.getItem('accessToken');
+    const [token, setToken] = useState<string | null>(null); // State to store token
     const router = useRouter();
 
     const [projects, setProjects] = useState<Project[]>([]);
@@ -39,7 +39,17 @@ export default function ProjectPlanForm() {
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [reloadTable, setReloadTable] = useState(false);
-
+    useEffect(() => {
+        // Check if we are running on the client-side (to access localStorage
+            const storedToken = localStorage.getItem('accessToken');
+            if (!storedToken) {
+                console.log("no token")
+                router.push('/');
+            } else {
+                setToken(storedToken); // Set the token to state
+            }
+        
+    }, [router]);
     const fetchProjects = useCallback(
         async (pageNumber = 1, query = '') => {
             setLoading(true);
@@ -69,7 +79,7 @@ export default function ProjectPlanForm() {
                 setTotalPages(data.data.totalPages);
             } catch (error) {
                 console.error('Error fetching projects:', error);
-                toast.error('Failed to load projects');
+                
             } finally {
                 setLoading(false);
             }
@@ -77,7 +87,10 @@ export default function ProjectPlanForm() {
         [token] // Adding token as a dependency
     );
     useEffect(() => {
+        const token = localStorage.getItem('accessToken');
+
         if (!token) {
+            console.log("no token")
             router.push('/');
         } else {
             fetchProjects(1, searchQuery);

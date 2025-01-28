@@ -22,7 +22,7 @@ interface ProjectDetails {
 }
 
 export default function SupervisionForm() {
-    const token = localStorage.getItem('accessToken');
+    const [token, setToken] = useState<string | null>(null); // State to store token
     const router = useRouter();
 
     const [projects, setProjects] = useState<Project[]>([]);
@@ -39,6 +39,18 @@ export default function SupervisionForm() {
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [reloadTable, setReloadTable] = useState(false);
+
+    useEffect(() => {
+        // Check if we are running on the client-side (to access localStorage)
+        if (typeof window !== 'undefined') {
+            const storedToken = localStorage.getItem('accessToken');
+            if (!storedToken) {
+                router.push('/'); // Redirect if no token is found
+            } else {
+                setToken(storedToken); // Set the token to state
+            }
+        }
+    }, [router]);
 
     const fetchProjects = useCallback(
         async (pageNumber = 1, query = '') => {
@@ -69,7 +81,6 @@ export default function SupervisionForm() {
                 setTotalPages(data.data.totalPages);
             } catch (error) {
                 console.error('Error fetching projects:', error);
-                toast.error('Failed to load projects');
             } finally {
                 setLoading(false);
             }
@@ -77,6 +88,8 @@ export default function SupervisionForm() {
         [token] // Adding token as a dependency
     );
     useEffect(() => {
+        const token = localStorage.getItem('accessToken');
+
         if (!token) {
             router.push('/');
         } else {

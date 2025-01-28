@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import { asyncHandler, ApiError, ApiResponse } from "../utils/root";
 import { ErrorCodes } from '../utils/errors/ErrorCodes';
-import { AssignedToSchema, DesignPlanValidator, ProjectSchema } from "../validators/projectValidators";
+import { AssignedToSchema, DesignPlanUpdateValidator, DesignPlanValidator, ProjectSchema } from "../validators/projectValidators";
 import ERROR_MESSAGES from "../utils/errors/errorMassage";
 import Project from "../models/project";
 import Employee from "../models/employee";
@@ -478,3 +478,79 @@ export const createDesignPlan = asyncHandler(
         }
     );
     
+
+    // Delete Design Plan
+export const deleteDesignPlan = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction) => {
+        const { id } = req.params;
+
+        // Check if the design plan exists
+        const existingDesignPlan = await DesignPlan.findOne({ where: { id } });
+        if (!existingDesignPlan) {
+            return next(
+                new ApiError(
+                    ERROR_MESSAGES.DESIGN_PLAN_NOT_FOUND,
+                    404,
+                    ErrorCodes.NOT_FOUND?.code || "NOT_FOUND"
+                )
+            );
+        }
+
+        // Delete the design plan
+        await existingDesignPlan.destroy();
+
+        return res
+            .status(200)
+            .json(
+                ApiResponse.success(
+                    null,
+                    "Design Plan deleted successfully"
+                )
+            );
+    }
+);
+
+// Update Design Plan
+export const updateDesignPlan = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction) => {
+        const { id } = req.params;
+        
+
+        // Validate the request body
+        const result = DesignPlanUpdateValidator.safeParse(req.body);
+        if (!result.success) {
+            const errors = result.error.errors.map((error) => error.message).join(", ");
+            throw new ApiError(
+                "Invalid input data",
+                400,
+                ErrorCodes.BAD_REQUEST.code,
+                errors
+            );
+        }
+
+        // Check if the design plan exists
+        const existingDesignPlan = await DesignPlan.findOne({ where: { id } });
+        if (!existingDesignPlan) {
+            return next(
+                new ApiError(
+                    ERROR_MESSAGES.DESIGN_PLAN_NOT_FOUND,
+                    404,
+                    ErrorCodes.NOT_FOUND?.code || "NOT_FOUND"
+                )
+            );
+        }
+
+        // Update the design plan
+        const updatedData = req.body;
+        await existingDesignPlan.update(updatedData);
+
+        return res
+            .status(200)
+            .json(
+                ApiResponse.success(
+                    existingDesignPlan,
+                    "Design Plan updated successfully"
+                )
+            );
+    }
+);

@@ -22,7 +22,7 @@ interface Project {
 
 
 export default function CreateDesignPlanFrom() {
-    const token = localStorage.getItem('accessToken');
+    const [token, setToken] = useState<string | null>(null); // State to store token
     const router = useRouter();
 
     const [projects, setProjects] = useState<Project[]>([]);
@@ -48,10 +48,21 @@ export default function CreateDesignPlanFrom() {
     const [endDate, setEndDate] = useState('');
     const [remarks, setRemarks] = useState('');
     const [reloadTable, setReloadTable] = useState(false);
+    useEffect(() => {
+        // Check if we are running on the client-side (to access localStorage)
+        if (typeof window !== 'undefined') {
+            const storedToken = localStorage.getItem('accessToken');
+            if (!storedToken) {
+                router.push('/'); // Redirect if no token is found
+            } else {
+                setToken(storedToken); // Set the token to state
+            }
+        }
+    }, [router]);
 
     const renderTable = (projectId: number | null) => {
         switch (selected) {
-            case '2D': return <Layout2DTable projectId={projectId}  reload={reloadTable}/>;
+            case '2D': return <Layout2DTable projectId={projectId} reload={reloadTable} />;
             case '3D': return <Design3DTable projectId={projectId} reload={reloadTable} />;
             case 'Rendering': return <RenderingTable projectId={projectId} reload={reloadTable} />;
             case 'Animation': return <AnimationTable projectId={projectId} reload={reloadTable} />;
@@ -92,7 +103,6 @@ export default function CreateDesignPlanFrom() {
                 setTotalPages(data.data.totalPages);
             } catch (error) {
                 console.error('Error fetching projects:', error);
-                toast.error('Failed to load projects');
             } finally {
                 setLoading(false);
             }
@@ -127,7 +137,6 @@ export default function CreateDesignPlanFrom() {
                 setTotalPages1(data.data.totalPages);
             } catch (error) {
                 console.error('Error fetching projects:', error);
-                toast.error('Failed to load projects');
             } finally {
                 setLoading1(false);
             }
@@ -135,6 +144,8 @@ export default function CreateDesignPlanFrom() {
         [token] // Adding token as a dependency
     );
     useEffect(() => {
+        const token = localStorage.getItem('accessToken');
+
         if (!token) {
             router.push('/');
         } else {
@@ -189,6 +200,8 @@ export default function CreateDesignPlanFrom() {
 
 
     useEffect(() => {
+        const token = localStorage.getItem('accessToken');
+
         if (!token) {
             router.push('/');
         } else {
@@ -339,161 +352,161 @@ export default function CreateDesignPlanFrom() {
 
                 </div>
             )}
-           {isModalOpen && (
-    <div
-        id="default-modal"
-        tabIndex={isModalOpen ? 0 : -1}
-        aria-hidden={!isModalOpen}
-        className={`fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 ${isModalOpen ? "block" : "hidden"}`}
-    >
-        <div className="relative w-full max-w-lg p-4 mx-2 bg-white rounded-lg shadow-lg dark:bg-gray-800 mb-16">
-            {/* Modal Header */}
-            <div className="flex items-center justify-between border-b border-gray-200 dark:border-gray-600 pb-4">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Add Steps</h3>
-                <button
-                    type="button"
-                    onClick={() => setIsModalOpen(false)}
-                    className="text-gray-400 rounded-lg hover:text-gray-900 hover:bg-gray-200 p-2 dark:hover:bg-gray-700 dark:hover:text-white"
-                    aria-label="Close Modal"
+            {isModalOpen && (
+                <div
+                    id="default-modal"
+                    tabIndex={isModalOpen ? 0 : -1}
+                    aria-hidden={!isModalOpen}
+                    className={`fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 ${isModalOpen ? "block" : "hidden"}`}
                 >
-                    <svg
-                        className="w-5 h-5"
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        strokeWidth={2}
-                    >
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                </button>
-            </div>
+                    <div className="relative w-full max-w-lg p-4 mx-2 bg-white rounded-lg shadow-lg dark:bg-gray-800 mb-16">
+                        {/* Modal Header */}
+                        <div className="flex items-center justify-between border-b border-gray-200 dark:border-gray-600 pb-4">
+                            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Add Steps</h3>
+                            <button
+                                type="button"
+                                onClick={() => setIsModalOpen(false)}
+                                className="text-gray-400 rounded-lg hover:text-gray-900 hover:bg-gray-200 p-2 dark:hover:bg-gray-700 dark:hover:text-white"
+                                aria-label="Close Modal"
+                            >
+                                <svg
+                                    className="w-5 h-5"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                    strokeWidth={2}
+                                >
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
 
-            {/* Modal Content */}
-            <form className="space-y-6 mt-4" onSubmit={handleSubmit}>
-                {/* Step Type and Step Name */}
-                <div className="flex space-x-4">
-                    <div className="flex-1">
-                        <label htmlFor="step-type" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-                            Step Type
-                        </label>
-                        <select
-                            id="step-type"
-                            value={stepType}
-                            onChange={(e) => setStepType(e.target.value)}
-                            className="w-full p-2 text-sm bg-gray-50 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        >
-                            <option value="">Select Step Type</option>
-                            <option value="2D">2D Layout</option>
-                            <option value="3D">3D Design</option>
-                            <option value="Rendering">Rendering</option>
-                            <option value="Animation">Animation</option>
-                            <option value="Working">Working Drawing</option>
-                        </select>
+                        {/* Modal Content */}
+                        <form className="space-y-6 mt-4" onSubmit={handleSubmit}>
+                            {/* Step Type and Step Name */}
+                            <div className="flex space-x-4">
+                                <div className="flex-1">
+                                    <label htmlFor="step-type" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                                        Step Type
+                                    </label>
+                                    <select
+                                        id="step-type"
+                                        value={stepType}
+                                        onChange={(e) => setStepType(e.target.value)}
+                                        className="w-full p-2 text-sm bg-gray-50 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    >
+                                        <option value="">Select Step Type</option>
+                                        <option value="2D">2D Layout</option>
+                                        <option value="3D">3D Design</option>
+                                        <option value="Rendering">Rendering</option>
+                                        <option value="Animation">Animation</option>
+                                        <option value="Working">Working Drawing</option>
+                                    </select>
+                                </div>
+                                <div className="flex-1">
+                                    <label htmlFor="step-name" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                                        Step Name
+                                    </label>
+                                    <input
+                                        type="text"
+                                        id="step-name"
+                                        value={stepName}
+                                        onChange={(e) => setStepName(e.target.value)}
+                                        placeholder="Enter the step name"
+                                        className="w-full p-2 text-sm bg-gray-50 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        required
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Assignee */}
+                            <div>
+                                <label htmlFor="assignee" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                                    Assignee
+                                </label>
+                                <Select
+                                    options={employees.map((employee) => ({
+                                        value: employee.id,
+                                        label: employee.name,
+                                    }))}
+                                    onInputChange={handleInputChange1}
+                                    onMenuScrollToBottom={handleMenuScrollToBottom1}
+                                    onChange={handleEmployeeChange}
+                                    isClearable
+                                    className="mt-2"
+                                    placeholder="Search and select an employee"
+                                    isLoading={loading1}
+                                    required
+                                />
+                            </div>
+
+                            {/* Start Date and End Date */}
+                            <div className="flex space-x-4">
+                                <div className="flex-1">
+                                    <label htmlFor="start-date" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                                        Start Date
+                                    </label>
+                                    <input
+                                        type="date"
+                                        id="start-date"
+                                        value={startDate}
+                                        onChange={(e) => setStartDate(e.target.value)}
+                                        className="w-full p-2 text-sm bg-gray-50 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        required
+                                    />
+                                </div>
+                                <div className="flex-1">
+                                    <label htmlFor="end-date" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                                        End Date
+                                    </label>
+                                    <input
+                                        type="date"
+                                        id="end-date"
+                                        value={endDate}
+                                        onChange={(e) => setEndDate(e.target.value)}
+                                        className="w-full p-2 text-sm bg-gray-50 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        required
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Remarks */}
+                            <div>
+                                <label htmlFor="remarks" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                                    Remarks
+                                </label>
+                                <textarea
+                                    id="remarks"
+                                    rows={3}
+                                    value={remarks}
+                                    onChange={(e) => setRemarks(e.target.value)}
+                                    placeholder="Add any remarks..."
+                                    className="w-full p-2 text-sm bg-gray-50 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                ></textarea>
+                            </div>
+
+                            {/* Buttons */}
+                            <div className="flex justify-end space-x-4 border-t border-gray-200 dark:border-gray-600 pt-4">
+                                <Button
+                                    onClick={() => setIsModalOpen(false)}
+                                    data-modal-hide="default-modal"
+                                    type="button"
+                                    className="py-2.5 px-5 ms-3 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700"
+                                >
+                                    Decline
+                                </Button>
+                                <button
+                                    type="submit"
+                                    className="text-white bg-[#433878] hover:bg-[#433878] focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-[#433878] dark:hover:bg-[#433878] dark:focus:ring-[#433878]"
+                                >
+                                    Add
+                                </button>
+                            </div>
+                        </form>
                     </div>
-                    <div className="flex-1">
-                        <label htmlFor="step-name" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-                            Step Name
-                        </label>
-                        <input
-                            type="text"
-                            id="step-name"
-                            value={stepName}
-                            onChange={(e) => setStepName(e.target.value)}
-                            placeholder="Enter the step name"
-                            className="w-full p-2 text-sm bg-gray-50 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            required
-                        />
-                    </div>
                 </div>
-
-                {/* Assignee */}
-                <div>
-                    <label htmlFor="assignee" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-                        Assignee
-                    </label>
-                    <Select
-                        options={employees.map((employee) => ({
-                            value: employee.id,
-                            label: employee.name,
-                        }))}
-                        onInputChange={handleInputChange1}
-                        onMenuScrollToBottom={handleMenuScrollToBottom1}
-                        onChange={handleEmployeeChange}
-                        isClearable
-                        className="mt-2"
-                        placeholder="Search and select an employee"
-                        isLoading={loading1}
-                        required
-                    />
-                </div>
-
-                {/* Start Date and End Date */}
-                <div className="flex space-x-4">
-                    <div className="flex-1">
-                        <label htmlFor="start-date" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-                            Start Date
-                        </label>
-                        <input
-                            type="date"
-                            id="start-date"
-                            value={startDate}
-                            onChange={(e) => setStartDate(e.target.value)}
-                            className="w-full p-2 text-sm bg-gray-50 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            required
-                        />
-                    </div>
-                    <div className="flex-1">
-                        <label htmlFor="end-date" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-                            End Date
-                        </label>
-                        <input
-                            type="date"
-                            id="end-date"
-                            value={endDate}
-                            onChange={(e) => setEndDate(e.target.value)}
-                            className="w-full p-2 text-sm bg-gray-50 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            required
-                        />
-                    </div>
-                </div>
-
-                {/* Remarks */}
-                <div>
-                    <label htmlFor="remarks" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-                        Remarks
-                    </label>
-                    <textarea
-                        id="remarks"
-                        rows={3}
-                        value={remarks}
-                        onChange={(e) => setRemarks(e.target.value)}
-                        placeholder="Add any remarks..."
-                        className="w-full p-2 text-sm bg-gray-50 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    ></textarea>
-                </div>
-
-                {/* Buttons */}
-                <div className="flex justify-end space-x-4 border-t border-gray-200 dark:border-gray-600 pt-4">
-                    <Button
-                        onClick={() => setIsModalOpen(false)}
-                        data-modal-hide="default-modal"
-                        type="button"
-                        className="py-2.5 px-5 ms-3 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700"
-                    >
-                        Decline
-                    </Button>
-                    <button
-                        type="submit"
-                        className="text-white bg-[#433878] hover:bg-[#433878] focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-[#433878] dark:hover:bg-[#433878] dark:focus:ring-[#433878]"
-                    >
-                        Add
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-)}
+            )}
 
         </div>
     )

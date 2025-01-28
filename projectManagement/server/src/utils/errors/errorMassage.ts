@@ -4,6 +4,7 @@ const ERROR_MESSAGES = {
     INTERNAL_ERROR: "An error occurred while creating the employee.",
     EMPLOYEE_NOT_FOUND: "Employee not found.",
     PROJECT_NOT_FOUND: "Project not found.",
+    DESIGN_PLAN_NOT_FOUND: "DESIGN not found."
 
 };
 
