@@ -437,21 +437,44 @@ export const createDesignPlan = asyncHandler(
         async (req: Request, res: Response, next: NextFunction) => {
             const { projectId, stepType } = req.query as { projectId: string; stepType: string };
     
+            // Check if the project exists
             const existingProject = await Project.findOne({ where: { id: projectId } });
             if (!existingProject) {
-                return next(new ApiError(
-                    ERROR_MESSAGES.PROJECT_NOT_FOUND,
-                    404,
-                    ErrorCodes.NOT_FOUND?.code || "NOT_FOUND"
-                ));
+                return next(
+                    new ApiError(
+                        ERROR_MESSAGES.PROJECT_NOT_FOUND,
+                        404,
+                        ErrorCodes.NOT_FOUND?.code || "NOT_FOUND"
+                    )
+                );
             }
     
             const designPlans = await DesignPlan.findAll({
                 where: { stepType, projectId },
+                include: [
+                    {
+                        model: Project,
+                        as: 'project', // Use the alias specified in the association
+                        attributes: ['projectName'], // Include only the project name
+                    },
+                    {
+                        model: Employee,
+                        as: 'employee', // Use the alias specified in the association
+                        attributes: ['name'], // Include only the employee name
+                    },
+                ],
             });
+            
     
+            // Respond with the fetched design plans
             return res
                 .status(200)
-                .json(ApiResponse.success(designPlans, `${stepType} Design Plans fetched successfully`));
+                .json(
+                    ApiResponse.success(
+                        designPlans,
+                        `${stepType} Design Plans fetched successfully`
+                    )
+                );
         }
     );
+    

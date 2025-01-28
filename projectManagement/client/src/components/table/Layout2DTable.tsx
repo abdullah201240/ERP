@@ -6,6 +6,7 @@ import {
     Table,
     TableBody,
     TableCell,
+    TableFooter,
     TableHead,
     TableHeader,
     TableRow,
@@ -27,6 +28,11 @@ import { useRouter } from 'next/navigation';
 import { RiDeleteBin6Line } from "react-icons/ri";
 import Link from 'next/link';
 
+// Define the types for Employee and Project
+interface Employee {
+    name: string;
+    // Add other properties if needed
+}
 interface PreProjectSiteVisitPlan {
     id: number;
     projectId: string;
@@ -36,6 +42,10 @@ interface PreProjectSiteVisitPlan {
     startDate: string;
     endDate: string;
     remarks: string;
+    project: [projectName: string];
+    employee: Employee
+
+
 }
 
 interface Layout2DTableProps {
@@ -43,7 +53,7 @@ interface Layout2DTableProps {
     reload: boolean;
 }
 
-const Layout2DTable: React.FC<Layout2DTableProps> = ({ projectId , reload }) => {
+const Layout2DTable: React.FC<Layout2DTableProps> = ({ projectId, reload }) => {
     const router = useRouter();
     const [projects, setProjects] = useState<PreProjectSiteVisitPlan[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
@@ -84,7 +94,7 @@ const Layout2DTable: React.FC<Layout2DTableProps> = ({ projectId , reload }) => 
 
     useEffect(() => {
         fetchProjects();
-    }, [fetchProjects,reload]);
+    }, [fetchProjects, reload]);
 
     const handleDelete = async () => {
         if (deleteId === null) return; // No project to delete
@@ -120,6 +130,7 @@ const Layout2DTable: React.FC<Layout2DTableProps> = ({ projectId , reload }) => 
         return <div>Error: {error}</div>;
     }
 
+
     return (
         <div>
             <Table>
@@ -148,7 +159,7 @@ const Layout2DTable: React.FC<Layout2DTableProps> = ({ projectId , reload }) => 
                                 <TableCell className='border border-[#e5e7eb]'>{project.stepName}</TableCell>
                                 <TableCell className='border border-[#e5e7eb]'>{project.startDate}</TableCell>
                                 <TableCell className='border border-[#e5e7eb]'>{project.endDate}</TableCell>
-                                <TableCell className='border border-[#e5e7eb]'>{project.assignee}</TableCell> {/* Assignee (string) */}
+                                <TableCell className='border border-[#e5e7eb]'>{project.employee.name}</TableCell> {/* Assignee (string) */}
                                 <TableCell className='border border-[#e5e7eb]'>{project.remarks}</TableCell>
                                 <TableCell className='border border-[#e5e7eb] text-3xl flex items-center justify-center'>
                                     <Link href={`/editPreProjectPlan/${project.id}`}>
@@ -179,7 +190,45 @@ const Layout2DTable: React.FC<Layout2DTableProps> = ({ projectId , reload }) => 
                         ))
                     )}
                 </TableBody>
+
             </Table>
+            <div className='mt-4'>
+
+
+                <TableFooter >
+                    <TableRow>
+                        <TableCell colSpan={1} className=' font-bold bg-[#433878] text-white'>
+                            Total (Days):
+                        </TableCell>
+                        <TableCell className='font-bold bg-white'>
+                            {projects.reduce((total, project) => {
+                                const totalDays =
+                                    (new Date(project.endDate).getTime() - new Date(project.startDate).getTime()) /
+                                    (1000 * 60 * 60 * 24);
+                                return total + totalDays;
+                            }, 0)}{' '}
+                            days
+                        </TableCell>
+                    </TableRow>
+                    <TableRow className='mt-4'>
+
+                        <TableCell colSpan={1} className=' font-bold bg-[#433878] text-white'>
+                            Delivery Date:
+                        </TableCell>
+                        <TableCell className='font-bold bg-white'>
+                            {projects.length > 0
+                                ? new Date(
+                                    Math.max(...projects.map((project) => new Date(project.endDate).getTime()))
+                                )
+                                    .toISOString()
+                                    .split('T')[0]
+                                : 'N/A'}
+                        </TableCell>
+                    </TableRow>
+                </TableFooter>
+            </div>
+
+
         </div>
     );
 }

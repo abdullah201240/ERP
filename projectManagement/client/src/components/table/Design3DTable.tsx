@@ -4,6 +4,7 @@ import {
     Table,
     TableBody,
     TableCell,
+    TableFooter,
     TableHead,
     TableHeader,
     TableRow,
@@ -179,6 +180,41 @@ const Design3DTable: React.FC<Design3DTableProps> = ({ projectId ,reload}) => {
                     )}
                 </TableBody>
             </Table>
+            <div className='mt-4'>
+
+
+                <TableFooter >
+                    <TableRow>
+                        <TableCell colSpan={1} className=' font-bold bg-[#433878] text-white'>
+                            Total (Days):
+                        </TableCell>
+                        <TableCell className='font-bold bg-white'>
+                            {projects.reduce((total, project) => {
+                                const totalDays =
+                                    (new Date(project.endDate).getTime() - new Date(project.startDate).getTime()) /
+                                    (1000 * 60 * 60 * 24);
+                                return total + totalDays;
+                            }, 0)}{' '}
+                            days
+                        </TableCell>
+                    </TableRow>
+                    <TableRow className='mt-4'>
+
+                        <TableCell colSpan={1} className=' font-bold bg-[#433878] text-white'>
+                            Delivery Date:
+                        </TableCell>
+                        <TableCell className='font-bold bg-white'>
+                            {projects.length > 0
+                                ? new Date(
+                                    Math.max(...projects.map((project) => new Date(project.endDate).getTime()))
+                                )
+                                    .toISOString()
+                                    .split('T')[0]
+                                : 'N/A'}
+                        </TableCell>
+                    </TableRow>
+                </TableFooter>
+            </div>
         </div>
     );
 }
