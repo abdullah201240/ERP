@@ -21,4 +21,16 @@ const AssignedToSchema = z.object({
   eName: z.string().min(1, 'eName Area is required'),
 });
 
-export { ProjectSchema ,AssignedToSchema  };
+const DesignPlanValidator = z.object({
+  id: z.number().optional(), // Optional because it's auto-incremented
+  projectId: z.number().min(1, "Project ID is required."),
+  assignee: z.number().min(1, "Assignee is required."),
+  stepName: z.string().min(1, "Step name is required."),
+  stepType: z.string().min(1, "Step type is required."),
+  startDate: z.string().min(1, "Start date is required."),
+  endDate: z.string().min(1, "End date is required."),
+  remarks: z.string().optional(), // Optional field
+});
+
+
+export { ProjectSchema ,AssignedToSchema,DesignPlanValidator  };

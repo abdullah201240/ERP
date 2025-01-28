@@ -3,6 +3,8 @@ const ERROR_MESSAGES = {
     EMPLOYEE_EXISTS: "An employee with this email already exists.",
     INTERNAL_ERROR: "An error occurred while creating the employee.",
     EMPLOYEE_NOT_FOUND: "Employee not found.",
+    PROJECT_NOT_FOUND: "Project not found.",
+
 };
 
 export default ERROR_MESSAGES;

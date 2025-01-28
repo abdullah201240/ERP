@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import { asyncHandler, ApiError, ApiResponse } from "../utils/root";
 import { ErrorCodes } from '../utils/errors/ErrorCodes';
-import { AssignedToSchema, ProjectSchema } from "../validators/projectValidators";
+import { AssignedToSchema, DesignPlanValidator, ProjectSchema } from "../validators/projectValidators";
 import ERROR_MESSAGES from "../utils/errors/errorMassage";
 import Project from "../models/project";
 import Employee from "../models/employee";
@@ -9,6 +9,7 @@ import Employee from "../models/employee";
 import '../models/association';
 import Assigned from "../models/assigned";
 import { Op } from "sequelize";
+import DesignPlan from "../models/designPlan";
 
 
 // Create Project Controller
@@ -367,3 +368,90 @@ export const getProjectsPaginated = asyncHandler(
         });
     }
 );
+
+
+
+
+
+// Create Project Controller
+export const createDesignPlan = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction) => {
+        const result = DesignPlanValidator.safeParse(req.body);
+
+        if (!result.success) {
+            const errors = result.error.errors.map((error) => error.message).join(", ");
+            throw new ApiError(
+                "All fields are required",
+                400,
+                ErrorCodes.BAD_REQUEST.code,
+                errors
+            );
+        }
+
+        const { projectId, assignee, stepName, stepType, startDate, endDate, remarks } = req.body;
+
+
+        // Check if employee or not
+        const existingEmployee = await Employee.findOne({ where: { id: assignee } });
+        if (!existingEmployee) {
+            throw new ApiError(
+                ERROR_MESSAGES.EMPLOYEE_NOT_FOUND,
+                404,
+                ErrorCodes.NOT_FOUND?.code || "NOT_FOUND"
+            );
+        }
+        // Check if project or not
+        const existingProject = await Project.findOne({ where: { id: projectId } });
+        if (!existingProject) {
+            throw new ApiError(
+                ERROR_MESSAGES.PROJECT_NOT_FOUND,
+                404,
+                ErrorCodes.NOT_FOUND?.code || "NOT_FOUND"
+            );
+        }
+
+        // Create the new project in the database
+        const newDesignPlan = await DesignPlan.create({
+            projectId,
+            assignee,
+            stepName,
+            stepType,
+            startDate,
+            endDate,
+            remarks,
+        });
+
+        if (!newDesignPlan) {
+            throw new ApiError(
+                "Internal error occurred",
+                500,
+                ErrorCodes.INTERNAL_SERVER_ERROR.code
+            );
+        }
+        return res.status(201).json(
+            ApiResponse.success(newDesignPlan, "DesignPlan created successfully")
+        );
+    });
+
+    export const getDesignPlans = asyncHandler(
+        async (req: Request, res: Response, next: NextFunction) => {
+            const { projectId, stepType } = req.query as { projectId: string; stepType: string };
+    
+            const existingProject = await Project.findOne({ where: { id: projectId } });
+            if (!existingProject) {
+                return next(new ApiError(
+                    ERROR_MESSAGES.PROJECT_NOT_FOUND,
+                    404,
+                    ErrorCodes.NOT_FOUND?.code || "NOT_FOUND"
+                ));
+            }
+    
+            const designPlans = await DesignPlan.findAll({
+                where: { stepType, projectId },
+            });
+    
+            return res
+                .status(200)
+                .json(ApiResponse.success(designPlans, `${stepType} Design Plans fetched successfully`));
+        }
+    );
