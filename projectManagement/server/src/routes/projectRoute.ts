@@ -1,6 +1,6 @@
 import express from "express";
 import { verifyJWT } from "../middleware/auth"; 
-import { createAssignedTo, createDesignPlan, createProject, deleteAssignedTo, deleteDesignPlan, deleteProject, getDesignPlans, getProject, getProjectAll, getProjectById, getProjectsPaginated, updateCompletionPercentage, updateDesignPlan, updateProject } from "../controllers/projectController";
+import { createAssignedTo, createDegineBOQ, createDesignPlan, createProject, createService, deleteAssignedTo, deleteDegineBOQById, deleteDesignPlan, deleteProject, deleteService, getDesignPlans, getProject, getProjectAll, getProjectById, getProjectsPaginated, updateCompletionPercentage, updateDegineBOQById, updateDesignPlan, updateProject, updateService, viewAllDegineBOQs, viewAllServices, viewDegineBOQById, viewServiceById } from "../controllers/projectController";
 
 const router = express.Router();
 
@@ -32,6 +32,35 @@ router.put("/designPlan/:id",verifyJWT, updateDesignPlan);
 
 router.put('/designplans/:id',verifyJWT, updateCompletionPercentage);
 
+// Route to create a new service
+router.post('/services',verifyJWT, createService);
 
+// Route to get all services
+router.get('/services',verifyJWT, viewAllServices);
+
+// Route to get a service by ID
+router.get('/services/:id',verifyJWT, viewServiceById);
+
+// Route to update a service by ID
+router.put('/services/:id', verifyJWT,updateService);
+
+// Route to delete a service by ID
+router.delete('/services/:id', verifyJWT,deleteService);
+
+
+// Route to create a new DegineBOQ
+router.post('/degineBOQ',verifyJWT, createDegineBOQ);
+
+// Route to get all DegineBOQs
+router.get('/degineBOQ', viewAllDegineBOQs);
+
+// Route to get a single DegineBOQ by ID
+router.get('/degineBOQ/:id',verifyJWT, viewDegineBOQById);
+
+// Route to update a DegineBOQ by ID
+router.put('/degineBOQ/:id', verifyJWT,updateDegineBOQById);
+
+// Route to delete a DegineBOQ by ID
+router.delete('/degineBOQ/:id',verifyJWT, deleteDegineBOQById);
 
 export default router;

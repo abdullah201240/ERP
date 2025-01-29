@@ -33,6 +33,8 @@ export const SIDENAV_ITEMS: SideNavItem[] = [
     subMenuItems: [
       { title: 'Create Design Plan', path: '/create-design-plan' },
       { title: 'Design Work & Update', path: '/design-work-update' },
+      { title: 'Service Package', path: '/service-package' },
+      { title: 'BOQ', path: '/design-boq' },
       { title: 'Generate BOQ & Quotation', path: '/generate-boq-quotation' },
       { title: 'BOQ & Quotation List', path: '/boq-quotation-list' },
       { title: 'Generate Invoice', path: '/generate-invoice' },
@@ -40,7 +42,7 @@ export const SIDENAV_ITEMS: SideNavItem[] = [
       { title: 'Upload Working Drawing', path: '/upload-working-drawing' },
       { title: 'Review Working Drawing BOQ', path: '/review-working-drawing-boq' },
       { title: 'Work Category', path: '/work-category' },
-      { title: 'Service Package', path: '/service-package' },
+     
 
     ],
   },

@@ -65,7 +65,7 @@ const Header = () => {
       <div className="flex h-[70px] items-center justify-between px-4">
         <div className="flex items-center space-x-8">
           <Link
-            href="/"
+            href="/dashboard"
             className="flex flex-row space-x-3 items-center justify-center md:hidden"
           >
             <Image

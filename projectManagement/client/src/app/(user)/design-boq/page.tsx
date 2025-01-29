@@ -2,14 +2,14 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import DesignGenerateQutationFrom from '@/components/DesignGenerateQutationFrom';
-export default function Page() {
+
+
+export default function Home() {
   const router = useRouter();
+  
 
   useEffect(() => {
     const checkTokenAndFetchProfile = async () => {
-      // Ensure we're in the browser before accessing localStorage
-      if (typeof window === 'undefined') return;
-
       // Check if the access token exists in localStorage
       const token = localStorage.getItem('accessToken');
 
@@ -22,24 +22,19 @@ export default function Page() {
       try {
         const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}employee/auth/profile`, {
           headers: {
-            'Authorization': `Bearer ${token}`,
-          },
+            'Authorization': token
+          }
         });
 
         if (!response.ok) {
-          // You can optionally handle different response statuses here
           router.push('/'); // Adjust the path to your login page
-          return;
+          return; // Exit the function early
         }
 
-        // If successful, handle the response data here if needed
-        const data = await response.json();
-        console.log(data); // For debugging or processing the profile data
-
+        // Handle the response data here if needed
       } catch (error) {
-        console.error("Error fetching profile:", error);
-        // Optionally show a user-friendly error message
-        router.push('/'); // Redirect to login if there's an error
+        console.error(error);
+        // Handle error (e.g., show a notification)
       }
     };
 
@@ -47,9 +42,16 @@ export default function Page() {
   }, [router]);
 
   return (
-    <div className="bg-[#F1F2F3] pl-0 mt-2">
-      <h1 className="text-2xl text-black">Generate Quotation</h1>
-      <DesignGenerateQutationFrom />
+    <div>
+      <div className="bg-[#F1F2F3] pl-0 mt-2">
+        <h1 className="text-2xl text-black">BOQ</h1>
+
+        <div className="bg-white mt-8  rounded-xl w-[98vw] md:w-full">
+          <DesignGenerateQutationFrom/>
+
+
+        </div>
+      </div>
     </div>
   );
 }

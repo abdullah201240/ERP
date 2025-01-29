@@ -10,6 +10,8 @@ import '../models/association';
 import Assigned from "../models/assigned";
 import { Op } from "sequelize";
 import DesignPlan from "../models/designPlan";
+import Service from "../models/service";
+import DegineBOQ from "../models/degineBOQ";
 
 
 // Create Project Controller
@@ -597,3 +599,207 @@ export const updateCompletionPercentage = asyncHandler(
             );
     }
 );
+
+
+// Create a new service
+export const createService = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction) => {
+        const { name, description } = req.body;
+
+        if (!name || !description) {
+            throw new ApiError('Name and description are required', 400, ErrorCodes.BAD_REQUEST.code);
+        }
+
+        const service = await Service.create({ name, description });
+
+        return res.status(201).json(
+            ApiResponse.success(service, 'Service created successfully')
+        );
+    }
+);
+
+// Get all services
+export const viewAllServices = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction) => {
+        const services = await Service.findAll();
+
+        return res.status(200).json(
+            ApiResponse.success(services, 'Services retrieved successfully')
+        );
+    }
+);
+
+// Get a service by ID
+export const viewServiceById = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction) => {
+        const { id } = req.params;
+
+        const service = await Service.findByPk(id);
+
+        if (!service) {
+            throw new ApiError(
+                `Service with ID ${id} not found`,
+                404,
+                ErrorCodes.NOT_FOUND.code
+            );
+        }
+
+        return res.status(200).json(
+            ApiResponse.success(service, 'Service retrieved successfully')
+        );
+    }
+);
+
+// Update a service by ID
+export const updateService = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction) => {
+        const { id } = req.params;
+        const { name, description } = req.body;
+
+        const service = await Service.findByPk(id);
+
+        if (!service) {
+            throw new ApiError(
+                `Service with ID ${id} not found`,
+                404,
+                ErrorCodes.NOT_FOUND.code
+            );
+        }
+
+        // Update fields
+        service.name = name || service.name;
+        service.description = description || service.description;
+
+        await service.save();
+
+        return res.status(200).json(
+            ApiResponse.success(service, 'Service updated successfully')
+        );
+    }
+);
+
+// Delete a service by ID
+export const deleteService = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction) => {
+        const { id } = req.params;
+
+        const service = await Service.findByPk(id);
+
+        if (!service) {
+            throw new ApiError(
+                `Service with ID ${id} not found`,
+                404,
+                ErrorCodes.NOT_FOUND.code
+            );
+        }
+
+        await service.destroy();
+
+        return res.status(200).json(
+            ApiResponse.success(null, 'Service deleted successfully')
+        );
+    }
+);
+
+
+export const createDegineBOQ = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction) => {
+        const {projectId, projectName, clientName, clientContact, projectAddress, totalArea, inputPerSftFees, totalFees, termsCondition,signName, designation } = req.body;
+
+        if (!projectId || !projectName || !clientName || !clientContact || !projectAddress || !totalArea || !inputPerSftFees || !totalFees || !termsCondition || !designation || !signName) {
+            throw new ApiError('All fields are required', 400, 'BAD_REQUEST');
+        }
+
+        const degineBOQ = await DegineBOQ.create({
+            projectId,
+            projectName,
+            clientName,
+            clientContact,
+            projectAddress,
+            totalArea,
+            inputPerSftFees,
+            totalFees,
+            termsCondition,
+            signName,
+            designation
+        });
+
+        return res.status(201).json(
+            ApiResponse.success(degineBOQ, 'DegineBOQ created successfully')
+        );
+    }
+);
+
+export const viewAllDegineBOQs = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction) => {
+        const degineBOQs = await DegineBOQ.findAll();
+
+        return res.status(200).json(
+            ApiResponse.success(degineBOQs, 'DegineBOQs retrieved successfully')
+        );
+    }
+);
+
+export const viewDegineBOQById = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction) => {
+        const { id } = req.params;
+
+        const degineBOQ = await DegineBOQ.findByPk(id);
+
+        if (!degineBOQ) {
+            throw new ApiError('DegineBOQ not found', 404, 'NOT_FOUND');
+        }
+
+        return res.status(200).json(
+            ApiResponse.success(degineBOQ, 'DegineBOQ retrieved successfully')
+        );
+    }
+);
+export const updateDegineBOQById = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction) => {
+        const { id } = req.params;
+        const { signName, designation,  inputPerSftFees, totalFees, termsCondition } = req.body;
+
+        const degineBOQ = await DegineBOQ.findByPk(id);
+
+        if (!degineBOQ) {
+            throw new ApiError('DegineBOQ not found', 404, 'NOT_FOUND');
+        }
+
+        // Update fields
+        degineBOQ.inputPerSftFees = inputPerSftFees || degineBOQ.inputPerSftFees;
+        degineBOQ.totalFees = totalFees || degineBOQ.totalFees;
+        degineBOQ.termsCondition = termsCondition || degineBOQ.termsCondition;
+        degineBOQ.signName = signName || degineBOQ.signName;
+
+        degineBOQ.designation = designation || degineBOQ.designation;
+
+        
+        
+
+        await degineBOQ.save();
+
+        return res.status(200).json(
+            ApiResponse.success(degineBOQ, 'DegineBOQ updated successfully')
+        );
+    }
+);
+export const deleteDegineBOQById = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction) => {
+        const { id } = req.params;
+
+        const degineBOQ = await DegineBOQ.findByPk(id);
+
+        if (!degineBOQ) {
+            throw new ApiError('DegineBOQ not found', 404, 'NOT_FOUND');
+        }
+
+        await degineBOQ.destroy();
+
+        return res.status(200).json(
+            ApiResponse.success(null, 'DegineBOQ deleted successfully')
+        );
+    }
+);
+
+
