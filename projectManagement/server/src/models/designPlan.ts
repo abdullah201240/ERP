@@ -1,22 +1,22 @@
-import { DataTypes, Model, Optional } from 'sequelize';
-import db from '../config/sequelize'; // Adjust path as needed
+// Updated DesignPlan Model
 
-// Define the attributes for the DesignPlan model
+import { DataTypes, Model, Optional } from 'sequelize';
+import db from '../config/sequelize';
+
 interface DesignPlanAttributes {
   id: number;
   projectId: string;
   assignee: string;
   stepName: string;
   stepType: string;
-  startDate : string;
+  startDate: string;
   endDate: string;
   remarks?: string;
- 
+  completed?: string;  // Change this to a string
 }
 
 interface DesignPlanCreationAttributes extends Optional<DesignPlanAttributes, 'id'> {}
 
-// Define the DesignPlan model class
 class DesignPlan extends Model<DesignPlanAttributes, DesignPlanCreationAttributes> implements DesignPlanAttributes {
   public id!: number;
   public projectId!: string;
@@ -26,7 +26,7 @@ class DesignPlan extends Model<DesignPlanAttributes, DesignPlanCreationAttribute
   public startDate!: string;
   public endDate!: string;
   public remarks?: string;
-  
+  public completed?: string;  // Change this to a string
 }
 
 DesignPlan.init(
@@ -65,15 +65,17 @@ DesignPlan.init(
       type: DataTypes.TEXT,
       allowNull: true,
     },
-    
-    
-
+    completed: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      defaultValue: '0',  // Default value is the string '0'
+    },
   },
   {
-    sequelize: db, // Use the passed `sequelizeInstance`
+    sequelize: db,
     modelName: 'DesignPlan',
-    tableName: 'designPlans', // Specify table name if different from model name
-    timestamps: true, // Enable `createdAt` and `updatedAt`
+    tableName: 'designPlans',
+    timestamps: true,
   }
 );
 

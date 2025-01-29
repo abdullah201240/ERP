@@ -1,6 +1,6 @@
 import express from "express";
 import { verifyJWT } from "../middleware/auth"; 
-import { createAssignedTo, createDesignPlan, createProject, deleteAssignedTo, deleteDesignPlan, deleteProject, getDesignPlans, getProject, getProjectAll, getProjectById, getProjectsPaginated, updateDesignPlan, updateProject } from "../controllers/projectController";
+import { createAssignedTo, createDesignPlan, createProject, deleteAssignedTo, deleteDesignPlan, deleteProject, getDesignPlans, getProject, getProjectAll, getProjectById, getProjectsPaginated, updateCompletionPercentage, updateDesignPlan, updateProject } from "../controllers/projectController";
 
 const router = express.Router();
 
@@ -23,12 +23,14 @@ router.delete('/delete-assigned/:id', verifyJWT, deleteAssignedTo);
 router.post('/create-assignedTo', verifyJWT, createAssignedTo);
 
 router.post('/designPlan', verifyJWT, createDesignPlan);
-router.get('/designPlan', getDesignPlans);
+router.get('/designPlan',verifyJWT, getDesignPlans);
 // Delete Design Plan
-router.delete("/designPlan/:id", deleteDesignPlan);
+router.delete("/designPlan/:id",verifyJWT, deleteDesignPlan);
 
 // Update Design Plan
-router.put("/designPlan/:id", updateDesignPlan);
+router.put("/designPlan/:id",verifyJWT, updateDesignPlan);
+
+router.put('/designplans/:id',verifyJWT, updateCompletionPercentage);
 
 
 

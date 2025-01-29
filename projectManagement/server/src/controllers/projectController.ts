@@ -554,3 +554,46 @@ export const updateDesignPlan = asyncHandler(
             );
     }
 );
+
+// Update Completion Percentage API
+export const updateCompletionPercentage = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction) => {
+        const { id } = req.params;
+        const { completed } = req.body;
+
+        // Validate the "completed" percentage
+        if (typeof completed !== 'string' || !/^\d+$/.test(completed) || parseInt(completed) < 0 || parseInt(completed) > 100) {
+            return next(
+                new ApiError(
+                    "Invalid percentage value. It should be between 0 and 100.",
+                    400,
+                    ErrorCodes.BAD_REQUEST.code
+                )
+            );
+        }
+
+        // Check if the design plan exists
+        const existingDesignPlan = await DesignPlan.findOne({ where: { id } });
+        if (!existingDesignPlan) {
+            return next(
+                new ApiError(
+                    ERROR_MESSAGES.DESIGN_PLAN_NOT_FOUND,
+                    404,
+                    ErrorCodes.NOT_FOUND?.code || "NOT_FOUND"
+                )
+            );
+        }
+
+        // Update the completion percentage
+        await existingDesignPlan.update({ completed });
+
+        return res
+            .status(200)
+            .json(
+                ApiResponse.success(
+                    existingDesignPlan,
+                    "Design Plan completion percentage updated successfully"
+                )
+            );
+    }
+);
