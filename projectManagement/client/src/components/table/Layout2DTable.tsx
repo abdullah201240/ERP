@@ -150,7 +150,7 @@ const Layout2DTable: React.FC<Layout2DTableProps> = ({ projectId, reload }) => {
     useEffect(() => {
         fetchProjects();
     }, [fetchProjects, reload]);
-  
+
 
 
     const handleDelete = async () => {
@@ -207,7 +207,7 @@ const Layout2DTable: React.FC<Layout2DTableProps> = ({ projectId, reload }) => {
         }
     };
 
-    
+
 
     const handleEdit = (project: PreProjectSiteVisitPlan) => {
         setSelectedProjectId(project.id);
@@ -334,13 +334,24 @@ const Layout2DTable: React.FC<Layout2DTableProps> = ({ projectId, reload }) => {
                         </TableCell>
                         <TableCell className='font-bold bg-white'>
                             {projects.reduce((total, project) => {
-                                const totalDays =
-                                    (new Date(project.endDate).getTime() - new Date(project.startDate).getTime()) /
-                                    (1000 * 60 * 60 * 24);
-                                return total + totalDays;
+                                const startDate = new Date(project.startDate);
+                                const endDate = new Date(project.endDate);
+
+                                let workingDays = 0;
+
+                                // Iterate through each day in the date range
+                                for (let currentDate = startDate; currentDate <= endDate; currentDate.setDate(currentDate.getDate() + 1)) {
+                                    // If the day is not Friday (getDay() returns 5 for Friday)
+                                    if (currentDate.getDay() !== 5) {
+                                        workingDays++;
+                                    }
+                                }
+
+                                return total + workingDays;
                             }, 0)}{' '}
                             days
                         </TableCell>
+
                     </TableRow>
                     <TableRow className='mt-4'>
                         <TableCell colSpan={1} className='font-bold bg-[#433878] text-white'>

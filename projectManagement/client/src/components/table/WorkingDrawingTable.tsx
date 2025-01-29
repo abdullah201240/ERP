@@ -333,10 +333,21 @@ const WorkingDrawingTable: React.FC<WorkingDrawingTableProps> = ({ projectId ,re
                         </TableCell>
                         <TableCell className='font-bold bg-white'>
                             {projects.reduce((total, project) => {
-                                const totalDays =
-                                    (new Date(project.endDate).getTime() - new Date(project.startDate).getTime()) /
-                                    (1000 * 60 * 60 * 24);
-                                return total + totalDays;
+                                const startDate = new Date(project.startDate);
+                                const endDate = new Date(project.endDate);
+
+                                let workingDays = 0;
+
+                                // Iterate through each day in the date range
+                                for (let currentDate = startDate; currentDate <= endDate; currentDate.setDate(currentDate.getDate() + 1)) {
+                                    // If the day is not Friday (getDay() returns 5 for Friday)
+                                    if (currentDate.getDay() !== 5) {
+                                        console.log(currentDate.getDay())
+                                        workingDays++;
+                                    }
+                                }
+
+                                return total + workingDays;
                             }, 0)}{' '}
                             days
                         </TableCell>

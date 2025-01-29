@@ -1,13 +1,56 @@
-import React from 'react'
-import ProjectPlanForm from '@/components/ProjectPlanForm'
-export default function page() {
-  return (
-    <div className="bg-[#F1F2F3]  pl-0 mt-2  ">
-        <h1 className="text-2xl  text-black">Create Project Site Visit Plan</h1>
+'use client';
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import ProjectPlanForm from '@/components/ProjectPlanForm'; // Make sure this is the correct path
 
-        <ProjectPlanForm/>
-        
-      
+export default function Page() {
+  const router = useRouter();
+
+  useEffect(() => {
+    const checkTokenAndFetchProfile = async () => {
+      // Ensure we're in the browser before accessing localStorage
+      if (typeof window === 'undefined') return;
+
+      // Check if the access token exists in localStorage
+      const token = localStorage.getItem('accessToken');
+
+      // If the token does not exist, redirect to the login page
+      if (!token) {
+        router.push('/'); // Adjust the path to your login page
+        return; // Exit the function early
+      }
+
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}employee/auth/profile`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+
+        if (!response.ok) {
+          // If the response is not ok, redirect to login
+          router.push('/'); // Adjust the path to your login page
+          return;
+        }
+
+        // If successful, handle the response data here if needed
+        const data = await response.json();
+        console.log(data); // Debugging or processing profile data
+
+      } catch (error) {
+        console.error("Error fetching profile:", error);
+        // Optionally show a user-friendly error message
+        router.push('/'); // Redirect to login if there's an error
+      }
+    };
+
+    checkTokenAndFetchProfile();
+  }, [router]);
+
+  return (
+    <div className="bg-[#F1F2F3] pl-0 mt-2">
+      <h1 className="text-2xl text-black">Create Project Site Visit Plan</h1>
+      <ProjectPlanForm />
     </div>
-  )
+  );
 }
