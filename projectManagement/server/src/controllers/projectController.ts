@@ -12,6 +12,7 @@ import { Op } from "sequelize";
 import DesignPlan from "../models/designPlan";
 import Service from "../models/service";
 import DegineBOQ from "../models/degineBOQ";
+import { AssignedDegineBoq } from "../models/association";
 
 
 // Create Project Controller
@@ -233,8 +234,8 @@ export const updateProject = asyncHandler(
         project.estimatedBudget = estimatedBudget || project.estimatedBudget;
 
 
-        
-        
+
+
 
         // Save the updated project to the database
         await project.save();
@@ -306,7 +307,7 @@ export const deleteAssignedTo = asyncHandler(
 
 export const getProjectAll = asyncHandler(
     async (req: Request, res: Response, next: NextFunction) => {
-        
+
 
         // Fetch projects with pagination
         const projects = await Project.findAll({
@@ -316,7 +317,7 @@ export const getProjectAll = asyncHandler(
                     as: "assigned", // Alias defined in the relationship
                 },
             ],
-            
+
         });
 
         return res.status(200).json({
@@ -342,10 +343,10 @@ export const getProjectsPaginated = asyncHandler(
         const { rows: projects, count: totalProjects } = await Project.findAndCountAll({
             where: search
                 ? {
-                      projectName: {
-                          [Op.like]: `%${search}%`, // Case-sensitive search for MariaDB/MySQL
-                      },
-                  }
+                    projectName: {
+                        [Op.like]: `%${search}%`, // Case-sensitive search for MariaDB/MySQL
+                    },
+                }
                 : {},
             include: [
                 {
@@ -435,53 +436,53 @@ export const createDesignPlan = asyncHandler(
         );
     });
 
-    export const getDesignPlans = asyncHandler(
-        async (req: Request, res: Response, next: NextFunction) => {
-            const { projectId, stepType } = req.query as { projectId: string; stepType: string };
-    
-            // Check if the project exists
-            const existingProject = await Project.findOne({ where: { id: projectId } });
-            if (!existingProject) {
-                return next(
-                    new ApiError(
-                        ERROR_MESSAGES.PROJECT_NOT_FOUND,
-                        404,
-                        ErrorCodes.NOT_FOUND?.code || "NOT_FOUND"
-                    )
-                );
-            }
-    
-            const designPlans = await DesignPlan.findAll({
-                where: { stepType, projectId },
-                include: [
-                    {
-                        model: Project,
-                        as: 'project', // Use the alias specified in the association
-                        attributes: ['projectName'], // Include only the project name
-                    },
-                    {
-                        model: Employee,
-                        as: 'employee', // Use the alias specified in the association
-                        attributes: ['name'], // Include only the employee name
-                    },
-                ],
-            });
-            
-    
-            // Respond with the fetched design plans
-            return res
-                .status(200)
-                .json(
-                    ApiResponse.success(
-                        designPlans,
-                        `${stepType} Design Plans fetched successfully`
-                    )
-                );
-        }
-    );
-    
+export const getDesignPlans = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction) => {
+        const { projectId, stepType } = req.query as { projectId: string; stepType: string };
 
-    // Delete Design Plan
+        // Check if the project exists
+        const existingProject = await Project.findOne({ where: { id: projectId } });
+        if (!existingProject) {
+            return next(
+                new ApiError(
+                    ERROR_MESSAGES.PROJECT_NOT_FOUND,
+                    404,
+                    ErrorCodes.NOT_FOUND?.code || "NOT_FOUND"
+                )
+            );
+        }
+
+        const designPlans = await DesignPlan.findAll({
+            where: { stepType, projectId },
+            include: [
+                {
+                    model: Project,
+                    as: 'project', // Use the alias specified in the association
+                    attributes: ['projectName'], // Include only the project name
+                },
+                {
+                    model: Employee,
+                    as: 'employee', // Use the alias specified in the association
+                    attributes: ['name'], // Include only the employee name
+                },
+            ],
+        });
+
+
+        // Respond with the fetched design plans
+        return res
+            .status(200)
+            .json(
+                ApiResponse.success(
+                    designPlans,
+                    `${stepType} Design Plans fetched successfully`
+                )
+            );
+    }
+);
+
+
+// Delete Design Plan
 export const deleteDesignPlan = asyncHandler(
     async (req: Request, res: Response, next: NextFunction) => {
         const { id } = req.params;
@@ -516,7 +517,7 @@ export const deleteDesignPlan = asyncHandler(
 export const updateDesignPlan = asyncHandler(
     async (req: Request, res: Response, next: NextFunction) => {
         const { id } = req.params;
-        
+
 
         // Validate the request body
         const result = DesignPlanUpdateValidator.safeParse(req.body);
@@ -704,7 +705,17 @@ export const deleteService = asyncHandler(
 
 export const createDegineBOQ = asyncHandler(
     async (req: Request, res: Response, next: NextFunction) => {
-        const {projectId, projectName, clientName, clientContact, projectAddress, totalArea, inputPerSftFees, totalFees, termsCondition,signName, designation } = req.body;
+        const { projectId, projectName, clientName, clientContact, projectAddress, totalArea, inputPerSftFees, totalFees, termsCondition, signName, designation,
+
+            subject,
+            firstPera,
+            secondPera,
+            feesProposal,
+            feesProposalNote1,
+            feesProposalNote2,
+            date
+
+        } = req.body;
 
         if (!projectId || !projectName || !clientName || !clientContact || !projectAddress || !totalArea || !inputPerSftFees || !totalFees || !termsCondition || !designation || !signName) {
             throw new ApiError('All fields are required', 400, 'BAD_REQUEST');
@@ -721,7 +732,14 @@ export const createDegineBOQ = asyncHandler(
             totalFees,
             termsCondition,
             signName,
-            designation
+            designation,
+            subject,
+            firstPera,
+            secondPera,
+            feesProposal,
+            feesProposalNote1,
+            feesProposalNote2,
+            date,
         });
 
         return res.status(201).json(
@@ -758,7 +776,10 @@ export const viewDegineBOQById = asyncHandler(
 export const updateDegineBOQById = asyncHandler(
     async (req: Request, res: Response, next: NextFunction) => {
         const { id } = req.params;
-        const { signName, designation,  inputPerSftFees, totalFees, termsCondition } = req.body;
+        const { signName, designation, inputPerSftFees, totalFees, termsCondition, subject, firstPera, secondPera, feesProposal,
+            feesProposalNote1,
+            feesProposalNote2,
+        } = req.body;
 
         const degineBOQ = await DegineBOQ.findByPk(id);
 
@@ -773,9 +794,21 @@ export const updateDegineBOQById = asyncHandler(
         degineBOQ.signName = signName || degineBOQ.signName;
 
         degineBOQ.designation = designation || degineBOQ.designation;
+        degineBOQ.subject = subject || degineBOQ.subject;
 
-        
-        
+        degineBOQ.firstPera = firstPera || degineBOQ.firstPera;
+
+        degineBOQ.secondPera = secondPera || degineBOQ.secondPera;
+
+        degineBOQ.feesProposal = feesProposal || degineBOQ.feesProposal;
+
+        degineBOQ.feesProposalNote1 = feesProposalNote1 || degineBOQ.feesProposalNote1;
+        degineBOQ.feesProposalNote2 = feesProposalNote2 || degineBOQ.feesProposalNote2;
+
+
+
+
+
 
         await degineBOQ.save();
 
@@ -803,3 +836,98 @@ export const deleteDegineBOQById = asyncHandler(
 );
 
 
+
+export const getAllBOQ = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction) => {
+        // Get the page and limit from query parameters, default to page 1 and limit 10
+        const page = parseInt(req.query.page as string) || 1;
+        const limit = parseInt(req.query.limit as string) || 10;
+
+
+        // Calculate the offset for pagination
+        const offset = (page - 1) * limit;
+
+        // Fetch projects with pagination
+        const boq = await DegineBOQ.findAll({
+            include: [
+                {
+                    model: AssignedDegineBoq,
+                    as: "assigned", // Alias defined in the relationship
+                },
+            ],
+            limit: limit, // Limit to 10 records per page
+            offset: offset, // Apply offset for pagination
+            order: [["createdAt", "DESC"]],
+        });
+
+        // Get the total number of projects to calculate the total pages
+        const totalProjects = await Project.count();
+
+        return res.status(200).json({
+            success: true,
+            data: {
+                projects: boq,
+                pagination: {
+                    currentPage: page,
+                    totalPages: Math.ceil(totalProjects / limit),
+                    totalProjects: totalProjects,
+                },
+            },
+            message: "boq retrieved successfully",
+        });
+    }
+);
+
+
+
+
+
+export const degineBOQPart = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction) => {
+
+        const { 
+            boqId, 
+            serviceId, 
+            serviceName, 
+            serviceDescription, 
+            totalFees, 
+            serviceAmount, 
+            servicePercentage 
+        } = req.body;
+
+        // Check for required fields
+        if (!boqId || !serviceId || !serviceName || !serviceDescription || !totalFees) {
+            throw new ApiError('All fields are required', 400, 'BAD_REQUEST');
+        }
+
+        // Calculate the finalAmount based on the provided data
+        let finalAmount: number;
+
+        if (serviceAmount) {
+            // If serviceAmount is provided, use it directly
+            finalAmount = serviceAmount;
+        } else if (servicePercentage) {
+            // If servicePercentage is provided, calculate the finalAmount as percentage of totalFees
+            finalAmount = (totalFees * servicePercentage) / 100;
+        } else {
+            // If neither serviceAmount nor servicePercentage is provided, throw an error
+            throw new ApiError('Either serviceAmount or servicePercentage is required', 400, 'BAD_REQUEST');
+        }
+
+        // Create the AssignedDegineBoq record
+        const assignedDegineBoq = await AssignedDegineBoq.create({
+            boqId,
+            serviceId,
+            serviceName,
+            serviceDescription,
+            totalFees,
+            serviceAmount: String(finalAmount), // Store the calculated finalAmount
+            servicePercentage,
+            finalAmount: String(finalAmount)
+        });
+
+        return res.status(201).json(
+            ApiResponse.success('AssignedDegineBoq created successfully')
+        );
+    }
+);

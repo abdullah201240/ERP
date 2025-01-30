@@ -8,6 +8,8 @@ import SupervisionSiteVisitPlan from './supervisionSiteVisitPlan';
 import AssignedSupervisionSiteVisitPlan from './assignedSupervisionSiteVisitPlan';
 import DesignPlan from './designPlan';
 import Employee from './employee';
+import DegineBOQ from './degineBOQ';
+import AssignedDegineBoq from './assignedDegineBoq';
 
 // A Project can have many Employees
 Project.hasMany(Assigned, {
@@ -92,4 +94,20 @@ DesignPlan.belongsTo(Employee, {
 });
 
 
-export { Project,Employee,DesignPlan, Assigned, PreSiteVisitPlan, AssignedPreSiteVisitPlan, SupervisionSiteVisitPlan, AssignedSupervisionSiteVisitPlan };
+
+// A AssignedPreSiteVisitPlan can have many Employees
+DegineBOQ.hasMany(AssignedDegineBoq, {
+  foreignKey: 'boqId', // Foreign key in Employee table pointing to Project
+  as: 'assigned', // Alias for the relation
+  onDelete: 'CASCADE', // Ensure cleanup when a project is deleted
+});
+
+// An Employee belongs to a single AssignedPreSiteVisitPlan
+AssignedDegineBoq.belongsTo(DegineBOQ, {
+  foreignKey: 'boqId',
+  as: 'boq',
+});
+
+
+
+export { Project,DegineBOQ,AssignedDegineBoq, Employee,DesignPlan, Assigned, PreSiteVisitPlan, AssignedPreSiteVisitPlan, SupervisionSiteVisitPlan, AssignedSupervisionSiteVisitPlan };

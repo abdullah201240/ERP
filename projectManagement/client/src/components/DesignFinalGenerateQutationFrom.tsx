@@ -6,10 +6,6 @@ import Select from 'react-select';
 import toast from 'react-hot-toast';
 import DesignBOQTable from './table/DesignBOQTable';
 import { IoCalendarNumberOutline } from "react-icons/io5";
-import dynamic from 'next/dynamic';
-const ReactEditor = dynamic(() => import('react-text-editor-kit'), {
-    ssr: false,
-});
 
 interface Project {
     id: number;
@@ -19,6 +15,8 @@ interface Project {
     clientAddress: string;
     clientContact: string;
     totalArea: string;
+    inputPerSftFees: string;
+    totalFees: string;
 }
 
 interface ProjectDetails {
@@ -30,9 +28,20 @@ interface ProjectDetails {
     totalFees?: string; // Add totalFees for calculated fee
     inputPerSftFees?: string; // Input per sft Fees
     termsCondition?: string; // Terms and Condition
+    serviceAmount?: string; // Amount entered if selected (for fixed amount)
+    servicePercentage?: string; // Percentage entered if selected
+    serviceId?: string; // Amount entered if selected (for fixed amount)
+
+    selectedService?: Service; // Selected service details
 }
 
-export default function DesignGenerateQutationForm() {
+interface Service {
+    id: number;
+    name: string;
+    description: string;
+}
+
+export default function DesignFinalGenerateQutationFrom() {
     const [token, setToken] = useState<string | null>(null);
     const router = useRouter();
     const [isClient, setIsClient] = useState(false);
@@ -45,24 +54,17 @@ export default function DesignGenerateQutationForm() {
         clientContact: '',
         projectName: '',
         totalArea: '',
-
+        inputPerSftFees: '',
+        totalFees: '',
+        termsCondition: '', // Initialize termsCondition
     });
-    const [inputPerSftFees, setInputPerSftFees] = useState<string>('');
-    const [designation, setDesignation] = useState<string>('');
-    const [signName, setSignName] = useState<string>('');
     const [loading, setLoading] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [reloadTable, setReloadTable] = useState(false);
-    const [subject, setSubject] = useState('');
-    const [firstPera, setFirstPera] = useState('');
-    const [secondPera, setSecondPera] = useState('');
-    const [feesProposal, setFeesProposal] = useState('');
-    const [feesProposalNote1, setFeesProposalNote1] = useState('');
-    const [feesProposalNote2, setFeesProposalNote2] = useState('');
-    const [date, setDate] = useState('');
-
+    const [isPercentage, setIsPercentage] = useState(false); // Track if percentage checkbox is checked
+    const [services, setServices] = useState<Service[]>([]); // New state for services
 
     useEffect(() => {
         if (typeof window !== 'undefined') { // Ensure this runs only on the client-side
@@ -70,24 +72,21 @@ export default function DesignGenerateQutationForm() {
             if (!storedToken) {
                 router.push('/');
             } else {
-                setDate(new Date().toISOString().split('T')[0])
                 setToken(storedToken);
             }
         }
     }, [router]);
+
     useEffect(() => {
         setIsClient(true); // Marks that we are in the client-side
     }, []);
-
-
-
 
     const fetchProjects = useCallback(
         async (pageNumber = 1, query = '') => {
             setLoading(true);
             try {
                 const response = await fetch(
-                    `${process.env.NEXT_PUBLIC_API_URL}projects/view-all-projects?page=${pageNumber}&limit=10&search=${query}`,
+                    `${process.env.NEXT_PUBLIC_API_URL}projects/getAllBOQ?page=${pageNumber}&limit=10&search=${query}`,
                     { headers: { Authorization: `Bearer ${token}` } }
                 );
 
@@ -111,12 +110,28 @@ export default function DesignGenerateQutationForm() {
         },
         [token]
     );
+    // Fetch Services
+    const fetchServices = useCallback(async () => {
+        try {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}projects/services`,
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+            if (!response.ok) {
+                throw new Error('Failed to fetch services');
+            }
 
+            const data = await response.json();
+            setServices(data.data); // Store the services data
+        } catch (error) {
+            console.error('Error fetching services:', error);
+        }
+    }, [token]);
     useEffect(() => {
         if (token) {
             fetchProjects(1, searchQuery);
+            fetchServices(); // Fetch services when the token is available
         }
-    }, [token, searchQuery, fetchProjects]);
+    }, [token, searchQuery, fetchProjects, fetchServices]);
 
     const handleInputChange = (inputValue: string) => {
         setSearchQuery(inputValue);
@@ -142,52 +157,70 @@ export default function DesignGenerateQutationForm() {
                     clientContact: selected.clientContact,
                     projectName: selected.projectName,
                     totalArea: selected.totalArea,
+                    inputPerSftFees: selected.inputPerSftFees,
+                    totalFees: selected.totalFees,
+                    termsCondition: '', // Initialize termsCondition
                 });
             }
         }
     };
 
-    // Auto-calculate Total Fees when inputPerSftFees or totalArea changes
+    // Auto-calculate Total Fees when inputPerSftFees or totalArea change
     useEffect(() => {
-        if (inputPerSftFees && projectDetails.totalArea) {
-            const totalFees = parseFloat(projectDetails.totalArea) * parseFloat(inputPerSftFees);
+        if (projectDetails.inputPerSftFees && projectDetails.totalArea) {
+            const calculatedTotalFees =
+                parseFloat(projectDetails.inputPerSftFees) * parseFloat(projectDetails.totalArea);
             setProjectDetails((prevDetails) => ({
                 ...prevDetails,
-                totalFees: totalFees.toFixed(2), // toFixed to ensure decimal precision
+                totalFees: calculatedTotalFees.toString(),
             }));
         }
-    }, [inputPerSftFees, projectDetails.totalArea]);
+    }, [projectDetails.inputPerSftFees, projectDetails.totalArea]);
+
+    // Handle Service Selection
+    const handleServiceChange = (newValue: { value: number; label: string } | null) => {
+        if (newValue) {
+            const selectedService = services.find((service) => service.id === newValue.value);
+            setProjectDetails((prevDetails) => ({
+                ...prevDetails,
+                selectedService: selectedService || undefined,
+            }));
+        } else {
+            setProjectDetails((prevDetails) => ({
+                ...prevDetails,
+                selectedService: undefined,
+            }));
+        }
+    };
+    // Handle Checkbox Change for Amount or Percentage
+    const handleCheckboxChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        setIsPercentage(event.target.checked); // Toggle between percentage and amount
+    };
 
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
 
-        if (!selectedProject || !inputPerSftFees || !projectDetails.totalArea || !projectDetails.termsCondition || !designation || !signName) {
+        if (!selectedProject || !projectDetails.totalArea) {
             toast.error('Please fill in all the required fields!');
             return;
-        }
+        }        
+
+        // Get the selected service details
+        const selectedService = projectDetails.selectedService;
 
         const payload = {
-            projectId: selectedProject,
-            inputPerSftFees,
-            signName,
-            designation,
-            subject,               // Add subject
-            firstPera,             // Add firstPera
-            secondPera,
-            feesProposal,           // Add secondPera
-            feesProposalNote1,     // Add feesProposalNote1
-            feesProposalNote2,
-            date,
-
-            termsCondition: projectDetails.termsCondition,
-            ...projectDetails,
+            boqId: selectedProject,
+            serviceName: selectedService?.name, // Service name
+            serviceDescription: selectedService?.description, // Service description
+            serviceId: selectedService?.id,
+            ...projectDetails, // Include other project details
         };
 
+        
         try {
             setLoading(true);
-            console.log(JSON.stringify(payload))
             const response = await fetch(
-                `${process.env.NEXT_PUBLIC_API_URL}projects/degineBOQ`,
+                `${process.env.NEXT_PUBLIC_API_URL}projects/degineBOQPart`,
                 {
                     method: 'POST',
                     headers: {
@@ -199,7 +232,7 @@ export default function DesignGenerateQutationForm() {
             );
 
             if (!response.ok) {
-                throw new Error('Failed to add BOQ ');
+                throw new Error('Failed to add BOQ');
             }
 
             toast.success('BOQ added successfully!');
@@ -210,13 +243,15 @@ export default function DesignGenerateQutationForm() {
                 clientContact: '',
                 projectName: '',
                 totalArea: '',
-                totalFees: '', // Reset totalFees
-                termsCondition: '', // Reset termsCondition
+                totalFees: '',
+                termsCondition: '',
+                inputPerSftFees: '',
+                serviceId: '',
+                serviceAmount: '',
+                servicePercentage: '',
+                selectedService: undefined, // Reset the service
             });
-            setInputPerSftFees('');
-            setDesignation('')
-            setSignName('')
-            setReloadTable((prev) => !prev);
+            setReloadTable((prev) => !prev); // Reload the table after submission
         } catch (error) {
             console.error('Error submitting form:', error);
             toast.error('Failed to add BOQ');
@@ -224,13 +259,16 @@ export default function DesignGenerateQutationForm() {
             setLoading(false);
         }
     };
+
+
+
     if (!isClient) {
         return null; // Or show a loading state
     }
 
     return (
         <div>
-            <div className=" mx-auto max-w-6xl mt-8 pt-12">
+            <div className="mx-auto max-w-6xl mt-8 pt-12">
                 <div className="bg-[#433878] p-8 rounded-xl">
                     <form className="grid grid-cols-1 gap-6" onSubmit={handleSubmit}>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -268,12 +306,7 @@ export default function DesignGenerateQutationForm() {
                                 <input
                                     type="text"
                                     value={projectDetails.clientName}
-                                    onChange={(e) =>
-                                        setProjectDetails({
-                                            ...projectDetails,
-                                            clientName: e.target.value,
-                                        })
-                                    }
+                                    disabled
                                     className="block w-full rounded-md border-gray-300 shadow-sm p-2 bg-gray-100 mt-2"
                                 />
                             </div>
@@ -282,21 +315,7 @@ export default function DesignGenerateQutationForm() {
                                 <input
                                     type="text"
                                     value={projectDetails.totalArea}
-                                    onChange={(e) =>
-                                        setProjectDetails({
-                                            ...projectDetails,
-                                            totalArea: e.target.value,
-                                        })
-                                    }
-                                    className="block w-full rounded-md border-gray-300 shadow-sm p-2 bg-gray-100 mt-2"
-                                />
-                            </div>
-                            <div>
-                                <label className="text-white mb-2">Input per sft Fees (Tk.)</label>
-                                <input
-                                    type="text"
-                                    value={inputPerSftFees}
-                                    onChange={(e) => setInputPerSftFees(e.target.value)}
+                                    disabled
                                     className="block w-full rounded-md border-gray-300 shadow-sm p-2 bg-gray-100 mt-2"
                                 />
                             </div>
@@ -309,102 +328,85 @@ export default function DesignGenerateQutationForm() {
                                     className="block w-full rounded-md border-gray-300 shadow-sm p-2 bg-gray-100 mt-2"
                                 />
                             </div>
-
                             <div>
-                                <label className="text-white mb-2">Sign Name</label>
+                                <label className="text-white mb-2">Per sft Fees</label>
                                 <input
-                                    type="text"
-                                    value={signName}
-                                    onChange={(e) => setSignName(e.target.value)}
-                                    className="block w-full rounded-md border-gray-300 shadow-sm p-2 bg-gray-100 mt-2"
-                                />
-                            </div>
-                            <div>
-                                <label className="text-white mb-2">Designation</label>
-                                <input
-                                    type="text"
-                                    value={designation}
-                                    onChange={(e) => setDesignation(e.target.value)}
-                                    className="block w-full rounded-md border-gray-300 shadow-sm p-2 bg-gray-100 mt-2"
-                                />
-                            </div>
-                            <div>
-                                <label className="text-white mb-2">Subject</label>
-                                <input
-                                    type="text"
-                                    value={subject}
-                                    onChange={(e) => setSubject(e.target.value)}
-                                    className="block w-full rounded-md border-gray-300 shadow-sm p-2 bg-gray-100 mt-2"
-                                />
-                            </div>
-                            <div>
-                                <label className="text-white mb-2">First Paragraph</label>
-                                <input
-                                    type="text"
-                                    value={firstPera}
-                                    onChange={(e) => setFirstPera(e.target.value)}
-                                    className="block w-full rounded-md border-gray-300 shadow-sm p-2 bg-gray-100 mt-2"
-                                />
-                            </div>
-                            <div>
-                                <label className="text-white mb-2">Second Paragraph</label>
-                                <input
-                                    type="text"
-                                    value={secondPera}
-                                    onChange={(e) => setSecondPera(e.target.value)}
-                                    className="block w-full rounded-md border-gray-300 shadow-sm p-2 bg-gray-100 mt-2"
-                                />
-                            </div>
-                            <div>
-                                <label className="text-white mb-2">Fees Proposal</label>
-                                <input
-                                    type="text"
-                                    value={feesProposal}
-                                    onChange={(e) => setFeesProposal(e.target.value)}
-                                    className="block w-full rounded-md border-gray-300 shadow-sm p-2 bg-gray-100 mt-2"
-                                />
-                            </div>
-                            <div>
-                                <label className="text-white mb-2">Note 01</label>
-                                <input
-                                    type="text"
-                                    value={feesProposalNote1}
-                                    onChange={(e) => setFeesProposalNote1(e.target.value)}
-                                    className="block w-full rounded-md border-gray-300 shadow-sm p-2 bg-gray-100 mt-2"
-                                />
-                            </div>
-                            <div>
-                                <label className="text-white mb-2">Note 02</label>
-                                <input
-                                    type="text"
-                                    value={feesProposalNote2}
-                                    onChange={(e) => setFeesProposalNote2(e.target.value)}
+                                    type="number"
+                                    value={projectDetails.inputPerSftFees || ''}
+                                    disabled
                                     className="block w-full rounded-md border-gray-300 shadow-sm p-2 bg-gray-100 mt-2"
                                 />
                             </div>
 
-                        </div>
+                            {/* Service Dropdown */}
+                            <div>
+                                <label className="text-white mb-2">Select Service</label>
+                                <Select
+                                    options={services.map((service) => ({
+                                        value: service.id,
+                                        label: service.name,
+                                    }))}
+                                    onChange={handleServiceChange}
+                                    className="mt-2"
+                                    placeholder="Search and select a service"
+                                    isLoading={loading}
+                                />
+                            </div>
 
-                        <div className="mb-6">
-                            <label htmlFor="termsCondition" className="block text-white  mb-2">
-                                Terms & Condition
-                            </label>
-                            <ReactEditor
-                                value={projectDetails.termsCondition || ""}  // Default to an empty string
-                                onChange={(value: string) => {
-                                    setProjectDetails({
-                                        ...projectDetails,
-                                        termsCondition: value,
-                                    });
-                                }}
-                                mainProps={{ className: "black" }}
-                                placeholder="Terms & Condition"
-                                className="w-full"
-                            />
+                            {isPercentage ? (
+                                <div>
+                                    <label className="text-white mb-2">Enter Percentage
+                                        <input
+                                            type="checkbox"
+                                            checked={isPercentage}
+                                            onChange={handleCheckboxChange}
+                                            className="mr-2"
+                                        />
+                                        <label className="text-white mb-2">%</label>
+
+
+
+                                    </label>
+                                    <input
+                                        type="number"
+                                        value={projectDetails.servicePercentage || ''}
+                                        onChange={(e) =>
+                                            setProjectDetails({
+                                                ...projectDetails,
+                                                servicePercentage: e.target.value,
+                                            })
+                                        }
+                                        className="block w-full rounded-md border-gray-300 shadow-sm p-2 bg-gray-100 mt-2"
+                                    />
+                                </div>
+                            ) : (
+                                <div>
+                                    <label className="text-white mb-2 ">Enter Amount
+
+                                        <input
+                                            type="checkbox"
+                                            checked={isPercentage}
+                                            onChange={handleCheckboxChange}
+                                            className="mr-2 ml-2"
+                                        />
+                                        <label className="text-white mb-2">%</label>
+
+                                    </label>
+                                    <input
+                                        type="number"
+                                        value={projectDetails.serviceAmount || ''}
+                                        onChange={(e) =>
+                                            setProjectDetails({
+                                                ...projectDetails,
+                                                serviceAmount: e.target.value,
+                                            })
+                                        }
+                                        className="block w-full rounded-md border-gray-300 shadow-sm p-2 bg-gray-100 mt-2"
+                                    />
+                                </div>
+                            )}
 
                         </div>
-
-
 
                         <button
                             type="submit"
@@ -418,12 +420,9 @@ export default function DesignGenerateQutationForm() {
                 </div>
             </div>
 
-            <div className='mt-12'>
-
-
+            <div className="mt-12">
+                <DesignBOQTable reload={reloadTable} />
             </div>
-
-            <DesignBOQTable reload={reloadTable} />
         </div>
     );
 }

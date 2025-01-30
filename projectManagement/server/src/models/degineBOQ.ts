@@ -15,6 +15,13 @@ interface DegineBOQAttributes {
   signName: string;
   designation: string;
   projectId: string;  // New field
+  subject?: string;          // Optional
+  firstPera?: string;       // Optional
+  secondPera?: string;      // Optional
+  feesProposal?: string;
+  feesProposalNote1?: string; // Optional
+  feesProposalNote2?: string; // Optional
+  date?: string;
 }
 
 interface DegineBOQCreationAttributes extends Optional<DegineBOQAttributes, 'id'> {}
@@ -32,6 +39,15 @@ class DegineBOQ extends Model<DegineBOQAttributes, DegineBOQCreationAttributes> 
   public signName!: string;
   public designation!: string;
   public projectId!: string;  // New field
+  public subject?: string;    // Optional field
+  public firstPera?: string; // Optional field
+  public secondPera?: string; // Optional field
+  public feesProposal?: string;
+  public feesProposalNote1?: string; // Optional field
+  public feesProposalNote2?: string; // Optional field
+  public date?: string; // Optional field
+
+  
 }
 
 DegineBOQ.init(
@@ -86,6 +102,34 @@ DegineBOQ.init(
       type: DataTypes.STRING,
       allowNull: true, // Can be null initially
     },
+    subject: {  // New optional field
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    firstPera: { // New optional field
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
+    secondPera: { // New optional field
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
+    feesProposal: {  // New optional field
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
+    feesProposalNote1: {  // New optional field
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
+    feesProposalNote2: {  // New optional field
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
+    date:{
+      type: DataTypes.STRING,
+      allowNull: true,
+    }
   },
   {
     sequelize: db,

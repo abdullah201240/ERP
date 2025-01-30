@@ -1,7 +1,7 @@
 'use client';
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import DesignGenerateQutationFrom from '@/components/DesignGenerateQutationFrom';
+import DesignFinalGenerateQutationFrom from '@/components/DesignFinalGenerateQutationFrom';
 export default function Page() {
   const router = useRouter();
 
@@ -49,7 +49,10 @@ export default function Page() {
   return (
     <div className="bg-[#F1F2F3] pl-0 mt-2">
       <h1 className="text-2xl text-black">Generate Quotation</h1>
-      <DesignGenerateQutationFrom />
+      <DesignFinalGenerateQutationFrom />
     </div>
   );
 }
+
+
+

@@ -1,6 +1,6 @@
 import express from "express";
 import { verifyJWT } from "../middleware/auth"; 
-import { createAssignedTo, createDegineBOQ, createDesignPlan, createProject, createService, deleteAssignedTo, deleteDegineBOQById, deleteDesignPlan, deleteProject, deleteService, getDesignPlans, getProject, getProjectAll, getProjectById, getProjectsPaginated, updateCompletionPercentage, updateDegineBOQById, updateDesignPlan, updateProject, updateService, viewAllDegineBOQs, viewAllServices, viewDegineBOQById, viewServiceById } from "../controllers/projectController";
+import { createAssignedTo, createDegineBOQ, createDesignPlan, createProject, createService, degineBOQPart, deleteAssignedTo, deleteDegineBOQById, deleteDesignPlan, deleteProject, deleteService, getAllBOQ, getDesignPlans, getProject, getProjectAll, getProjectById, getProjectsPaginated, updateCompletionPercentage, updateDegineBOQById, updateDesignPlan, updateProject, updateService, viewAllDegineBOQs, viewAllServices, viewDegineBOQById, viewServiceById } from "../controllers/projectController";
 
 const router = express.Router();
 
@@ -36,7 +36,7 @@ router.put('/designplans/:id',verifyJWT, updateCompletionPercentage);
 router.post('/services',verifyJWT, createService);
 
 // Route to get all services
-router.get('/services',verifyJWT, viewAllServices);
+router.get('/services', viewAllServices);
 
 // Route to get a service by ID
 router.get('/services/:id',verifyJWT, viewServiceById);
@@ -54,13 +54,23 @@ router.post('/degineBOQ',verifyJWT, createDegineBOQ);
 // Route to get all DegineBOQs
 router.get('/degineBOQ', viewAllDegineBOQs);
 
+router.get('/getAllBOQ', getAllBOQ);
+
+
+
+
 // Route to get a single DegineBOQ by ID
-router.get('/degineBOQ/:id',verifyJWT, viewDegineBOQById);
+router.get('/degineBOQ/:id', viewDegineBOQById);
 
 // Route to update a DegineBOQ by ID
 router.put('/degineBOQ/:id', verifyJWT,updateDegineBOQById);
 
 // Route to delete a DegineBOQ by ID
 router.delete('/degineBOQ/:id',verifyJWT, deleteDegineBOQById);
+
+
+
+router.post('/degineBOQPart',verifyJWT, degineBOQPart);
+
 
 export default router;

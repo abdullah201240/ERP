@@ -20,12 +20,10 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { FaEdit } from "react-icons/fa";
 import { useRouter } from 'next/navigation';
 import { RiDeleteBin6Line } from "react-icons/ri";
-import { Button } from '../ui/button';
-import toast from 'react-hot-toast';
-import ReactEditor from 'react-text-editor-kit';
+import { MdOutlinePreview } from "react-icons/md";
+import Link from 'next/link';
 
 // Interface as provided by you
 interface DegineBOQ {
@@ -54,19 +52,6 @@ const DesignBOQTable: React.FC<DesignBOQTableProps> = ({ reload }) => {
     const [deleteId, setDeleteId] = useState<number | null>(null);
     const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
 
-    // Modal form states for editing
-    const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [projectName, setProjectName] = useState('');
-    const [clientName, setClientName] = useState('');
-    const [clientContact, setClientContact] = useState('');
-    const [projectAddress, setProjectAddress] = useState('');
-    const [totalArea, setTotalArea] = useState('');
-    const [inputPerSftFees, setInputPerSftFees] = useState('');
-    const [totalFees, setTotalFees] = useState('');
-    const [termsCondition, setTermsCondition] = useState('');
-    const [signName, setSignName] = useState('');
-    const [designation, setDesignation] = useState('');
 
 
     // Fetch projects
@@ -130,86 +115,12 @@ const DesignBOQTable: React.FC<DesignBOQTableProps> = ({ reload }) => {
         }
     };
 
-    // Edit button to open the modal with selected project data
-    const handleEdit = (project: DegineBOQ) => {
-        setSelectedProjectId(project.id);
-        setProjectName(project.projectName);
-        setClientName(project.clientName);
-        setClientContact(project.clientContact);
-        setProjectAddress(project.projectAddress);
-        setTotalArea(project.totalArea);
-        setInputPerSftFees(project.inputPerSftFees);
-        setTotalFees(project.totalFees);
-        setTermsCondition(project.termsCondition);
-        setSignName(project.signName);
-        setDesignation(project.designation)
-        setIsModalOpen(true);
-    };
 
-    // Handle form submit for updating project
-    const handleSubmit = async (event: React.FormEvent) => {
-        event.preventDefault();
 
-        const updatedProject = {
-            projectName,
-            clientName,
-            clientContact,
-            projectAddress,
-            totalArea,
-            inputPerSftFees,
-            totalFees,
-            termsCondition,
-            signName,
-            designation
-        };
 
-        try {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}projects/degineBOQ/${selectedProjectId}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify(updatedProject),
-            });
 
-            if (!response.ok) {
-                throw new Error('Failed to update project');
-            }
 
-            toast.success('Project updated successfully!');
-            fetchProjects(); // Refresh the project list after update
-            setIsModalOpen(false); // Close the modal
 
-        } catch (error) {
-            console.error('Error updating project:', error);
-            toast.error('Failed to update project');
-        }
-    };
-    // Correcting the arithmetic operations by parsing strings to numbers
-    const handleTotalFeesCalculation = (area: string, perSftFees: string) => {
-        const areaNumber = parseFloat(area);
-        const perSftFeesNumber = parseFloat(perSftFees);
-        return areaNumber * perSftFeesNumber;
-    };
-
-    // Update the input handlers to use the correct calculation function
-    const handleAreaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const newArea = e.target.value;
-        setTotalArea(newArea);
-        setTotalFees(handleTotalFeesCalculation(newArea, inputPerSftFees).toString());
-    };
-
-    const handlePerSftFeesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const newPerSftFees = e.target.value;
-        setInputPerSftFees(newPerSftFees);
-        setTotalFees(handleTotalFeesCalculation(totalArea, newPerSftFees).toString());
-    };
-
-    // Correcting the ReactEditor component usage
-    const handleTermsConditionChange = (value: string) => {
-        setTermsCondition(value);
-    };
 
     // Loading and error handling
     if (loading) {
@@ -264,10 +175,14 @@ const DesignBOQTable: React.FC<DesignBOQTableProps> = ({ reload }) => {
 
 
                                 <TableCell className='border border-[#e5e7eb] text-3xl flex items-center justify-center'>
-                                    <FaEdit
-                                        onClick={() => handleEdit(project)}
-                                        className='mr-8 opacity-50 cursor-pointer'
-                                    />
+                                    <Link href={`/viewDesignBOQ/${project.id}`} >
+
+
+                                        <MdOutlinePreview
+
+                                            className='mr-8 opacity-50 cursor-pointer'
+                                        />
+                                    </Link>
                                     <AlertDialog>
                                         <AlertDialogTrigger asChild>
                                             <RiDeleteBin6Line
@@ -295,165 +210,6 @@ const DesignBOQTable: React.FC<DesignBOQTableProps> = ({ reload }) => {
                 </TableBody>
             </Table>
 
-
-            {isModalOpen && (
-    <div
-        id="default-modal"
-        tabIndex={isModalOpen ? 0 : -1}
-        aria-hidden={!isModalOpen}
-        className={`fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 ${isModalOpen ? "block" : "hidden"}`}
-    >
-        <div className="relative w-full max-w-3xl p-4 mx-2 bg-white rounded-lg shadow-lg dark:bg-gray-800 mb-16 max-h-[90vh] overflow-y-auto sm:max-h-[80vh]">
-            <div className="flex items-center justify-between border-b border-gray-200 dark:border-gray-600 pb-4">
-                <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Edit Project</h3>
-                <button
-                    onClick={() => setIsModalOpen(false)}
-                    className="text-gray-600 dark:text-white hover:text-gray-800 dark:hover:text-gray-400"
-                >
-                    X
-                </button>
-            </div>
-            <form onSubmit={handleSubmit}>
-                <div className="space-y-3">
-
-                    {/* Display 3 fields per row */}
-                    <div className="grid grid-cols-3 gap-4">
-                        <div className="flex-1">
-                            <label htmlFor="project-name" className="block text-xs font-medium text-gray-900">Project Name</label>
-                            <input
-                                type="text"
-                                id="project-name"
-                                value={projectName}
-                                onChange={(e) => setProjectName(e.target.value)}
-                                className="w-full p-2 border rounded"
-                                disabled
-                            />
-                        </div>
-                        <div className="flex-1">
-                            <label htmlFor="client-name" className="block text-xs font-medium text-gray-900">Client Name</label>
-                            <input
-                                type="text"
-                                id="client-name"
-                                value={clientName}
-                                onChange={(e) => setClientName(e.target.value)}
-                                className="w-full p-2 border rounded"
-                                disabled
-                            />
-                        </div>
-                        <div className="flex-1">
-                            <label htmlFor="client-contact" className="block text-xs font-medium text-gray-900">Client Contact</label>
-                            <input
-                                type="text"
-                                id="client-contact"
-                                value={clientContact}
-                                onChange={(e) => setClientContact(e.target.value)}
-                                className="w-full p-2 border rounded"
-                                disabled
-                            />
-                        </div>
-                    </div>
-
-                    <div className="grid grid-cols-3 gap-4">
-                        <div className="flex-1">
-                            <label htmlFor="sign-name" className="block text-xs font-medium text-gray-900">Sign Name</label>
-                            <input
-                                type="text"
-                                id="sign-name"
-                                value={signName}
-                                onChange={(e) => setSignName(e.target.value)}
-                                className="w-full p-2 border rounded"
-                            />
-                        </div>
-                        <div className="flex-1">
-                            <label htmlFor="designation" className="block text-xs font-medium text-gray-900">Designation</label>
-                            <input
-                                type="text"
-                                id="designation"
-                                value={designation}
-                                onChange={(e) => setDesignation(e.target.value)}
-                                className="w-full p-2 border rounded"
-                            />
-                        </div>
-                        <div className="flex-1">
-                            <label htmlFor="project-address" className="block text-xs font-medium text-gray-900">Project Address</label>
-                            <input
-                                type="text"
-                                id="project-address"
-                                value={projectAddress}
-                                onChange={(e) => setProjectAddress(e.target.value)}
-                                className="w-full p-2 border rounded"
-                                disabled
-                            />
-                        </div>
-                    </div>
-
-                    <div className="grid grid-cols-3 gap-4">
-                        <div className="flex-1">
-                            <label htmlFor="total-area" className="block text-xs font-medium text-gray-900">Total Area</label>
-                            <input
-                                type="text"
-                                id="total-area"
-                                value={totalArea}
-                                onChange={handleAreaChange}
-                                className="w-full p-2 border rounded"
-                                disabled
-                            />
-                        </div>
-                        <div className="flex-1">
-                            <label htmlFor="input-per-sft-fees" className="block text-xs font-medium text-gray-900">Input per Sqft Fees</label>
-                            <input
-                                type="text"
-                                id="input-per-sft-fees"
-                                value={inputPerSftFees}
-                                onChange={handlePerSftFeesChange}
-                                className="w-full p-2 border rounded"
-                            />
-                        </div>
-                        <div className="flex-1">
-                            <label htmlFor="total-fees" className="block text-xs font-medium text-gray-900">Total Fees</label>
-                            <input
-                                type="text"
-                                id="total-fees"
-                                value={totalFees}
-                                readOnly
-                                className="w-full p-2 border rounded"
-                                disabled
-                            />
-                        </div>
-                    </div>
-
-                    <div className="flex-1">
-                        <label htmlFor="terms-condition" className="block text-xs font-medium text-gray-900">Terms & Condition</label>
-                        <ReactEditor
-                            value={termsCondition}
-                            onChange={handleTermsConditionChange}
-                            mainProps={{ className: "black" }}
-                            placeholder="Terms & Condition"
-                            className="w-full"
-                        />
-                    </div>
-
-                </div>
-
-                <div className="flex justify-end space-x-4 mt-4">
-                    <Button
-                        type="button"
-                        onClick={() => setIsModalOpen(false)}
-                        className="py-1 px-3 bg-gray-300 rounded"
-                    >
-                        Cancel
-                    </Button>
-                    <Button
-                        type="submit"
-                        className="py-1 px-3 bg-blue-500 text-white rounded"
-                    >
-                        Update
-                    </Button>
-                </div>
-            </form>
-        </div>
-    </div>
-)}
 
 
 
