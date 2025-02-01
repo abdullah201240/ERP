@@ -4,7 +4,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Select from 'react-select';
 import toast from 'react-hot-toast';
-import DesignBOQTable from './table/DesignBOQTable';
+import DesignFinalGenerateQutationTable from './table/DesignFinalGenerateQutationTable';
 import { IoCalendarNumberOutline } from "react-icons/io5";
 
 interface Project {
@@ -203,7 +203,7 @@ export default function DesignFinalGenerateQutationFrom() {
         if (!selectedProject || !projectDetails.totalArea) {
             toast.error('Please fill in all the required fields!');
             return;
-        }        
+        }
 
         // Get the selected service details
         const selectedService = projectDetails.selectedService;
@@ -216,7 +216,7 @@ export default function DesignFinalGenerateQutationFrom() {
             ...projectDetails, // Include other project details
         };
 
-        
+
         try {
             setLoading(true);
             const response = await fetch(
@@ -236,21 +236,8 @@ export default function DesignFinalGenerateQutationFrom() {
             }
 
             toast.success('BOQ added successfully!');
-            setSelectedProject(null);
-            setProjectDetails({
-                projectAddress: '',
-                clientName: '',
-                clientContact: '',
-                projectName: '',
-                totalArea: '',
-                totalFees: '',
-                termsCondition: '',
-                inputPerSftFees: '',
-                serviceId: '',
-                serviceAmount: '',
-                servicePercentage: '',
-                selectedService: undefined, // Reset the service
-            });
+            
+            
             setReloadTable((prev) => !prev); // Reload the table after submission
         } catch (error) {
             console.error('Error submitting form:', error);
@@ -376,6 +363,8 @@ export default function DesignFinalGenerateQutationFrom() {
                                                 servicePercentage: e.target.value,
                                             })
                                         }
+                                        placeholder='Enter Percentage'
+
                                         className="block w-full rounded-md border-gray-300 shadow-sm p-2 bg-gray-100 mt-2"
                                     />
                                 </div>
@@ -401,6 +390,7 @@ export default function DesignFinalGenerateQutationFrom() {
                                                 serviceAmount: e.target.value,
                                             })
                                         }
+                                        placeholder='Enter Amount'
                                         className="block w-full rounded-md border-gray-300 shadow-sm p-2 bg-gray-100 mt-2"
                                     />
                                 </div>
@@ -419,10 +409,13 @@ export default function DesignFinalGenerateQutationFrom() {
                     </form>
                 </div>
             </div>
+            {selectedProject &&
 
-            <div className="mt-12">
-                <DesignBOQTable reload={reloadTable} />
-            </div>
+                <div className="mt-12">
+                    <DesignFinalGenerateQutationTable reload={reloadTable} boqId={selectedProject} />
+                </div>
+            }
+
         </div>
     );
 }

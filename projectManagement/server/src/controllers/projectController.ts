@@ -481,6 +481,50 @@ export const getDesignPlans = asyncHandler(
     }
 );
 
+export const getDesignPlansProject = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction) => {
+        const { projectId } = req.query as { projectId: string; };
+
+        // Check if the project exists
+        const existingProject = await Project.findOne({ where: { id: projectId } });
+        if (!existingProject) {
+            return next(
+                new ApiError(
+                    ERROR_MESSAGES.PROJECT_NOT_FOUND,
+                    404,
+                    ErrorCodes.NOT_FOUND?.code || "NOT_FOUND"
+                )
+            );
+        }
+
+        const designPlans = await DesignPlan.findAll({
+            where: {  projectId },
+            include: [
+                {
+                    model: Project,
+                    as: 'project', // Use the alias specified in the association
+                    attributes: ['projectName'], // Include only the project name
+                },
+                {
+                    model: Employee,
+                    as: 'employee', // Use the alias specified in the association
+                    attributes: ['name'], // Include only the employee name
+                },
+            ],
+        });
+
+
+        // Respond with the fetched design plans
+        return res
+            .status(200)
+            .json(
+                ApiResponse.success(
+                    designPlans,
+                    `Design Plans fetched successfully`
+                )
+            );
+    }
+);
 
 // Delete Design Plan
 export const deleteDesignPlan = asyncHandler(
@@ -903,12 +947,13 @@ export const degineBOQPart = asyncHandler(
         // Calculate the finalAmount based on the provided data
         let finalAmount: number;
 
-        if (serviceAmount) {
+        if (servicePercentage) {
+             // If servicePercentage is provided, calculate the finalAmount as percentage of totalFees
+             finalAmount = (totalFees * servicePercentage) / 100;
+            
+        } else if (serviceAmount) {
             // If serviceAmount is provided, use it directly
             finalAmount = serviceAmount;
-        } else if (servicePercentage) {
-            // If servicePercentage is provided, calculate the finalAmount as percentage of totalFees
-            finalAmount = (totalFees * servicePercentage) / 100;
         } else {
             // If neither serviceAmount nor servicePercentage is provided, throw an error
             throw new ApiError('Either serviceAmount or servicePercentage is required', 400, 'BAD_REQUEST');
@@ -928,6 +973,45 @@ export const degineBOQPart = asyncHandler(
 
         return res.status(201).json(
             ApiResponse.success('AssignedDegineBoq created successfully')
+        );
+    }
+);
+
+
+export const viewAllDegineBOQPart = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction) => {
+        
+        const { boqId } = req.params;
+
+        const assignedDegineBoq = await AssignedDegineBoq.findAll(
+
+            {
+                where:{
+                    boqId
+                }
+            }
+        );
+
+        return res.status(200).json(
+            ApiResponse.success(assignedDegineBoq, 'AssignedDegineBoq retrieved successfully')
+        );
+    }
+);
+
+export const deleteDegineBOQPartById = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction) => {
+        const { id } = req.params;
+
+        const degineBOQ = await AssignedDegineBoq.findByPk(id);
+
+        if (!degineBOQ) {
+            throw new ApiError('DegineBOQ not found', 404, 'NOT_FOUND');
+        }
+
+        await degineBOQ.destroy();
+
+        return res.status(200).json(
+            ApiResponse.success(null, 'DegineBOQ deleted successfully')
         );
     }
 );
