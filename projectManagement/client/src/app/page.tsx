@@ -4,7 +4,6 @@ import Image from 'next/image';
 import Logo from '@/app/assets/img/Logo.webp';
 import { toast } from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
-
 export default function Page() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');

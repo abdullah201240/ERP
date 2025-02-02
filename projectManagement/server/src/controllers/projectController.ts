@@ -13,6 +13,7 @@ import DesignPlan from "../models/designPlan";
 import Service from "../models/service";
 import DegineBOQ from "../models/degineBOQ";
 import { AssignedDegineBoq } from "../models/association";
+import DesignInvoice from "../models/designInvoice";
 
 
 // Create Project Controller
@@ -1015,3 +1016,95 @@ export const deleteDegineBOQPartById = asyncHandler(
         );
     }
 );
+
+
+export const degineInvoiceCreate = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction) => {
+
+        const { 
+            boqId, 
+            boqName, 
+            clientContact, 
+            clientName, 
+            nowPayAmount, 
+            projectAddress, 
+            subject,
+            totalFees,
+            totalArea
+
+        } = req.body;
+
+        // Check for required fields
+        if (!boqId || !boqName || !clientContact || !clientName || !totalFees || !nowPayAmount || !projectAddress || !subject) {
+            throw new ApiError('All fields are required', 400, 'BAD_REQUEST');
+        }
+
+
+        // Create the AssignedDegineBoq record
+        const assignedDegineBoq = await DesignInvoice.create({
+            boqId,
+            boqName,
+            clientContact,
+            clientName,
+            nowPayAmount,
+            projectAddress, // Store the calculated finalAmount
+            subject,
+            totalFees,
+            totalArea,
+            date: new Date(), // Automatically adds the current date
+
+        });
+
+        return res.status(201).json(
+            ApiResponse.success('Invoice created successfully')
+        );
+    }
+);
+
+export const viewAllDegineInvoice = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction) => {
+        
+        const { boqId } = req.params;
+
+        const designInvoice = await DesignInvoice.findAll(
+
+            {
+                where:{
+                    boqId
+                }
+            }
+        );
+
+        return res.status(200).json(
+            ApiResponse.success(designInvoice, 'DesignInvoice retrieved successfully')
+        );
+    }
+);
+
+export const viewAllDegineInvoiceById = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction) => {
+        const { id } = req.params;
+
+        // Find the specific design invoice
+        const designInvoice = await DesignInvoice.findByPk(id);
+        if (!designInvoice) {
+            throw new ApiError('DesignInvoice not found', 404, 'NOT_FOUND');
+        }
+
+        const boqId = designInvoice.boqId;
+
+        // Calculate total PayAmount for all rows with the same boqId and id < given id (excluding current row)
+        const totalPayAmount = await DesignInvoice.sum('nowPayAmount', {
+            where: {
+                boqId,
+                id: { [Op.lt]: id } // Only consider rows where id is LESS THAN the given id
+            }
+        });
+
+        return res.status(200).json(
+            ApiResponse.success({ designInvoice, totalPayAmount }, 'DesignInvoice retrieved successfully')
+        );
+    }
+);
+
+

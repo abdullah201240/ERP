@@ -15,7 +15,7 @@ import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Logo from '@/app/assets/img/IQlogo.jpg'
 import Footer from '@/app/assets/img/iqpv.jpg'
-interface DegineBOQPart {
+interface Project {
     id: number;
     serviceName: string;
     serviceDescription: string;
@@ -59,52 +59,21 @@ interface Task {
 export default function Home() {
     const router = useRouter();
 
-    const [projects, setProjects] = useState<DegineBOQPart[]>([]);
     const [boq, setBoq] = useState<DegineBOQ | null>(null);
     const [tasks, setTasks] = useState<Task[]>([]);
 
-    const [loading, setLoading] = useState<boolean>(true);
     const [loading1, setLoading1] = useState<boolean>(true);
     const [loading2, setLoading2] = useState<boolean>(true);
 
 
-    const [error, setError] = useState<string | null>(null);
     const [error1, setError1] = useState<string | null>(null);
     const [error2, setError2] = useState<string | null>(null);
     const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
     const params = useParams();
     const boqId = params?.id;
+    const projects: Project[] = JSON.parse(localStorage.getItem('updatedProjects') || '[]');
 
-    // Fetch projects
-    const fetchProjects = useCallback(async () => {
-        if (!token) {
-            router.push('/');
-        } else {
-            try {
-                const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}projects/degineBOQPart/${boqId}`, {
-                    headers: {
-                        'Authorization': token
-                    }
-                });
 
-                if (!response.ok) {
-                    throw new Error('Failed to fetch projects');
-                }
-
-                const data = await response.json();
-
-                if (data.success && Array.isArray(data.data)) {
-                    setProjects(data.data);
-                } else {
-                    throw new Error('Fetched data is not in expected format');
-                }
-            } catch (err) {
-                setError((err as Error).message);
-            } finally {
-                setLoading(false);
-            }
-        }
-    }, [token, router, boqId]);
 
 
     const fetchDegineBOQ = useCallback(async () => {
@@ -171,31 +140,54 @@ export default function Home() {
 
     // CSS for printing
     const printStyles = `
-@media print {
-    .header {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 10px;
-        background-color: #f17b21;
-        border-bottom: 1px solid #f17b21;
-        z-index: 1000;
-    }
-    .footer {
+        @page {
+            size: A4;
+            margin: 1cm; /* Adjust margins as needed */
+        }
+
+        @media print {
+            body {
+                width: 210mm;
+                height: 297mm;
+                margin: 0;
+                padding: 0;
+            }
+
+            .header {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                text-align: center;
+                padding: 10px;
+                background-color: #f17b21;
+                z-index: 1000;
+            }
+
+             .footer {
         position: fixed;
         bottom: 0;
         left: 0;
         right: 0;
-        text-align: center;
-        z-index: 1000;
+        height: 100px; /* Adjust height as needed */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background-color: white; /* Add background color if needed */
+        z-index: 1000; /* Ensure footer is above other content */
     }
-    .page-content {
-        margin-top: 20px; /* Adjust based on header height */
-        margin-bottom: 50px; /* Adjust based on footer height */
-    }
-}
-`;
+
+            .page-content {
+                margin-top: 50px; /* Adjust based on header height */
+                margin-bottom: 50px; /* Adjust based on footer height */
+            }
+
+            .print-break {
+                page-break-after: always;
+            }
+        }
+            
+    `;
 
     useEffect(() => {
         if (boq?.projectId) { // Only fetch tasks if boq and projectId are available
@@ -204,26 +196,16 @@ export default function Home() {
     }, [boq, fetchTask]); // Trigger fetchTask when boq changes
 
     useEffect(() => {
-        fetchProjects();
+       
         fetchDegineBOQ();
 
-    }, [fetchProjects, fetchDegineBOQ]);
+    }, [ fetchDegineBOQ]);
 
 
-    // useEffect(() => {
-    //     if (!loading && !loading2 && !loading1 && boq && projects.length > 0) {
-    //         window.print();
-    //     }
-    // }, [loading, loading1, boq, projects, loading2]);
+   
 
     // Loading and error handling
-    if (loading) {
-        return <div>Loading...</div>;
-    }
-
-    if (error) {
-        return <div>Error: {error}</div>;
-    }
+    
     if (loading1) {
         return <div>Loading...</div>;
     }
@@ -232,13 +214,14 @@ export default function Home() {
     }
 
     if (error2) {
-        return <div>Error2: {error}</div>;
+        return <div>Error2: {error2}</div>;
     }
     if (error1) {
-        return <div>Error: {error}</div>;
+        return <div>Error: {error1}</div>;
     }
     // Calculate final total amount
-    const finalTotalAmount = projects.reduce((total, project) => {
+    // Calculate final total amount
+    const finalTotalAmount = projects.reduce((total: number, project: Project) => {
         return total + parseFloat(project.serviceAmount || '0');
     }, 0);
     // Add final amount below the table
@@ -253,13 +236,15 @@ export default function Home() {
         return formattedDate;
     };
 
+    
+
     return (
         <div id="pdf-content">
             <style>{printStyles}</style>
             <div className="header"></div>
 
 
-            <div className='mt-4 page-content'>
+            <div className="mt-4 page-content">
 
                 <div className="max-w-7xl mx-auto p-8 bg-white ">
 
@@ -296,22 +281,22 @@ export default function Home() {
 
 
                                     </div>
-                                    
 
-                                        <p className='mt-8'>Dear Sir,</p>
-                                        <p className='mt-4'>{boq.firstPera}</p>
-                                        <p className='mt-4'>{boq.secondPera}</p>
-                                        <p className='font-semibold mt-8 mb-4'><u>SCOPE OF WORKS:</u></p>
-                                        {projects && projects.length > 0 ? (
-                                            projects.map((project, index) => (
-                                                <p key={index}>PHASE-{index + 1}: <span>{project.serviceName}</span></p>
-                                            ))
-                                        ) : (
-                                            <p>No projects available</p>
-                                        )}
-                                        <p className='mt-4 font-semibold'>FEES PROPOSAL:</p>
-                                        <p className='mt-2 mb-4'>{boq.feesProposal}</p>
-                                    
+
+                                    <p className='mt-8'>Dear Sir,</p>
+                                    <p className='mt-4'>{boq.firstPera}</p>
+                                    <p className='mt-4'>{boq.secondPera}</p>
+                                    <p className='font-semibold mt-8 mb-4'><u>SCOPE OF WORKS:</u></p>
+                                    {projects && projects.length > 0 ? (
+                                        projects.map((project, index) => (
+                                            <p key={index}>PHASE-{index + 1}: <span>{project.serviceName}</span></p>
+                                        ))
+                                    ) : (
+                                        <p>No projects available</p>
+                                    )}
+                                    <p className='mt-4 font-semibold'>FEES PROPOSAL:</p>
+                                    <p className='mt-2 mb-4'>{boq.feesProposal}</p>
+
 
                                 </div>
 
@@ -423,7 +408,7 @@ export default function Home() {
 
 
 
-                                    <p className='font-semibold mt-4 mb-4 text-xm'>REQUIRED TIME SCHEDULE FOR THE DESIGN WORKS</p>
+                                    <p className='font-semibold mt-8 mb-4 text-xm'>REQUIRED TIME SCHEDULE FOR THE DESIGN WORKS</p>
 
                                     <Table className='mt-4'>
                                         <TableHeader className='bg-[#2A515B] text-white text-xs'>
@@ -548,7 +533,12 @@ export default function Home() {
                 </div>
             </div>
             <div className="footer h-[100px] flex justify-center items-center">
-                <Image src={Footer} alt="Footer" className="max-w-7xl w-full h-full   object-contain" />
+                <Image
+                    src={Footer} // Ensure this path is correct
+                    alt="Footer"
+                    className="max-w-7xl w-full h-full object-contain"
+                    unoptimized // Disable image optimization for printing
+                />
             </div>
 
 

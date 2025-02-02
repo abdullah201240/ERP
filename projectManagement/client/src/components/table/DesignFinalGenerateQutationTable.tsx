@@ -29,6 +29,7 @@ import { toWords } from 'number-to-words';
 import Link from 'next/link';
 import Image from 'next/image';
 import Logo from '@/app/assets/img/Logo.webp'
+
 // Interface as provided by you
 interface DegineBOQPart {
     id: number;
@@ -93,9 +94,40 @@ const DesignFinalGenerateQutationTable: React.FC<DesignFinalGenerateQutationTabl
 
     const [deleteId, setDeleteId] = useState<number | null>(null);
     const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+    const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+    // Handle drag start
+    const handleDragStart = (index: number) => {
+        setDraggedIndex(index);
+    };
+
+    // Handle drag over
+    const handleDragOver = (event: React.DragEvent<HTMLTableRowElement>, index: number) => {
+        if (draggedIndex === null) return;
+
+        // Prevent default to allow drop
+        event.preventDefault();
+
+        // Reorder the projects array
+        const newProjects = [...projects];
+        const draggedItem = newProjects[draggedIndex];
+
+        // Remove the dragged item from its original position
+        newProjects.splice(draggedIndex, 1);
+        // Insert the dragged item at the new position
+        newProjects.splice(index, 0, draggedItem);
+
+        // Update the state with the new order
+        setProjects(newProjects);
+        localStorage.setItem('updatedProjects', JSON.stringify(newProjects));
 
 
+        setDraggedIndex(index);
+    };
 
+    // Handle drop
+    const handleDrop = () => {
+        setDraggedIndex(null);
+    };
     // Fetch projects
     const fetchProjects = useCallback(async () => {
         if (!token) {
@@ -199,7 +231,11 @@ const DesignFinalGenerateQutationTable: React.FC<DesignFinalGenerateQutationTabl
         }
     }, [boq, fetchTask]); // Trigger fetchTask when boq changes
 
-
+    useEffect(() => {
+        if (projects.length > 0) {
+            localStorage.setItem('updatedProjects', JSON.stringify(projects));
+        }
+    }, [projects]);
 
     // Handle delete
     const handleDelete = async () => {
@@ -251,7 +287,7 @@ const DesignFinalGenerateQutationTable: React.FC<DesignFinalGenerateQutationTabl
     if (error1) {
         return <div>Error: {error}</div>;
     }
-   
+
 
     if (error2) {
         return <div>Error2: {error}</div>;
@@ -303,7 +339,12 @@ const DesignFinalGenerateQutationTable: React.FC<DesignFinalGenerateQutationTabl
                         </TableRow>
                     ) : (
                         projects.map((project, index) => (
-                            <TableRow key={project.id} className='text-center'>
+                            <TableRow key={project.id} className='text-center'
+                                draggable
+                                onDragStart={() => handleDragStart(index)}
+                                onDragOver={(event) => handleDragOver(event, index)}
+                                onDrop={handleDrop}
+                            >
                                 <TableCell className='text-center border border-[#e5e7eb]'>{index + 1}</TableCell>
                                 <TableCell className='border border-[#e5e7eb]'>{project.serviceName}</TableCell>
                                 <TableCell className='border border-[#e5e7eb]'>{project.serviceDescription}</TableCell>

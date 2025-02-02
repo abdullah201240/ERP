@@ -33,7 +33,10 @@ export default function RootLayout({
                   <HeaderMobile />
                   <PageWrapper>
                     <Toaster position="top-center" />
+                    
+
                     {children}
+                   
                   </PageWrapper>
                   <Footer />
                 </MarginWidthWrapper>
