@@ -23,9 +23,8 @@ export default function RootLayout({
 
 
   return (
-    <html lang="en">
-      <body className={`bg-white ${inter.className}`}>
-        <div>
+    
+        <div className={`bg-white ${inter.className}`}>
               <SideNav />
               <main className="flex-1">
                 <MarginWidthWrapper>
@@ -39,7 +38,6 @@ export default function RootLayout({
                 </MarginWidthWrapper>
               </main>
         </div>
-      </body>
-    </html>
+     
   );
 }

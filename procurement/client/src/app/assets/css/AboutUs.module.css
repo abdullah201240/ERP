@@ -1,0 +1,28 @@
+/* Add this CSS in your global CSS or in a module CSS file */
+
+@keyframes moveButton {
+    0% {
+      top: 10%;
+      left: 10%;
+    }
+    25% {
+      top: 10%;
+      left: 80%;
+    }
+    50% {
+      top: 80%;
+      left: 80%;
+    }
+    75% {
+      top: 80%;
+      left: 10%;
+    }
+    100% {
+      top: 10%;
+      left: 10%;
+    }
+  }
+  
+  .animate-moveButton {
+    animation: moveButton 6s linear infinite;
+  }
