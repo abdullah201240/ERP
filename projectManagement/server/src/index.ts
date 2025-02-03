@@ -12,6 +12,8 @@ import db from './config/sequelize'; // Adjust path
 import routes from './routes/index';
 import { errorMiddleware } from "./middleware/error";
 import morganMiddleware from './logger/morganLogger';
+import { connectRabbitMQ } from './utils/rabbitmq';
+import { startConsumer } from './controllers/employeeController';
 
 dotenv.config();
 
@@ -57,6 +59,8 @@ app.use(
 // Define the routes
 app.use("",routes);
 
+
+
 // Basic route
 app.get('/', (req: Request, res: Response) => {
   res.send('Hello, TypeScript with Express!');
@@ -70,7 +74,19 @@ const server = createServer(app);
 db.authenticate()
   .then(() => console.log('Database connected successfully!'))
   .catch(err => console.error('Database connection failed:', err));
+  
 // Start the server
+const startServer = async () => {
+  try {
+    await connectRabbitMQ(); // Ensure the connection is established
+    startConsumer(); // Start consuming only after the connection is ready
+  } catch (error) {
+    console.error('Error starting the server:', error);
+  }
+};
+
+startServer();
+
 server.listen(port, () => {
   console.log(`Server is running on port ${port}`);
 });

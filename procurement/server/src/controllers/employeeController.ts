@@ -7,6 +7,7 @@ import bcrypt from 'bcryptjs';
 import ERROR_MESSAGES from '../utils/errors/errorMassage'
 import jwt, { SignOptions } from 'jsonwebtoken';
 import { Op } from "sequelize";
+import { getChannel } from '../utils/rabbitmq';
 
 const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET || "LD9cv1kBfgRHVIg9GG_OGzh9TUkcyqgZAaM0o3DmVkx08MCFRSzMocyO3UtNdDNtoCJ0X0-5nLwK7fdO"; // Fallback to a hardcoded secret if not in env
 if (!ACCESS_TOKEN_SECRET) {
@@ -73,6 +74,26 @@ export const createEmployee = asyncHandler(
         ErrorCodes.INTERNAL_SERVER_ERROR.code
       );
     }
+    // Send a message to RabbitMQ
+    const channel = getChannel();
+    const queue = process.env.RABBITMQ_QUEUE;
+    if (!queue) {
+      throw new Error('RabbitMQ queue is not defined in environment variables');
+    }
+    const message = JSON.stringify({
+      id: newEmployee.id,
+      name: newEmployee.name,
+      email: newEmployee.email,
+      password: newEmployee.password,
+      phone: newEmployee.phone,
+      dob: newEmployee.dob,
+      gender: newEmployee.gender
+
+    });
+    channel.assertQueue(queue, { durable: false });
+    channel.sendToQueue(queue, Buffer.from(message));
+    console.log(`Message sent to RabbitMQ: ${message}`);
+
 
     // Exclude the password from the response
     const { password: _, ...employeeResponse } = newEmployee.toJSON();
