@@ -15,13 +15,16 @@ export const SIDENAV_ITEMS: SideNavItem[] = [
     icon: <Icon icon="gridicons:add" width="19" height="19" />,
   },
   {
-    title: 'Site Visit Plan',
+    title: 'Products',
     path: '/',
-    icon: <Icon icon="lucide:calendar" width="19" height="19" />,
+    icon: <Icon icon="fa-solid:box-open" width="19" height="19" />,
     submenu: true,
     subMenuItems: [
-      { title: 'Pre Project', path: '/create-pre-project-plan' },
-      { title: 'Project', path: '/create-project-plan' },
+      
+      { title: 'Category', path: '/product-category' },
+
+      { title: 'Unit List', path: '/create-pre-project-plan' },
+      { title: 'All Products', path: '/create-project-plan' },
       { title: 'Supervision', path: '/create-supervision' },
     ],
   },
