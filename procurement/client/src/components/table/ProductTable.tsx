@@ -176,7 +176,6 @@ export default function ProductTable() {
                         <TableHead className='text-white text-center'>Source Price</TableHead>
                         <TableHead className='text-white text-center'>Unit</TableHead>
                         <TableHead className='text-white text-center'>Product Category</TableHead>
-                        <TableHead className='text-white text-center'>Size And Dimension</TableHead>
 
 
 
@@ -202,7 +201,6 @@ export default function ProductTable() {
                             <TableCell className='border border-[#e5e7eb]'>{product.sourcePrice}</TableCell>
                             <TableCell className='border border-[#e5e7eb]'>{product.unit}</TableCell>
                             <TableCell className='border border-[#e5e7eb]'>{product.product_category}</TableCell>
-                            <TableCell className='border border-[#e5e7eb]'>{product.sizeAndDimension}</TableCell>
 
 
                             <TableCell className='border border-[#e5e7eb] text-3xl flex items-center justify-center'>
