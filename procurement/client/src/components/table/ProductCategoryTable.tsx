@@ -25,30 +25,34 @@ import { RiDeleteBin6Line } from 'react-icons/ri';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useRouter } from 'next/navigation';
 
 // Define Interface for Category
 interface Category {
     id: number;
     name: string;
 }
-
-export default function ProductCategoryTable() {
+interface ProductCategoryTableProps {
+    reload: boolean;
+}
+const ProductCategoryTable: React.FC<ProductCategoryTableProps> = ({ reload }) => {
     const [categories, setCategories] = useState<Category[]>([]);
     const [deleteId, setDeleteId] = useState<number | null>(null);
     const [editCategory, setEditCategory] = useState<Category | null>(null);
     const [editedName, setEditedName] = useState<string>("");
+    const router = useRouter();
 
     // Fetch categories from API
     useEffect(() => {
         fetchCategories();
-    }, []);
+    }, [reload]);
 
     const fetchCategories = async () => {
         try {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}product/product`); // Replace with your actual API endpoint
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}product/category`); // Replace with your actual API endpoint
             if (!response.ok) throw new Error("Failed to fetch categories");
             const result = await response.json(); // Parse the response JSON
-    
+
             // Check if the response has a `data` field and it is an array
             if (result.data && Array.isArray(result.data)) {
                 setCategories(result.data); // Set the categories from the `data` field
@@ -66,8 +70,17 @@ export default function ProductCategoryTable() {
     const handleDelete = async () => {
         if (!deleteId) return;
         try {
-            const response = await fetch(`/api/categories/${deleteId}`, {
+            const token = localStorage.getItem('accessToken');
+            if (!token) {
+                router.push('/'); // Adjust the path to your login page
+                return; // Exit the function early
+            }
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}product/category/${deleteId}`, {
                 method: 'DELETE',
+                headers: {
+                    'Authorization': token,
+                    
+                },
             });
 
             if (!response.ok) throw new Error("Failed to delete category");
@@ -89,9 +102,17 @@ export default function ProductCategoryTable() {
     const saveEdit = async () => {
         if (!editCategory) return;
         try {
-            const response = await fetch(`/api/categories/${editCategory.id}`, {
+            const token = localStorage.getItem('accessToken');
+            if (!token) {
+                router.push('/'); // Adjust the path to your login page
+                return; // Exit the function early
+            }
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}product/category/${editCategory.id}`, {
                 method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Authorization': token,
+                    'Content-Type': 'application/json'
+                },
                 body: JSON.stringify({ name: editedName }),
             });
 
@@ -107,10 +128,10 @@ export default function ProductCategoryTable() {
     return (
         <div>
             <Table>
-                <TableHeader className='bg-[#2A515B] text-white'>
+                <TableHeader className='bg-[#2A515B] text-white '>
                     <TableRow className='text-center'>
                         <TableHead className='text-white text-center'>SI. No.</TableHead>
-                        <TableHead className='text-white text-center'>Category Name</TableHead>
+                        <TableHead className='text-white text-center'>Name</TableHead>
                         <TableHead className='text-white text-center'>Action</TableHead>
                     </TableRow>
                 </TableHeader>
@@ -129,12 +150,12 @@ export default function ProductCategoryTable() {
                                 <TableCell className='border border-[#e5e7eb] flex items-center justify-center gap-4'>
                                     <FaEdit
                                         onClick={() => handleEdit(category)}
-                                        className='opacity-50 cursor-pointer'
+                                        className='opacity-50 cursor-pointer text-xl'
                                     />
                                     <AlertDialog>
                                         <AlertDialogTrigger asChild>
                                             <RiDeleteBin6Line
-                                                className='opacity-50 cursor-pointer'
+                                                className='opacity-50 cursor-pointer text-xl'
                                                 onClick={() => setDeleteId(category.id)}
                                             />
                                         </AlertDialogTrigger>
@@ -180,3 +201,4 @@ export default function ProductCategoryTable() {
         </div>
     );
 }
+export default ProductCategoryTable;

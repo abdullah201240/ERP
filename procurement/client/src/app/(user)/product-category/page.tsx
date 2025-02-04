@@ -1,11 +1,46 @@
 'use client'
 import { Button } from '@/components/ui/button';
-import React, { useState } from 'react';
+import React, { useState ,useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import ProductCategoryTable from '@/components/table/ProductCategoryTable'
 export default function ProductCategoryPage() {
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [categoryName, setCategoryName] = useState('');
+  const [reloadTable, setReloadTable] = useState(false);
+  const router = useRouter();
 
+  useEffect(() => {
+    const checkTokenAndFetchProfile = async () => {
+      // Check if the access token exists in localStorage
+      const token = localStorage.getItem('accessToken');
+
+      // If the token does not exist, redirect to the login page
+      if (!token) {
+        router.push('/'); // Adjust the path to your login page
+        return; // Exit the function early
+      }
+
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}employee/auth/profile`, {
+          headers: {
+            'Authorization': token
+          }
+        });
+
+        if (!response.ok) {
+          router.push('/'); // Adjust the path to your login page
+          return; // Exit the function early
+        }
+
+        // Handle the response data here if needed
+      } catch (error) {
+        console.error(error);
+        // Handle error (e.g., show a notification)
+      }
+    };
+
+    checkTokenAndFetchProfile();
+  }, [router]);
   const openPopup = () => {
     setIsPopupOpen(true);
   };
@@ -19,10 +54,16 @@ export default function ProductCategoryPage() {
     e.preventDefault();
 
     try {
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        router.push('/'); // Adjust the path to your login page
+        return; // Exit the function early
+      }
       // Replace with your API endpoint
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}product/product`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}product/category`, {
         method: 'POST',
         headers: {
+          'Authorization': token,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ name: categoryName }),
@@ -30,7 +71,7 @@ export default function ProductCategoryPage() {
 
       if (response.ok) {
         closePopup(); // Close the popup
-        window.location.reload(); // Reload the page to refresh the table
+        setReloadTable((prev) => !prev);
       } else {
         console.error('Failed to add category');
       }
@@ -41,11 +82,13 @@ export default function ProductCategoryPage() {
 
   return (
     <div>
+      <h1 className="text-lg">All Product Category</h1>
       <div className="bg-white mt-8 p-4 rounded-xl">
-        <div className="w-[98vw] md:w-full">
+        
+        
           {/* Flex container for button and heading */}
           <div className="flex items-center justify-between mb-4">
-            <h1 className="text-xl">All Product Category</h1>
+            
             <button
               onClick={openPopup}
               className="bg-[#FF8319] text-white px-4 py-2 rounded"
@@ -54,10 +97,10 @@ export default function ProductCategoryPage() {
             </button>
           </div>
 
-          <div className="w-[98vw] md:w-full">
-            <ProductCategoryTable />
-          </div>
-        </div>
+          
+            <ProductCategoryTable reload={reloadTable} />
+         
+       
       </div>
 
 

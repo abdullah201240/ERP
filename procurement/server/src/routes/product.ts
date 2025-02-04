@@ -5,10 +5,10 @@ import { createProduct, deleteProduct, updateProduct, viewProduct } from "../con
 const router = express.Router();
 
 
-router.post("/product",verifyJWT, createProduct);
-router.get("/product", viewProduct);
-router.delete("/product", verifyJWT, deleteProduct);
-router.put("/product", verifyJWT, updateProduct);
+router.post("/category",verifyJWT, createProduct);
+router.get("/category", viewProduct);
+router.delete("/category/:id", verifyJWT, deleteProduct);
+router.put("/category/:id", verifyJWT, updateProduct);
 
 
 
