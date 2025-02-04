@@ -47,10 +47,18 @@ export default function ProductCategoryTable() {
         try {
             const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}product/product`); // Replace with your actual API endpoint
             if (!response.ok) throw new Error("Failed to fetch categories");
-            const data: Category[] = await response.json();
-            setCategories(data); // Directly set the fetched data if it's already an array of Category
+            const result = await response.json(); // Parse the response JSON
+    
+            // Check if the response has a `data` field and it is an array
+            if (result.data && Array.isArray(result.data)) {
+                setCategories(result.data); // Set the categories from the `data` field
+            } else {
+                console.error("Expected an array of categories inside 'data', but got:", result);
+                setCategories([]); // Default to an empty array if the structure is incorrect
+            }
         } catch (error) {
             console.error("Error fetching categories:", error);
+            setCategories([]); // Default to an empty array in case of error
         }
     };
 
