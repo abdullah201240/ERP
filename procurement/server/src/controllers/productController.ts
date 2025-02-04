@@ -269,3 +269,92 @@ export const createProduct = asyncHandler(
       });
     }
   );
+
+  export const deleteProduct = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction) => {
+        const { id } = req.params;
+
+        const deleteProduct = await Product.findByPk(id);
+
+        if (!deleteProduct) {
+            throw new ApiError('Product  not found', 404, 'NOT_FOUND');
+        }
+
+        await deleteProduct.destroy();
+
+        return res.status(200).json(
+            ApiResponse.success(null, 'Product  deleted successfully')
+        );
+    }
+);
+
+export const viewProductById = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction) => {
+        const { id } = req.params; // Get product ID from request parameters
+
+        const viewProduct = await Product.findOne({
+            where: { id }, // Find product by ID
+        });
+
+        if (!viewProduct) {
+            throw new ApiError('Product  not found', 404, 'NOT_FOUND');
+        }
+
+        return res.status(200).json(
+            ApiResponse.success(viewProduct, 'Product retrieved successfully')
+        );
+    }
+);
+
+export const updateProduct = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction) => {
+        const { id } = req.params;
+
+        // Validate product existence
+        const product = await Product.findByPk(id);
+        if (!product) {
+            throw new ApiError(`Product with ID ${id} not found`, 404, 'NOT_FOUND');
+        }
+
+        // Extract valid fields from the request body
+        const {
+            name,
+            brand,
+            countryOfOrigin,
+            sizeAndDimension,
+            category,
+            supplierProductCode,
+            ourProductCode,
+            mrpPrice,
+            discountPercentage,
+            discountAmount,
+            sourcePrice,
+            unit,
+            product_category
+        } = req.body;
+
+        // Update the product fields
+        product.name = name || product.name;
+        product.brand = brand || product.brand;
+        product.countryOfOrigin = countryOfOrigin || product.countryOfOrigin;
+        product.sizeAndDimension = sizeAndDimension || product.sizeAndDimension;
+        product.category = category || product.category;
+        product.supplierProductCode = supplierProductCode || product.supplierProductCode;
+        product.ourProductCode = ourProductCode || product.ourProductCode;
+        product.mrpPrice = mrpPrice || product.mrpPrice;
+        product.discountPercentage = discountPercentage || product.discountPercentage;
+        product.discountAmount = discountAmount || product.discountAmount;
+        product.sourcePrice = sourcePrice || product.sourcePrice;
+        product.unit = unit || product.unit;
+        product.product_category = product_category || product.product_category;
+
+        // Save the updated product to the database
+        await product.save();
+
+        return res.status(200).json(
+            ApiResponse.success(product, 'Product updated successfully')
+        );
+    }
+);
+
+
