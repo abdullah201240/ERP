@@ -1,6 +1,6 @@
 import express from "express";
 import { verifyJWT } from "../middleware/auth"; 
-import { createCategory, createUnit, deleteCategory, deleteUnit, updateCategory, updateUnit, viewCategory, viewUnit } from "../controllers/productController";
+import { createCategory, createProduct, createUnit, deleteCategory, deleteUnit, getAllProduct, updateCategory, updateUnit, viewCategory, viewUnit } from "../controllers/productController";
 
 const router = express.Router();
 
@@ -14,5 +14,10 @@ router.post("/unit",verifyJWT, createUnit);
 router.get("/unit",verifyJWT, viewUnit);
 router.delete("/unit/:id", verifyJWT, deleteUnit);
 router.put("/unit/:id", verifyJWT, updateUnit);
+
+
+router.post("/product",verifyJWT, createProduct);
+router.get("/product",verifyJWT, getAllProduct);
+
 
 export default router;

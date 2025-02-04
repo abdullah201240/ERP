@@ -4,6 +4,8 @@ import { ErrorCodes } from '../utils/errors/ErrorCodes';
 import ERROR_MESSAGES from '../utils/errors/errorMassage'
 import ProductCategory from "../models/productCategory";
 import ProductUnit from '../models/productUnit';
+import Product from "../models/product";
+import { Op } from "sequelize";
 
 
 
@@ -179,3 +181,91 @@ export const updateUnit = asyncHandler(
         );
     }
 );
+
+
+
+export const createProduct = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction) => {
+      // Destructure required fields from the request body
+      const {
+        name,
+        brand,
+        countryOfOrigin,
+        sizeAndDimension,
+        category,
+        supplierProductCode,
+        ourProductCode,
+        mrpPrice,
+        discountPercentage,
+        discountAmount,
+        sourcePrice,
+        unit,
+        product_category
+      } = req.body;
+  
+      // Check for required fields
+      if (!name || !brand || !countryOfOrigin || !sizeAndDimension || !category || !supplierProductCode || !ourProductCode || !mrpPrice || !discountPercentage || !discountAmount || !sourcePrice || !unit || !product_category) {
+        throw new ApiError('All fields are required', 400, 'BAD_REQUEST');
+      }
+  
+      // Create the Product record
+      const createdProduct = await Product.create({
+        name,
+        brand,
+        countryOfOrigin,
+        sizeAndDimension,
+        category,
+        supplierProductCode,
+        ourProductCode,
+        mrpPrice,
+        discountPercentage,
+        discountAmount,
+        sourcePrice,
+        unit,
+        product_category
+      });
+  
+      // Return success response
+      return res.status(201).json(
+        ApiResponse.success('Product created successfully')
+      );
+    }
+  );
+
+
+
+  export const getAllProduct = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction) => {
+      const { page = 1, limit = 10, search = "" } = req.query;
+      
+      // Parse page and limit as integers
+      const pageNumber = parseInt(page as string, 10);
+      const pageSize = parseInt(limit as string, 10);
+      const offset = (pageNumber - 1) * pageSize;
+    
+      // Fetch products with pagination and search
+      const { rows: products, count: totalProducts } = await Product.findAndCountAll({
+        where: search
+          ? {
+              name: {
+                [Op.like]: `%${search}%`, // Case-insensitive search for MariaDB/MySQL
+              },
+            }
+          : {},
+        limit: pageSize,
+        offset: offset,
+        order: [["createdAt", "ASC"]], // Sort by most recent
+      });
+    
+      return res.status(200).json({
+        success: true,
+        data: {
+          products,  // Fixed this to 'products' instead of 'employees'
+          totalProducts,  // Fixed this to 'totalProducts' instead of 'totalEmployees'
+          totalPages: Math.ceil(totalProducts / pageSize),  // Fixed this to use 'totalProducts'
+          currentPage: pageNumber,
+        },
+        message: "Products retrieved successfully",  // Updated the message
+      });
+    }
+  );

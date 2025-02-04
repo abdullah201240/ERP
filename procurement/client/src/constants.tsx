@@ -24,7 +24,7 @@ export const SIDENAV_ITEMS: SideNavItem[] = [
       { title: 'Category', path: '/product-category' },
 
       { title: 'Unit List', path: '/product-unit' },
-      { title: 'All Products', path: '/create-project-plan' },
+      { title: 'All Products', path: '/product' },
       { title: 'Supervision', path: '/create-supervision' },
     ],
   },
