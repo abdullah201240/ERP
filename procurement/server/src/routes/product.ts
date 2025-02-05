@@ -11,7 +11,7 @@ router.delete("/category/:id", verifyJWT, deleteCategory);
 router.put("/category/:id", verifyJWT, updateCategory);
 
 router.post("/unit",verifyJWT, createUnit);
-router.get("/unit",verifyJWT, viewUnit);
+router.get("/unit", viewUnit);
 router.delete("/unit/:id", verifyJWT, deleteUnit);
 router.put("/unit/:id", verifyJWT, updateUnit);
 
