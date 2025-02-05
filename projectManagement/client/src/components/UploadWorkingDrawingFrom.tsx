@@ -216,24 +216,24 @@ export default function UploadWorkingDrawingFrom() {
 
         try {
             // Log FormData properly
-            console.log('FormData entries:');
+            
             for (const pair of form.entries()) {
                 console.log(pair[0], pair[1]);
             }
 
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}siteVisit/create-pre-site-visit-plan`, {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}workingDrawing/drawing`, {
                 method: 'POST',
                 headers: {
                     Authorization: `Bearer ${token}`,
-                    'Content-Type': 'multipart/form-data',
+                    
                 },
                 body: form, // Use FormData directly
             });
 
             if (!response.ok) {
-                toast.error('Failed to add Pre-Project Site Visit Plan');
+                toast.error('Failed to add working drawing');
             } else {
-                toast.success('Pre-Project Site Visit Plan added successfully!');
+                toast.success('Working drawing added successfully!');
 
                 // Reset form
                 setSelectedProject(null);
@@ -252,8 +252,10 @@ export default function UploadWorkingDrawingFrom() {
                 setReloadTable((prev) => !prev);
             }
         } catch (error) {
-            console.error('Error submitting form:', error);
-            toast.error('Failed to add Pre-Project Site Visit Plan');
+            if(error){
+                toast.error('Failed to add working drawing');
+
+            }
         }
     };
 
