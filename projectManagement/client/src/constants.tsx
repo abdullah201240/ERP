@@ -37,9 +37,9 @@ export const SIDENAV_ITEMS: SideNavItem[] = [
       { title: 'BOQ', path: '/design-boq' },
       { title: 'Generate BOQ & Quotation', path: '/generate-boq-quotation' },
       { title: 'Generate Invoice', path: '/generate-invoice' },
+      { title: 'Work Category', path: '/work-category' },
       { title: 'Upload Working Drawing', path: '/upload-working-drawing' },
       { title: 'Review Working Drawing BOQ', path: '/review-working-drawing-boq' },
-      { title: 'Work Category', path: '/work-category' },
      
 
     ],

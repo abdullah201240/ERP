@@ -1,0 +1,44 @@
+import { Sequelize, DataTypes, Model, Optional } from 'sequelize';
+import db from '../config/sequelize'; // Adjust path as needed
+
+interface WorkCategoryAttributes {
+  id: number;
+  name: string;
+  
+ 
+}
+
+interface WorkCategoryCreationAttributes extends Optional<WorkCategoryAttributes, 'id'> {}
+
+class WorkCategory extends Model<WorkCategoryAttributes, WorkCategoryCreationAttributes> implements WorkCategoryAttributes {
+  public id!: number;
+  public name!: string;
+  
+  }
+
+  WorkCategory.init(
+    {
+      id: {
+        type: DataTypes.INTEGER,
+        autoIncrement: true,
+        primaryKey: true,
+        allowNull: false,
+      },
+      name: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      }
+      
+      
+    },
+    {
+      sequelize: db, // Use the passed `sequelizeInstance`
+      modelName: 'WorkCategory',
+      tableName: 'workCategorys', // Specify table name if different from model name
+      timestamps: true, // Enable `createdAt` and `updatedAt`
+    }
+  );
+
+  
+
+export default WorkCategory;

@@ -2,6 +2,8 @@ import express from "express";
 import employeeRoute from "./employeeRoute";
 import projectRoute from "./projectRoute";
 import siteVisitRoute from "./siteVisitRoute";
+import workingDrawingRoute from "./workingDrawingRoute";
+
 
 
 
@@ -13,6 +15,8 @@ const router = express.Router();
 router.use("/employee", employeeRoute);
 router.use("/projects", projectRoute);
 router.use("/siteVisit", siteVisitRoute);
+router.use("/workingDrawing", workingDrawingRoute);
+
 
 
 
