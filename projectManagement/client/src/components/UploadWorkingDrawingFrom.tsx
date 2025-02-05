@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Select from 'react-select';
 import toast from 'react-hot-toast';
 import PreProjectPlanTable from './table/PreProjectPlanTable';
+import { Icon } from '@iconify/react';
 
 interface Project {
     id: number;
@@ -22,7 +23,7 @@ interface ProjectDetails {
     projectName: string;
 }
 
-interface FormData {
+interface MyFormData {
     unit: string;
     category: string;
 }
@@ -38,12 +39,12 @@ export default function UploadWorkingDrawingFrom() {
         clientContact: '',
         projectName: '',
     });
-    const [formData, setFormData] = useState<FormData>({
+    const [formData, setFormData] = useState<MyFormData>({
         unit: '',
         category: '',
     });
+
     const [itemName, setItemName] = useState<string>('');
-    const [uploadDesignWorkingDrawing, setUploadDesignWorkingDrawing] = useState<File | null>(null);
     const [itemDescription, setItemDescription] = useState<string>('');
     const [brandModel, setBrandModel] = useState<string>('');
     const [itemQuantity, setItemQuantity] = useState<string>('');
@@ -55,6 +56,7 @@ export default function UploadWorkingDrawingFrom() {
     const [token, setToken] = useState<string | null>(null);
     const [categories, setCategories] = useState<{ id: string; name: string }[]>([]);
     const [units, setUnits] = useState<{ id: string; name: string }[]>([]);
+    const [uploadDesignWorkingDrawings, setUploadDesignWorkingDrawings] = useState<File[]>([]);
 
     useEffect(() => {
         if (typeof window !== 'undefined') {
@@ -180,40 +182,60 @@ export default function UploadWorkingDrawingFrom() {
         setFormData((prev) => ({ ...prev, [name]: value }));
     };
 
+
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files) {
-            setUploadDesignWorkingDrawing(e.target.files[0]);
+            setUploadDesignWorkingDrawings(Array.from(e.target.files));
         }
     };
-
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
 
-        const payload = {
-            projectId: selectedProject,
-            itemName,
-            ...projectDetails,
-            ...formData,
-            brandModel,
-            itemQuantity,
-            itemDescription,
-            uploadDesignWorkingDrawing,
-        };
+        if (!selectedProject) {
+            toast.error('Please select a project');
+            return;
+        }
+
+        const form = new FormData();
+        form.append('projectId', selectedProject.toString());
+        form.append('itemName', itemName);
+        form.append('brandModel', brandModel);
+        form.append('itemQuantity', itemQuantity);
+        form.append('itemDescription', itemDescription);
+        form.append('unit', formData.unit);
+        form.append('category', formData.category);
+        form.append('clientName', projectDetails.clientName);
+        form.append('clientContact', projectDetails.clientContact);
+        form.append('projectAddress', projectDetails.projectAddress);
+        form.append('projectName', projectDetails.projectName);
+
+        // Append each file
+        uploadDesignWorkingDrawings.forEach((file) => {
+            form.append('designDrawings', file);
+        });
 
         try {
+            // Log FormData properly
+            console.log('FormData entries:');
+            for (const pair of form.entries()) {
+                console.log(pair[0], pair[1]);
+            }
+
             const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}siteVisit/create-pre-site-visit-plan`, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
                     Authorization: `Bearer ${token}`,
+                    'Content-Type': 'multipart/form-data',
                 },
-                body: JSON.stringify(payload),
+                body: form, // Use FormData directly
             });
 
             if (!response.ok) {
                 toast.error('Failed to add Pre-Project Site Visit Plan');
             } else {
                 toast.success('Pre-Project Site Visit Plan added successfully!');
+
+                // Reset form
                 setSelectedProject(null);
                 setProjectDetails({
                     projectAddress: '',
@@ -226,7 +248,7 @@ export default function UploadWorkingDrawingFrom() {
                 setBrandModel('');
                 setItemQuantity('');
                 setItemDescription('');
-                setUploadDesignWorkingDrawing(null);
+                setUploadDesignWorkingDrawings([]);
                 setReloadTable((prev) => !prev);
             }
         } catch (error) {
@@ -355,6 +377,9 @@ export default function UploadWorkingDrawingFrom() {
                                 <label className="text-white mb-2">Upload Design Working Drawing</label>
                                 <input
                                     type="file"
+                                    multiple
+                                    accept="image/*"
+
                                     onChange={handleFileChange}
                                     className="block w-full rounded-md border-gray-300 shadow-sm p-2 bg-gray-100 mt-2"
                                 />
@@ -394,11 +419,10 @@ export default function UploadWorkingDrawingFrom() {
                         <button
                             type="submit"
                             disabled={loading}
-                            className={`block w-full border border-white text-white font-bold py-3 px-4 rounded-md ${
-                                loading ? 'opacity-50 cursor-not-allowed' : ''
-                            }`}
+                            className={`block w-full border border-white text-white font-bold py-3 px-4 rounded-md ${loading ? 'opacity-50 cursor-not-allowed' : ''
+                                }`}
                         >
-                            {loading ? 'Adding Pre-Project Site Visit Plan...' : 'Add Pre-Project Site Visit Plan'}
+                            {loading ? <Icon icon="svg-spinners:6-dots-scale" width="24" height="24" /> : 'Adding upload working drawing'}
                         </button>
                     </form>
                 </div>

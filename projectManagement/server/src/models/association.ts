@@ -10,7 +10,8 @@ import DesignPlan from './designPlan';
 import Employee from './employee';
 import DegineBOQ from './degineBOQ';
 import AssignedDegineBoq from './assignedDegineBoq';
-
+import WorkingDrawing from './workingDrawing'; // Import WorkingDrawing model
+import WorkingDrawingImage from './workingDrawingImage'; // Import WorkingDrawingImage model
 // A Project can have many Employees
 Project.hasMany(Assigned, {
   foreignKey: 'pid', // Foreign key in Employee table pointing to Project
@@ -108,6 +109,20 @@ AssignedDegineBoq.belongsTo(DegineBOQ, {
   as: 'boq',
 });
 
+// A WorkingDrawing can have many WorkingDrawingImages
+WorkingDrawing.hasMany(WorkingDrawingImage, {
+  foreignKey: 'workingDrawingId', // Foreign key in WorkingDrawingImage pointing to WorkingDrawing
+  as: 'images', // Alias for the relation
+  onDelete: 'CASCADE', // Cleanup when a WorkingDrawing is deleted
+});
+
+// A WorkingDrawingImage belongs to a single WorkingDrawing
+WorkingDrawingImage.belongsTo(WorkingDrawing, {
+  foreignKey: 'workingDrawingId', // Foreign key in WorkingDrawingImage
+  as: 'workingDrawing', // Alias for accessing the related WorkingDrawing
+});
 
 
-export { Project,DegineBOQ,AssignedDegineBoq, Employee,DesignPlan, Assigned, PreSiteVisitPlan, AssignedPreSiteVisitPlan, SupervisionSiteVisitPlan, AssignedSupervisionSiteVisitPlan };
+
+export { Project,DegineBOQ,AssignedDegineBoq, Employee,DesignPlan, Assigned, PreSiteVisitPlan, AssignedPreSiteVisitPlan, SupervisionSiteVisitPlan, AssignedSupervisionSiteVisitPlan,WorkingDrawing,
+  WorkingDrawingImage };
