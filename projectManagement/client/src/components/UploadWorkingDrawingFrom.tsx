@@ -4,7 +4,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Select from 'react-select';
 import toast from 'react-hot-toast';
-import PreProjectPlanTable from './table/PreProjectPlanTable';
+import UploadWorkingDrawingTable from './table/UploadWorkingDrawingTable';
 import { Icon } from '@iconify/react';
 
 interface Project {
@@ -431,9 +431,9 @@ export default function UploadWorkingDrawingFrom() {
             </div>
 
             <div className="bg-white mt-8 p-4 rounded-xl">
-                <h1 className="text-center text-xl mb-4">Pre Project Site Visit Plan</h1>
+                <h1 className="text-center text-xl mb-4">Working Drawing</h1>
                 <div className="w-[98vw] md:w-full">
-                    <PreProjectPlanTable reload={reloadTable} />
+                    <UploadWorkingDrawingTable reload={reloadTable} />
                 </div>
             </div>
         </div>

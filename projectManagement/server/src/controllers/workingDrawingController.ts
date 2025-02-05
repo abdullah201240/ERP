@@ -107,7 +107,7 @@ export const createUploadDrawing = asyncHandler(
         }
 
         // Check for required fields
-        if (!projectId || !itemName || !brandModel || !itemQuantity || !itemDescription ||
+        if (!projectId || !itemName  || !itemQuantity || !itemDescription ||
             !unit || !category || !clientName || !clientContact || !projectAddress || !projectName) {
             throw new ApiError('All fields are required', 400, 'BAD_REQUEST');
         }
