@@ -26,6 +26,7 @@ import { RiDeleteBin6Line } from 'react-icons/ri';
 
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import Link from 'next/link';
 // Define Interface for Drawing
 interface Drawing {
     id: number;
@@ -40,8 +41,6 @@ interface Drawing {
     clientContact: string;
     projectAddress: string;
     projectName: string;
-    createdAt: string;
-    updatedAt: string;
     images: Array<{ id: number; imageName: string }>;
 }
 interface UploadWorkingDrawingTableProps {
@@ -194,10 +193,13 @@ const UploadWorkingDrawingTable: React.FC<UploadWorkingDrawingTableProps> = ({ r
 
 
                                 <TableCell className='border border-[#e5e7eb] flex items-center justify-center gap-4'>
+                                    
+                                    <Link href={`/edit-upload-working-drawing/${drawing.id}`}> 
                                     <FaEdit
 
                                         className='opacity-50 cursor-pointer text-xl'
                                     />
+                                    </Link>
                                     <AlertDialog>
                                         <AlertDialogTrigger asChild>
                                             <RiDeleteBin6Line

@@ -107,7 +107,7 @@ export const createUploadDrawing = asyncHandler(
         }
 
         // Check for required fields
-        if (!projectId || !itemName  || !itemQuantity || !itemDescription ||
+        if (!projectId || !itemName || !itemQuantity || !itemDescription ||
             !unit || !category || !clientName || !clientContact || !projectAddress || !projectName) {
             throw new ApiError('All fields are required', 400, 'BAD_REQUEST');
         }
@@ -289,7 +289,7 @@ export const updateDrawing = asyncHandler(
             projectId, itemName, brandModel, itemQuantity, itemDescription,
             unit, category, clientName, clientContact, projectAddress, projectName
         } = req.body;
-
+        console.log(req.body)
         const drawing = await WorkingDrawing.findByPk(id);
 
         if (!drawing) {
