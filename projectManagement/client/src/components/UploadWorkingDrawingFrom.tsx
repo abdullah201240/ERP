@@ -57,6 +57,7 @@ export default function UploadWorkingDrawingFrom() {
     const [categories, setCategories] = useState<{ id: string; name: string }[]>([]);
     const [units, setUnits] = useState<{ id: string; name: string }[]>([]);
     const [uploadDesignWorkingDrawings, setUploadDesignWorkingDrawings] = useState<File[]>([]);
+    const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
 
     useEffect(() => {
         if (typeof window !== 'undefined') {
@@ -164,6 +165,8 @@ export default function UploadWorkingDrawingFrom() {
 
     const handleProjectChange = (newValue: { value: number; label: string } | null) => {
         setSelectedProject(newValue ? newValue.value : null);
+        setSelectedProjectId(newValue ? newValue.value : null);
+
         if (newValue) {
             const selected = projects.find((project) => project.id === newValue.value);
             if (selected) {
@@ -429,13 +432,15 @@ export default function UploadWorkingDrawingFrom() {
                     </form>
                 </div>
             </div>
-
+            {selectedProjectId && (
             <div className="bg-white mt-8 p-4 rounded-xl">
                 <h1 className="text-center text-xl mb-4">Working Drawing</h1>
                 <div className="w-[98vw] md:w-full">
-                    <UploadWorkingDrawingTable reload={reloadTable} />
+                    <UploadWorkingDrawingTable reload={reloadTable} projectId={String(selectedProjectId)} />
                 </div>
             </div>
+            )}
         </div>
+    
     );
 }

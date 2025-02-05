@@ -46,9 +46,10 @@ interface Drawing {
 }
 interface UploadWorkingDrawingTableProps {
     reload: boolean;
+    projectId: string;
 }
 
-const UploadWorkingDrawingTable: React.FC<UploadWorkingDrawingTableProps> = ({ reload }) => {
+const UploadWorkingDrawingTable: React.FC<UploadWorkingDrawingTableProps> = ({ reload  , projectId}) => {
     const [drawings, setDrawings] = useState<Drawing[]>([]);
     const [deleteId, setDeleteId] = useState<number | null>(null);
     const router = useRouter();
@@ -65,7 +66,7 @@ const UploadWorkingDrawingTable: React.FC<UploadWorkingDrawingTableProps> = ({ r
                 return;
             }
 
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}workingDrawing/drawing`, {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}workingDrawing/drawingAll/${projectId}`, {
                 headers: {
                     'Authorization': token,
                 },
@@ -85,7 +86,7 @@ const UploadWorkingDrawingTable: React.FC<UploadWorkingDrawingTableProps> = ({ r
             console.error("Error fetching drawings:", error);
             setDrawings([]);
         }
-    }, [router]);
+    }, [router,projectId]);
     useEffect(() => {
         fetchDrawings();
     }, [reload, fetchDrawings]);

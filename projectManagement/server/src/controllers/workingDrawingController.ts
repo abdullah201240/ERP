@@ -153,10 +153,15 @@ export const viewAllDrawings = asyncHandler(
         const page = parseInt(req.query.page as string) || 1;
         const limit = parseInt(req.query.limit as string) || 10;
         const search = req.query.search as string || '';
+        const { projectId } = req.params;
+
         // Calculate the offset for pagination
         const offset = (page - 1) * limit;
 
         const drawings = await WorkingDrawing.findAll({
+            where: {
+                projectId
+            },
             include: [
                 {
                     model: WorkingDrawingImage,

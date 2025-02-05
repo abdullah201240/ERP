@@ -12,7 +12,7 @@ router.put("/category/:id", verifyJWT, updateCategory);
 
 router.post("/drawing", upload.array("designDrawings", 15), createUploadDrawing);
 // View all working drawings
-router.get('/drawing', viewAllDrawings);
+router.get('/drawingAll/:projectId', viewAllDrawings);
 
 // View a specific working drawing by ID
 router.get('/drawing/:id', viewDrawingById);
