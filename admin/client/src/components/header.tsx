@@ -20,20 +20,20 @@ const Header = () => {
   const handleLogout = async () => {
     if (isLoggingOut) return; // Prevent multiple clicks
     setIsLoggingOut(true);
-    const accessTokenpq = localStorage.getItem('accessTokenpq');
+    const accessTokenCompany = localStorage.getItem('accessTokenCompany');
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}employee/auth/logout`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}company/auth/company/logout`, {
         method: "POST",
         credentials: "include", // Ensure cookies are sent
         headers: {
-          'Authorization': `${accessTokenpq}`, // Send token in the Authorization header
+          'Authorization': `${accessTokenCompany}`, // Send token in the Authorization header
         },
       });
 
       if (response.ok) {
         // Remove token from localStorage
-        localStorage.removeItem("accessTokenpq");
+        localStorage.removeItem("accessTokenCompany");
         toast.success('Log out successful');
 
         // Redirect to the login page

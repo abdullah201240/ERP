@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -11,7 +11,59 @@ import { Icon } from '@iconify/react';
 import Image from 'next/image';
 import Logo from '@/app/assets/img/Logo.webp';
 
+const fetchUserEmail = async (): Promise<string | null> => {
+  const accessTokenCompany = typeof window !== 'undefined' ? localStorage.getItem('accessTokenCompany') : null;
+
+  if (!accessTokenCompany) {
+    return null;
+  }
+
+  try {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}company/auth/company/profile`, {
+      headers: {
+        Authorization: accessTokenCompany,
+      },
+    });
+    const data = await response.json();
+
+    if (data.success) {
+      return data.data.email;
+    } else {
+      return null;
+    }
+  } catch (error) {
+    console.error('Error fetching profile:', error);
+    return null;
+  }
+};
+
 const SideNav = () => {
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+  useEffect(() => {
+    const getUserEmail = async () => {
+      const email = await fetchUserEmail();
+      setUserEmail(email);
+    };
+
+    getUserEmail();
+  }, []);
+
+  const filteredNavItems = userEmail === 'team.digirib@gmail.com' ? [
+    ...SIDENAV_ITEMS,
+    {
+      title: 'Company',
+      path: '/',
+      icon: <Icon icon="mdi:company" width="19" height="19" />,
+      submenu: true,
+      subMenuItems: [
+        { title: 'Add Company', path: '/product-category' },
+        { title: 'Unit List', path: '/product-unit' },
+        { title: 'All Products', path: '/product' },
+        { title: 'Supervision', path: '/create-supervision' },
+      ],
+    },
+  ] : SIDENAV_ITEMS;
+
   return (
     <div className="md:w-60 bg-white h-screen flex-1 fixed  hidden md:flex">
       <div className="flex flex-col space-y-6 w-full mt-4">
@@ -31,7 +83,7 @@ const SideNav = () => {
         </Link>
 
         <div className="flex flex-col space-y-2 md:px-6 overflow-y-auto h-full scrollbar-thin scrollbar-thumb-[#bababa] scrollbar-track-[#f0f0f0]">
-        {SIDENAV_ITEMS.map((item, idx) => {
+          {filteredNavItems.map((item, idx) => {
             return <MenuItem key={idx} item={item} />;
           })}
         </div>

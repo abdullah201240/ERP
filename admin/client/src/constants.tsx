@@ -2,6 +2,10 @@ import { Icon } from '@iconify/react';
 
 import { SideNavItem } from './types';
 
+
+
+
+
 export const SIDENAV_ITEMS: SideNavItem[] = [
   {
     title: 'Dashboard',
@@ -14,20 +18,27 @@ export const SIDENAV_ITEMS: SideNavItem[] = [
     path: '/addProject',
     icon: <Icon icon="gridicons:add" width="19" height="19" />,
   },
-  {
-    title: 'Company',
-    path: '/',
-    icon: <Icon icon="mdi:company" width="19" height="19" />,
-    submenu: true,
-    subMenuItems: [
-      
-      { title: 'Add Company', path: '/product-category' },
+  
 
-      { title: 'Unit List', path: '/product-unit' },
-      { title: 'All Products', path: '/product' },
-      { title: 'Supervision', path: '/create-supervision' },
-    ],
-  },
+  // {
+  //   title: 'Company',
+  //   path: '/',
+  //   icon: <Icon icon="mdi:company" width="19" height="19" />,
+  //   submenu: true,
+  //   subMenuItems: [
+      
+  //     { title: 'Add Company', path: '/product-category' },
+
+  //     { title: 'Unit List', path: '/product-unit' },
+  //     { title: 'All Products', path: '/product' },
+  //     { title: 'Supervision', path: '/create-supervision' },
+  //   ],
+  // },
+
+
+
+
+
   {
     title: 'Design & Development',
     path: '/settings',
