@@ -30,7 +30,7 @@ export default function Page() {
                 // Success - Redirect or show success message
                 toast.success('Login successful');
 
-                localStorage.setItem('accessToken', data.data.accessToken);
+                localStorage.setItem('accessTokenpq', data.data.accessToken);
 
 
                 router.push('/dashboard');

@@ -26,7 +26,7 @@ export default function EditProductPage() {
     const [units, setUnits] = useState([]);
 
     useEffect(() => {
-        const token = localStorage.getItem('accessToken');
+        const token = localStorage.getItem('accessTokenpq');
         if (!token) {
             router.push('/');
             return;
@@ -35,7 +35,7 @@ export default function EditProductPage() {
 
     const fetchCategories = useCallback(async () => {
         try {
-            const token = localStorage.getItem('accessToken');
+            const token = localStorage.getItem('accessTokenpq');
             if (!token) {
                 router.push('/');
                 return;
@@ -61,7 +61,7 @@ export default function EditProductPage() {
 
     const fetchUnit = useCallback(async () => {
         try {
-            const token = localStorage.getItem('accessToken');
+            const token = localStorage.getItem('accessTokenpq');
             if (!token) {
                 router.push('/');
                 return;
@@ -87,7 +87,7 @@ export default function EditProductPage() {
 
     const fetchProduct = useCallback(async () => {
         try {
-            const token = localStorage.getItem('accessToken');
+            const token = localStorage.getItem('accessTokenpq');
             if (!token) {
                 router.push('/');
                 return;
@@ -110,7 +110,7 @@ export default function EditProductPage() {
     }, [id, router]);
 
     useEffect(() => {
-        const token = localStorage.getItem('accessToken');
+        const token = localStorage.getItem('accessTokenpq');
         if (!token) {
             router.push('/');
             return;
@@ -172,7 +172,7 @@ export default function EditProductPage() {
         event.preventDefault();
         setLoading(true);
 
-        const token = localStorage.getItem('accessToken');
+        const token = localStorage.getItem('accessTokenpq');
         if (token) {
             try {
                 const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}product/product/${id}`, {

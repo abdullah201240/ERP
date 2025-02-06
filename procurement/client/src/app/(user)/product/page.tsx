@@ -12,7 +12,7 @@ export default function Home() {
   useEffect(() => {
     const checkTokenAndFetchProfile = async () => {
       // Check if the access token exists in localStorage
-      const token = localStorage.getItem('accessToken');
+      const token = localStorage.getItem('accessTokenpq');
 
       // If the token does not exist, redirect to the login page
       if (!token) {

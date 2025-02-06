@@ -40,7 +40,7 @@ const WorkUpdateWorkingDrawingTable: React.FC<WorkingDrawingTableProps> = ({ pro
     const [projects, setProjects] = useState<PreProjectSiteVisitPlan[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
-    const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+    const token = typeof window !== 'undefined' ? localStorage.getItem('accessTokenpq') : null;
     const [updatedPercentage, setUpdatedPercentage] = useState<string>(''); // Track the updated percentage
     const [editingIndex, setEditingIndex] = useState<number | null>(null); // Track which row is being edited
 

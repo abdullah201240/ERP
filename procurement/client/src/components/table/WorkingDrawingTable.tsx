@@ -56,7 +56,7 @@ const WorkingDrawingTable: React.FC<WorkingDrawingTableProps> = ({ projectId ,re
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
     const [deleteId, setDeleteId] = useState<number | null>(null);
-    const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+    const token = typeof window !== 'undefined' ? localStorage.getItem('accessTokenpq') : null;
     const [employees, setEmployees] = useState<{ id: string; name: string }[]>([]);
 
     // State variables for the modal form

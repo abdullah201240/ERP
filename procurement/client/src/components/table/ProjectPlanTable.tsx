@@ -47,7 +47,7 @@ const ProjectPlanTable: React.FC<ProjectPlanTableProps> = ({ reload }) => {
     const [error, setError] = useState<string | null>(null);
     const [totalProjects, setTotalProjects] = useState<number>(0);
     const [searchQuery, setSearchQuery] = useState<string>(''); // State for search query
-    const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+    const token = typeof window !== 'undefined' ? localStorage.getItem('accessTokenpq') : null;
     const [deleteId, setDeleteId] = useState<number | null>(null); // State to hold the project ID to delete
 
     // Pagination state

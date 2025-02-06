@@ -41,7 +41,7 @@ export default function ProjectPlanForm() {
     const [reloadTable, setReloadTable] = useState(false);
     useEffect(() => {
         // Check if we are running on the client-side (to access localStorage
-            const storedToken = localStorage.getItem('accessToken');
+            const storedToken = localStorage.getItem('accessTokenpq');
             if (!storedToken) {
                 console.log("no token")
                 router.push('/');
@@ -87,7 +87,7 @@ export default function ProjectPlanForm() {
         [token] // Adding token as a dependency
     );
     useEffect(() => {
-        const token = localStorage.getItem('accessToken');
+        const token = localStorage.getItem('accessTokenpq');
 
         if (!token) {
             console.log("no token")

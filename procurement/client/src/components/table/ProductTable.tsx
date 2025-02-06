@@ -50,7 +50,7 @@ export default function ProductTable() {
     const [error, setError] = useState<string | null>(null);
     const [totalProducts, setTotalProducts] = useState<number>(0);
     const [searchQuery, setSearchQuery] = useState<string>(''); // State for search query
-    const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+    const token = typeof window !== 'undefined' ? localStorage.getItem('accessTokenpq') : null;
     const [deleteId, setDeleteId] = useState<number | null>(null);
 
     // Pagination state

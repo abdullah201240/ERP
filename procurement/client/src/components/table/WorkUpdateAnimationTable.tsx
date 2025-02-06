@@ -42,7 +42,7 @@ const WorkUpdateAnimationTable: React.FC<AnimationTableProps> = ({ projectId }) 
     const [error, setError] = useState<string | null>(null);
     const [editingIndex, setEditingIndex] = useState<number | null>(null); // Track which row is being edited
     const [updatedPercentage, setUpdatedPercentage] = useState<string>(''); // Track the updated percentage
-    const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+    const token = typeof window !== 'undefined' ? localStorage.getItem('accessTokenpq') : null;
 
     const fetchProjects = useCallback(async () => {
         if (!token) {

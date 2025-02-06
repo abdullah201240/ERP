@@ -48,7 +48,7 @@ const ProductCategoryTable: React.FC<ProductCategoryTableProps> = ({ reload }) =
     const fetchCategories = useCallback(async () => {
 
         try {
-            const token = localStorage.getItem('accessToken');
+            const token = localStorage.getItem('accessTokenpq');
             if (!token) {
                 router.push('/'); // Adjust the path to your login page
                 return; // Exit the function early
@@ -81,7 +81,7 @@ const ProductCategoryTable: React.FC<ProductCategoryTableProps> = ({ reload }) =
     const handleDelete = async () => {
         if (!deleteId) return;
         try {
-            const token = localStorage.getItem('accessToken');
+            const token = localStorage.getItem('accessTokenpq');
             if (!token) {
                 router.push('/'); // Adjust the path to your login page
                 return; // Exit the function early
@@ -113,7 +113,7 @@ const ProductCategoryTable: React.FC<ProductCategoryTableProps> = ({ reload }) =
     const saveEdit = async () => {
         if (!editCategory) return;
         try {
-            const token = localStorage.getItem('accessToken');
+            const token = localStorage.getItem('accessTokenpq');
             if (!token) {
                 router.push('/'); // Adjust the path to your login page
                 return; // Exit the function early

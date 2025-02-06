@@ -49,7 +49,7 @@ const ProductunitTable: React.FC<ProductunitTableProps> = ({ reload }) => {
     const fetchunits = useCallback(async () => {
 
         try {
-            const token = localStorage.getItem('accessToken');
+            const token = localStorage.getItem('accessTokenpq');
             if (!token) {
                 router.push('/'); // Adjust the path to your login page
                 return; // Exit the function early
@@ -83,7 +83,7 @@ const ProductunitTable: React.FC<ProductunitTableProps> = ({ reload }) => {
     const handleDelete = async () => {
         if (!deleteId) return;
         try {
-            const token = localStorage.getItem('accessToken');
+            const token = localStorage.getItem('accessTokenpq');
             if (!token) {
                 router.push('/'); // Adjust the path to your login page
                 return; // Exit the function early
@@ -115,7 +115,7 @@ const ProductunitTable: React.FC<ProductunitTableProps> = ({ reload }) => {
     const saveEdit = async () => {
         if (!editunit) return;
         try {
-            const token = localStorage.getItem('accessToken');
+            const token = localStorage.getItem('accessTokenpq');
             if (!token) {
                 router.push('/'); // Adjust the path to your login page
                 return; // Exit the function early

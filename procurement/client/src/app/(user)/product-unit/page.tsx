@@ -12,7 +12,7 @@ export default function ProductunitPage() {
   useEffect(() => {
     const checkTokenAndFetchProfile = async () => {
       // Check if the access token exists in localStorage
-      const token = localStorage.getItem('accessToken');
+      const token = localStorage.getItem('accessTokenpq');
 
       // If the token does not exist, redirect to the login page
       if (!token) {
@@ -54,7 +54,7 @@ export default function ProductunitPage() {
     e.preventDefault();
 
     try {
-      const token = localStorage.getItem('accessToken');
+      const token = localStorage.getItem('accessTokenpq');
       if (!token) {
         router.push('/'); // Adjust the path to your login page
         return; // Exit the function early
