@@ -14,8 +14,8 @@ export const SIDENAV_ITEMS: SideNavItem[] = [
   },
 
   {
-    title: 'Add a Project',
-    path: '/addProject',
+    title: 'Add Sister Concern',
+    path: '/addSisterConcern',
     icon: <Icon icon="gridicons:add" width="19" height="19" />,
   },
   

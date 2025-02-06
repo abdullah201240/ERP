@@ -7,6 +7,7 @@ import jwt, { SignOptions } from 'jsonwebtoken';
 import { companyLoginValidator, companyRegisterValidator } from "../validators/companyValidators";
 import Company from "../models/company";
 import dotenv from 'dotenv';
+import SisterConcern from "../models/sisterConcern";
 
 dotenv.config();
 
@@ -330,6 +331,136 @@ export const deleteCompany = asyncHandler(
         
         return res.status(200).json(
             ApiResponse.success(null, "Company deleted successfully")
+        );
+    }
+);
+
+
+export const createSister = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const { name, email, password, phone, companyId, companyEmail } = req.body;
+
+            // Check for missing fields
+            if (!name || !email || !password || !phone || !companyId || !companyEmail) {
+                return next(new ApiError(ERROR_MESSAGES.MISSING_FIELDS, 400, ErrorCodes.BAD_REQUEST.code));
+            }
+
+            // Validate mother company
+            const motherAccount = await Company.findOne({ where: { email: companyEmail } });
+            if (!motherAccount) {
+                return next(new ApiError("Invalid mother email", 401, ErrorCodes.UNAUTHORIZED.code));
+            }
+
+            // Check if the mother company has sister concern slots available
+            if (motherAccount.numberOfSister <= 0) {
+                return next(new ApiError("Sister concern limit reached", 403, ErrorCodes.FORBIDDEN.code));
+            }
+
+            // Handle file upload for logo
+            if (!req.file) {
+                return next(new ApiError("Logo file is required", 400, ErrorCodes.BAD_REQUEST.code));
+            }
+            const logo = req.file.filename;
+
+            // Check if sister concern already exists
+            const existingCompany = await SisterConcern.findOne({ where: { email } });
+            if (existingCompany) {
+                return next(new ApiError(ERROR_MESSAGES.EMPLOYEE_EXISTS, 409, ErrorCodes.CONFLICT?.code || "CONFLICT"));
+            }
+
+            // Hash the password before storing it
+            const hashedPassword = await bcrypt.hash(password, 10);
+
+            // Create the new SisterConcern
+            const newCompany = await SisterConcern.create({
+                name,
+                email,
+                password: hashedPassword,
+                phone,
+                logo,
+                companyId,
+                companyEmail
+            });
+
+            if (!newCompany) {
+                return next(new ApiError(ERROR_MESSAGES.INTERNAL_ERROR, 500, ErrorCodes.INTERNAL_SERVER_ERROR.code));
+            }
+
+            // Reduce the mother's available sister concern slots
+            await motherAccount.update({ numberOfSister: motherAccount.numberOfSister - 1 });
+
+            // Exclude password from response
+            const { password: _, ...CompanyResponse } = newCompany.toJSON();
+
+            return res.status(201).json({ message: "Sister concern created successfully", company: CompanyResponse });
+        } catch (error) {
+            next(error);
+        }
+    }
+);
+
+
+export const loginSister = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction) => {
+        // Validate request body with Zod
+        
+
+        const { email, password } = req.body;
+        // Check for missing fields
+        if ( !email || !password) {
+            return next(new ApiError(ERROR_MESSAGES.MISSING_FIELDS, 400, ErrorCodes.BAD_REQUEST.code));
+        }
+
+        // Find Company by email
+        const sisterConcern = await SisterConcern.findOne({ where: { email } });
+        if (!sisterConcern) {
+            return next(
+                new ApiError(
+                    "sister Concern does not exist",
+                    404,
+                    ErrorCodes.NOT_FOUND.code
+                )
+            );
+        }
+
+        // Check if the password matches
+        const isPasswordValid = await bcrypt.compare(password, sisterConcern.password);
+        if (!isPasswordValid) {
+            return next(
+                new ApiError(
+                    "Invalid email or password",
+                    401,
+                    ErrorCodes.UNAUTHORIZED.code
+                )
+            );
+        }
+
+        // Generate access token
+        const accessToken = jwt.sign(
+            { id: sisterConcern.id, email: sisterConcern.email, name: sisterConcern.name }, // Payload
+            ACCESS_TOKEN_SECRET, // Secret key
+            { expiresIn: process.env.ACCESS_TOKEN_EXPIRY || "1h" } as SignOptions // Explicitly cast as SignOptions
+        );
+        console.log('Access Token:', accessToken);
+
+
+
+        // Set the access token in a secure, HTTP-only cookie
+        const cookieOptions: CookieOptions = {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production", // Ensure secure cookies in production
+            sameSite: "strict" as "strict", // CSRF protection
+            maxAge: 60 * 60 * 1000, // 1 hour in milliseconds
+        };
+        res.cookie("accessToken", accessToken, cookieOptions);
+
+
+        return res.status(200).json(
+            ApiResponse.success(
+                { accessToken },
+                "Employee logged in successfully"
+            )
         );
     }
 );
