@@ -12,7 +12,6 @@ import db from './config/sequelize'; // Adjust path
 import routes from './routes/index';
 import { errorMiddleware } from "./middleware/error";
 import morganMiddleware from './logger/morganLogger';
-import { connectRabbitMQ } from './utils/rabbitmq';
 
 dotenv.config();
 
@@ -62,7 +61,7 @@ app.use("",routes);
 app.get('/', (req: Request, res: Response) => {
   res.send('Hello, TypeScript with Express!');
 });
-connectRabbitMQ();
+
 
 // Error-handling middleware
 app.use(errorMiddleware);
