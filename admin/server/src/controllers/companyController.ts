@@ -44,7 +44,7 @@ export const createCompany = asyncHandler(
         if (!file) {
             throw new ApiError("Logo file is required", 400, ErrorCodes.BAD_REQUEST.code);
         }
-        const logo = file.path;
+        const logo = file.filename;
 
         // Check if Company already exists
         const existingCompany = await Company.findOne({ where: { email } });
