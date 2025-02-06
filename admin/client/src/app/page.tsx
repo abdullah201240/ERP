@@ -18,7 +18,7 @@ export default function Page() {
         setError('');
 
         try {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}employee/auth/login`, {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}company/auth/company/login`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, password })
@@ -30,7 +30,7 @@ export default function Page() {
                 // Success - Redirect or show success message
                 toast.success('Login successful');
 
-                localStorage.setItem('accessTokenpq', data.data.accessToken);
+                localStorage.setItem('accessTokenCompany', data.data.accessToken);
 
 
                 router.push('/dashboard');

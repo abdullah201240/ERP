@@ -1,6 +1,6 @@
 import express from "express";
 import { verifyJWT } from "../middleware/companyAuth"; 
-import { createCompany, getAllCompany, getProfile, loginCompany, logoutCompany } from "../controllers/companyController";
+import { createCompany, deleteCompany, getAllCompany, getProfile, loginCompany, logoutCompany, updateCompany } from "../controllers/companyController";
 import upload from "../middleware/uploadMiddleware";
 
 const router = express.Router();
@@ -12,6 +12,7 @@ router.get("/auth/company/profile", verifyJWT, getProfile);
 router.post("/auth/company/logout", verifyJWT, logoutCompany);
 router.get("/company", verifyJWT, getAllCompany);
 
-
+router.put("/auth/company/edit/:id", verifyJWT, upload.single("logo"), updateCompany);
+router.delete("/auth/company/delete/:id", verifyJWT, deleteCompany);
 
 export default router;

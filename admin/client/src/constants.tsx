@@ -15,13 +15,13 @@ export const SIDENAV_ITEMS: SideNavItem[] = [
     icon: <Icon icon="gridicons:add" width="19" height="19" />,
   },
   {
-    title: 'Products',
+    title: 'Company',
     path: '/',
-    icon: <Icon icon="fa-solid:box-open" width="19" height="19" />,
+    icon: <Icon icon="mdi:company" width="19" height="19" />,
     submenu: true,
     subMenuItems: [
       
-      { title: 'Category', path: '/product-category' },
+      { title: 'Add Company', path: '/product-category' },
 
       { title: 'Unit List', path: '/product-unit' },
       { title: 'All Products', path: '/product' },

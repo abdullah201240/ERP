@@ -253,3 +253,60 @@ export const getAllCompany = asyncHandler(
 );
 
 
+export const updateCompany = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction) => {
+        const { id } = req.params;
+        const { name, email, phone } = req.body;
+        const file = req.file;
+        
+        // Find company by ID
+        const company = await Company.findByPk(id);
+        if (!company) {
+            return next(
+                new ApiError(
+                    "Company not found",
+                    404,
+                    ErrorCodes.NOT_FOUND.code
+                )
+            );
+        }
+        
+        // Update fields if provided
+        if (name) company.name = name;
+        if (email) company.email = email;
+        if (phone) company.phone = phone;
+        if (file) company.logo = file.filename;
+
+        // Save the updated company
+        await company.save();
+        
+        return res.status(200).json(
+            ApiResponse.success(company, "Company updated successfully")
+        );
+    }
+);
+
+export const deleteCompany = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction) => {
+        const { id } = req.params;
+        
+        // Find company by ID
+        const company = await Company.findByPk(id);
+        if (!company) {
+            return next(
+                new ApiError(
+                    "Company not found",
+                    404,
+                    ErrorCodes.NOT_FOUND.code
+                )
+            );
+        }
+        
+        // Delete company
+        await company.destroy();
+        
+        return res.status(200).json(
+            ApiResponse.success(null, "Company deleted successfully")
+        );
+    }
+);
