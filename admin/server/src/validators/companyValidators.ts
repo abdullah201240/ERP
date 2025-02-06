@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 
-const eompanyRegisterValidator = z.object({
+const companyRegisterValidator = z.object({
     name: z.string()
       .min(3, 'Name must be at least 3 characters long')
       .max(50, 'Name must be at most 50 characters long'),
@@ -26,7 +26,7 @@ const eompanyRegisterValidator = z.object({
 
 
 
-  const eompanyLoginValidator = z.object({
+  const companyLoginValidator = z.object({
     
     email: z.string()
       .email('Invalid email')
@@ -45,4 +45,4 @@ const eompanyRegisterValidator = z.object({
 
 
 
-  export {eompanyRegisterValidator,eompanyLoginValidator};
+  export {companyRegisterValidator,companyLoginValidator};
