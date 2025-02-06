@@ -10,7 +10,7 @@ router.post("/auth/company/signup", upload.single("logo"), createCompany);
 router.post("/auth/company/login", loginCompany);
 router.get("/auth/company/profile", verifyJWT, getProfile);
 router.post("/auth/company/logout", verifyJWT, logoutCompany);
-router.get("/company", verifyJWT, getAllCompany);
+router.get("/company", getAllCompany);
 
 router.put("/auth/company/edit/:id", verifyJWT, upload.single("logo"), updateCompany);
 router.delete("/auth/company/delete/:id", verifyJWT, deleteCompany);

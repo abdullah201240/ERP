@@ -4,9 +4,11 @@ import { ErrorCodes } from '../utils/errors/ErrorCodes';
 import bcrypt from 'bcryptjs';
 import ERROR_MESSAGES from '../utils/errors/errorMassage'
 import jwt, { SignOptions } from 'jsonwebtoken';
-import { Op } from "sequelize";
 import { companyLoginValidator, companyRegisterValidator } from "../validators/companyValidators";
 import Company from "../models/company";
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET || "LD9cv1kBfgRHVIg9GG_OGzh9TUkcyqgZAaM0o3DmVkx08MCFRSzMocyO3UtNdDNtoCJ0X0-5nLwK7fdO"; // Fallback to a hardcoded secret if not in env
 if (!ACCESS_TOKEN_SECRET) {
@@ -28,17 +30,57 @@ export const createCompany = asyncHandler(
                 errors
             );
         }
+        
 
-        const { name, email, password, phone } = req.body;
-
+        const { name, email, password, phone , numberOfSister,motherAccountEmail,motherAccountPassword} = req.body;
         // Check for missing fields
-        if (!name || !email || !password || !phone) {
+        if (!name || !email || !password || !phone || !numberOfSister ||!motherAccountPassword ||!motherAccountEmail) {
             throw new ApiError(
                 ERROR_MESSAGES.MISSING_FIELDS,
                 400,
                 ErrorCodes.BAD_REQUEST.code
             );
         }
+        const mainEmail= process.env.MOTHER_EMAIL
+        console.log("okay")
+
+        console.log(mainEmail)
+        if(mainEmail!==motherAccountEmail){
+            return next(
+                new ApiError(
+                    "Email Not Match",
+                    401,
+                    ErrorCodes.UNAUTHORIZED.code
+                )
+            );
+        }
+
+        const motherAccount = await Company.findOne({ where: { email:mainEmail } });
+
+        if (!motherAccount) {
+            return next(
+                new ApiError(
+                    "Invalid mother email or password",
+                    401,
+                    ErrorCodes.UNAUTHORIZED.code
+                )
+            );
+        }
+
+        // Check if the password matches
+        const isPasswordValid = await bcrypt.compare(motherAccountPassword, motherAccount.password);
+        if (!isPasswordValid) {
+            return next(
+                new ApiError(
+                    "Invalid mother email or password",
+                    401,
+                    ErrorCodes.UNAUTHORIZED.code
+                )
+            );
+        }
+
+
+        
         // Handle file upload for logo
         const file = req.file;
         if (!file) {
@@ -66,6 +108,7 @@ export const createCompany = asyncHandler(
             password: hashedPassword,
             phone,
             logo,
+            numberOfSister
         });
 
 
@@ -219,35 +262,14 @@ export const logoutCompany = asyncHandler(
 
 export const getAllCompany = asyncHandler(
     async (req: Request, res: Response, next: NextFunction) => {
-        const { page = 1, limit = 10, search = "" } = req.query;
-        // Parse page and limit as integers
-        const pageNumber = parseInt(page as string, 10);
-        const pageSize = parseInt(limit as string, 10);
-        const offset = (pageNumber - 1) * pageSize;
 
         // Fetch Company with pagination and search
-        const { rows: company, count: totalCompany } = await Company.findAndCountAll({
-            where: search
-                ? {
-                    name: {
-                        [Op.like]: `%${search}%`, // Case-sensitive search for MariaDB/MySQL
-                    },
-                }
-                : {},
-            limit: pageSize,
-            offset: offset,
-            order: [["createdAt", "ASC"]], // Sort by most recent
-        });
+        const company = await Company.findAll();
 
         return res.status(200).json({
             success: true,
-            data: {
-                company,  // Fixed this to 'employees' instead of 'projects'
-                totalCompany,  // Fixed this to 'totalEmployees' instead of 'totalProjects'
-                totalPages: Math.ceil(totalCompany / pageSize),  // Fixed this to use 'totalEmployees'
-                currentPage: pageNumber,
-            },
-            message: "company retrieved successfully",  // Updated the message
+            data:company,
+            message: "company retrieved successfully",  
         });
     }
 );
@@ -256,7 +278,7 @@ export const getAllCompany = asyncHandler(
 export const updateCompany = asyncHandler(
     async (req: Request, res: Response, next: NextFunction) => {
         const { id } = req.params;
-        const { name, email, phone } = req.body;
+        const { name, email, phone,numberOfSister } = req.body;
         const file = req.file;
         
         // Find company by ID
@@ -275,6 +297,7 @@ export const updateCompany = asyncHandler(
         if (name) company.name = name;
         if (email) company.email = email;
         if (phone) company.phone = phone;
+        if(numberOfSister) company.numberOfSister = numberOfSister;
         if (file) company.logo = file.filename;
 
         // Save the updated company

@@ -9,6 +9,7 @@ interface CompanyAttributes {
   password: string;
   phone: string;
   logo: string;
+  numberOfSister: number;
  
 }
 
@@ -22,6 +23,7 @@ class Company extends Model<CompanyAttributes, CompanyCreationAttributes> implem
   public password!: string;
   public phone!: string;
   public logo!: string;
+  public numberOfSister!: number;
   }
 
   Company.init(
@@ -57,6 +59,10 @@ class Company extends Model<CompanyAttributes, CompanyCreationAttributes> implem
         type: DataTypes.STRING,
         allowNull: false,
       },
+      numberOfSister: {
+        type: DataTypes.NUMBER,
+        allowNull: false,
+      }
       
       
     },

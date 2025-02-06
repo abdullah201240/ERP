@@ -48,7 +48,9 @@ const SideNav = () => {
     getUserEmail();
   }, []);
 
-  const filteredNavItems = userEmail === 'team.digirib@gmail.com' ? [
+  const teamEmail = process.env.NEXT_PUBLIC_TEAM_EMAIL; 
+
+  const filteredNavItems = userEmail === teamEmail ? [
     ...SIDENAV_ITEMS,
     {
       title: 'Company',
@@ -56,10 +58,8 @@ const SideNav = () => {
       icon: <Icon icon="mdi:company" width="19" height="19" />,
       submenu: true,
       subMenuItems: [
-        { title: 'Add Company', path: '/product-category' },
-        { title: 'Unit List', path: '/product-unit' },
-        { title: 'All Products', path: '/product' },
-        { title: 'Supervision', path: '/create-supervision' },
+        { title: 'Add Company', path: '/addCompany' },
+        
       ],
     },
   ] : SIDENAV_ITEMS;

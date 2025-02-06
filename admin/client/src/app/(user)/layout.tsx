@@ -11,9 +11,9 @@ import { Toaster } from "react-hot-toast";
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-      title: "IQ",
-      description: "Dashboard",
-    };
+  title: "Digirib",
+  description: "This is Digirib ERP ",
+};
 
 export default function RootLayout({
   children,
@@ -23,23 +23,23 @@ export default function RootLayout({
 
 
   return (
-   
-     
-        <div className={`bg-white ${inter.className}`}>
-              <SideNav />
-              <main className="flex-1">
-                <MarginWidthWrapper>
-                  <Header />
-                  <HeaderMobile />
-                  <PageWrapper>
-                    <Toaster position="top-center" />
-                    {children}
-                  </PageWrapper>
-                  <Footer />
-                </MarginWidthWrapper>
-              </main>
-        </div>
-      
-    
+
+
+    <div className={`bg-white ${inter.className}`}>
+      <SideNav />
+      <main className="flex-1">
+        <MarginWidthWrapper>
+          <Header />
+          <HeaderMobile />
+          <PageWrapper>
+            <Toaster position="top-center" />
+            {children}
+          </PageWrapper>
+          <Footer />
+        </MarginWidthWrapper>
+      </main>
+    </div>
+
+
   );
 }
