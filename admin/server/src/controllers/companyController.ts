@@ -39,10 +39,12 @@ export const createCompany = asyncHandler(
                 ErrorCodes.BAD_REQUEST.code
             );
         }
-        const files = req.files as { [fieldname: string]: Express.Multer.File[] };
-
-        // Handle file uploads for images, using req.files (since you're uploading multiple fields)
-        const logo = files['logo'] ? files['logo'][0].path : ''; // Check if 'homeImage' exists in req.files
+        // Handle file upload for logo
+        const file = req.file;
+        if (!file) {
+            throw new ApiError("Logo file is required", 400, ErrorCodes.BAD_REQUEST.code);
+        }
+        const logo = file.path;
 
         // Check if Company already exists
         const existingCompany = await Company.findOne({ where: { email } });
