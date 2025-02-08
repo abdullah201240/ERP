@@ -459,7 +459,7 @@ export const loginSister = asyncHandler(
         return res.status(200).json(
             ApiResponse.success(
                 { accessToken },
-                "Employee logged in successfully"
+                "Sister Concern logged in successfully"
             )
         );
     }

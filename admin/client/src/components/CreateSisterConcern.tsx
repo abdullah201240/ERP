@@ -196,8 +196,7 @@ export default function CreateSisterConcern() {
                                     type="email"
                                     name="email"
                                     value={sisterConcernDetails.email}
-                                    disabled // Make email read-only
-                                    className="block w-full rounded-md border-gray-300 shadow-sm p-2 bg-gray-100 mt-2 cursor-not-allowed"
+                                    className="block w-full rounded-md border-gray-300 shadow-sm p-2 bg-gray-100 mt-2 "
                                 />
                             </div>
                             <div>
