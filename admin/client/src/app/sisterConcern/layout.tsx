@@ -1,6 +1,6 @@
 import { Inter } from 'next/font/google';
 import type { Metadata } from "next";
-import Header from '@/components/header';
+import Header from '@/components/sister-header';
 import HeaderMobile from '@/components/sister-header-mobile';
 import MarginWidthWrapper from '@/components/margin-width-wrapper';
 import PageWrapper from '@/components/page-wrapper';

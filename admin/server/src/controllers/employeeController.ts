@@ -17,21 +17,12 @@ if (!ACCESS_TOKEN_SECRET) {
 
 export const createEmployee = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
-    const result = employeeRegisterValidator.safeParse(req.body);
 
-    if (!result.success) {
-      // ZodError includes an array of issues, format them for a response
-      const errors = result.error.errors.map((error) => error.message).join(", ");
-      throw new ApiError(
-        "All fields are required",
-        400,
-        ErrorCodes.BAD_REQUEST.code,
-        errors
-      );
-    }
 
-    const { name, email, password, phone, dob, gender } = req.body;
-
+    const { name, email, password, phone, employeeId, dob, gender } = req.body;
+    const companyId = parseInt(req.body.companyId, 10);
+    const sisterConcernId = parseInt(req.body.sisterConcernId, 10);
+    console.log(req.body)
     // Check for missing fields
     if (!name || !email || !password || !phone || !dob || !gender) {
       throw new ApiError(
@@ -40,6 +31,11 @@ export const createEmployee = asyncHandler(
         ErrorCodes.BAD_REQUEST.code
       );
     }
+    // Handle file upload for logo
+    if (!req.file) {
+      return next(new ApiError("Photo file is required", 400, ErrorCodes.BAD_REQUEST.code));
+    }
+    const photo = req.file.filename;
 
     // Check if employee already exists
     const existingEmployee = await Employee.findOne({ where: { email } });
@@ -62,6 +58,10 @@ export const createEmployee = asyncHandler(
       phone,
       dob,
       gender,
+      companyId,
+      employeeId,
+      sisterConcernId,
+      photo
     });
 
 
@@ -74,25 +74,7 @@ export const createEmployee = asyncHandler(
         ErrorCodes.INTERNAL_SERVER_ERROR.code
       );
     }
-    // Send a message to RabbitMQ
-    const channel = getChannel();
-    const queue = process.env.RABBITMQ_QUEUE;
-    if (!queue) {
-      throw new Error('RabbitMQ queue is not defined in environment variables');
-    }
-    const message = JSON.stringify({
-      id: newEmployee.id,
-      name: newEmployee.name,
-      email: newEmployee.email,
-      password: newEmployee.password,
-      phone: newEmployee.phone,
-      dob: newEmployee.dob,
-      gender: newEmployee.gender
 
-    });
-    channel.assertQueue(queue, { durable: false });
-    channel.sendToQueue(queue, Buffer.from(message));
-    console.log(`Message sent to RabbitMQ: ${message}`);
 
 
     // Exclude the password from the response
@@ -237,20 +219,23 @@ export const logoutEmployee = asyncHandler(
 export const getAllEmployee = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     const { page = 1, limit = 10, search = "" } = req.query;
+    const { id } = req.params; // Get sisterConcernId from params
+
     // Parse page and limit as integers
     const pageNumber = parseInt(page as string, 10);
     const pageSize = parseInt(limit as string, 10);
     const offset = (pageNumber - 1) * pageSize;
 
-    // Fetch employees with pagination and search
+    // Fetch employees with pagination, search, and filtering by sisterConcernId
     const { rows: employees, count: totalEmployees } = await Employee.findAndCountAll({
-      where: search
-        ? {
+      where: {
+        sisterConcernId: id, // Filter by sisterConcernId
+        ...(search && {
           name: {
-            [Op.like]: `%${search}%`, // Case-sensitive search for MariaDB/MySQL
+            [Op.like]: `%${search}%`, // Case-insensitive search
           },
-        }
-        : {},
+        }),
+      },
       limit: pageSize,
       offset: offset,
       order: [["createdAt", "ASC"]], // Sort by most recent
@@ -259,14 +244,15 @@ export const getAllEmployee = asyncHandler(
     return res.status(200).json({
       success: true,
       data: {
-        employees,  // Fixed this to 'employees' instead of 'projects'
-        totalEmployees,  // Fixed this to 'totalEmployees' instead of 'totalProjects'
-        totalPages: Math.ceil(totalEmployees / pageSize),  // Fixed this to use 'totalEmployees'
+        employees,
+        totalEmployees,
+        totalPages: Math.ceil(totalEmployees / pageSize),
         currentPage: pageNumber,
       },
-      message: "Employees retrieved successfully",  // Updated the message
+      message: "Employees retrieved successfully",
     });
   }
 );
+
 
 

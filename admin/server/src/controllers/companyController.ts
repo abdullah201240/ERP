@@ -439,7 +439,7 @@ export const loginSister = asyncHandler(
 
         // Generate access token
         const accessToken = jwt.sign(
-            { id: sisterConcern.id, email: sisterConcern.email, name: sisterConcern.name }, // Payload
+            { id: sisterConcern.id, email: sisterConcern.email, name: sisterConcern.name , companyId: sisterConcern.companyId}, // Payload
             ACCESS_TOKEN_SECRET, // Secret key
             { expiresIn: process.env.ACCESS_TOKEN_EXPIRY || "1h" } as SignOptions // Explicitly cast as SignOptions
         );
@@ -482,7 +482,7 @@ export const getSisterConcernProfile = asyncHandler(
                 )
             );
         }
-        const { id, name, email, phone , logo } = sisterConcern.sisterConcern.dataValues; // Extract only required fields
+        const { id, name, email, phone , logo,companyId } = sisterConcern.sisterConcern.dataValues; // Extract only required fields
 
 
         // Return the employee details
@@ -493,7 +493,8 @@ export const getSisterConcernProfile = asyncHandler(
                     name,
                     email,
                     phone,
-                    logo
+                    logo,
+                    companyId
                 },
                 "Profile retrieved successfully"
             )
