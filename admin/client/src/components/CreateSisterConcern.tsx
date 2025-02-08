@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
-import CompanyTable from './table/companyTable';
+import  SisterConcernTable from './table/SisterConcernTable';
 
 interface SisterConcernDetails {
     name: string;
@@ -225,7 +225,7 @@ export default function CreateSisterConcern() {
                 </div>
             </div>
             <div className="mt-12">
-                <CompanyTable reload={reloadTable} />
+                <SisterConcernTable reload={reloadTable} />
             </div>
         </div>
     );

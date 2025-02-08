@@ -465,3 +465,75 @@ export const loginSister = asyncHandler(
         );
     }
 );
+
+
+export const getSisterConcernProfile = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction) => {
+        // Extract employee from the request (added by verifyJWT middleware)
+        const sisterConcern = req as Request & { sisterConcern: SisterConcern }; // Manually cast the request type
+
+
+        if (!sisterConcern) {
+            return next(
+                new ApiError(
+                    "sisterConcern not found",
+                    404,
+                    ErrorCodes.NOT_FOUND.code
+                )
+            );
+        }
+        const { id, name, email, phone , logo } = sisterConcern.sisterConcern.dataValues; // Extract only required fields
+
+
+        // Return the employee details
+        return res.status(200).json(
+            ApiResponse.success(
+                {
+                    id,
+                    name,
+                    email,
+                    phone,
+                    logo
+                },
+                "Profile retrieved successfully"
+            )
+        );
+    }
+);
+
+export const logoutSisterConcernCompany = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction) => {
+        // Clear the access token cookie
+        res.clearCookie("accessToken", {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production", // Ensure secure cookies in production
+            sameSite: "strict" as "strict", // CSRF protection
+            maxAge: 0, // Expire cookie immediately
+        });
+
+        // Return a success response
+        return res.status(200).json(
+            ApiResponse.success(
+                null,
+                "Sister Concern logged out successfully"
+            )
+        );
+    }
+);
+
+
+
+
+export const getAllSisterConcern = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction) => {
+
+        // Fetch Company with pagination and search
+        const sisterConcern = await SisterConcern.findAll();
+
+        return res.status(200).json({
+            success: true,
+            data:sisterConcern,
+            message: "Sister Concern retrieved successfully",  
+        });
+    }
+);
