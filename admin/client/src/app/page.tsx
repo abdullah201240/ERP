@@ -1,24 +1,30 @@
 'use client';
-import React, {  useState } from 'react';
+import React, { useState } from 'react';
 import Image from 'next/image';
-import Logo from '@/app/assets/img/Logo.webp';
+import Logo from '@/app/assets/img/Logo.png';
 import { toast } from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
+
 export default function Page() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [userType, setUserType] = useState('company'); // Default selection
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const router = useRouter();
-   
 
     const handleLogin = async (e: { preventDefault: () => void; }) => {
         e.preventDefault();
         setLoading(true);
         setError('');
 
+        // Determine API endpoint based on user type
+        const apiEndpoint = userType === 'company'
+            ? `${process.env.NEXT_PUBLIC_API_URL}company/auth/company/login`
+            : `${process.env.NEXT_PUBLIC_API_URL}sisterConcern/auth/sisterConcern/login`;
+
         try {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}company/auth/company/login`, {
+            const response = await fetch(apiEndpoint, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, password })
@@ -27,20 +33,18 @@ export default function Page() {
             const data = await response.json();
 
             if (response.ok) {
-                // Success - Redirect or show success message
                 toast.success('Login successful');
 
                 localStorage.setItem('accessTokenCompany', data.data.accessToken);
 
-
-                router.push('/dashboard');
-
+                // Redirect based on user type
+                router.push(userType === 'company' ? '/dashboard' : '/sisterConcern/dashboard');
             } else {
                 toast.error('Invalid email or password');
             }
         } catch (error) {
-            if (error)
-                toast.error('Something went wrong. Please try again later.');
+            if(error)
+            toast.error('Something went wrong. Please try again later.');
         } finally {
             setLoading(false);
         }
@@ -67,6 +71,20 @@ export default function Page() {
                             Enter your User ID and Password to login to the Portal
                         </h1>
                         {error && <p className="text-red-600 text-center mb-4">{error}</p>}
+
+                        {/* Dropdown for selecting user type */}
+                        <div className="mb-6">
+                            <label className="block mb-2 font-semibold text-gray-700" htmlFor="userType">Login As</label>
+                            <select
+                                className="w-full p-3 text-lg font-semibold bg-white border-2 border-indigo-500 rounded focus:outline-none focus:ring-2 focus:ring-indigo-300"
+                                value={userType}
+                                onChange={(e) => setUserType(e.target.value)}
+                            >
+                                <option value="company">Company</option>
+                                <option value="sister-concern">Sister Concern</option>
+                            </select>
+                        </div>
+
                         <div className="mb-6">
                             <label className="block mb-2 font-semibold text-gray-700" htmlFor="email">Email</label>
                             <input
@@ -78,6 +96,7 @@ export default function Page() {
                                 required
                             />
                         </div>
+
                         <div className="mb-6">
                             <label className="block mb-2 font-semibold text-gray-700" htmlFor="password">Password</label>
                             <input
@@ -89,6 +108,7 @@ export default function Page() {
                                 required
                             />
                         </div>
+
                         <div className="flex items-center justify-between mb-6">
                             <label className="flex items-center">
                                 <input type="checkbox" className="mr-2" />
@@ -96,6 +116,7 @@ export default function Page() {
                             </label>
                             <a className="text-indigo-600 hover:underline text-sm font-semibold" href="#">Forgot your password?</a>
                         </div>
+
                         <button
                             type="submit"
                             className="w-full py-4 px-6 text-lg font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded shadow-md transition duration-200"
@@ -104,9 +125,10 @@ export default function Page() {
                             {loading ? 'Signing in...' : 'Sign in'}
                         </button>
                     </form>
+
                     {loading && (
                         <div className="flex justify-center mt-4">
-                            <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-indigo-600"></div> {/* Tailwind CSS Spinner */}
+                            <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-indigo-600"></div>
                         </div>
                     )}
                 </div>
