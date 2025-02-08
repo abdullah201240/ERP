@@ -562,3 +562,34 @@ export const deleteSister = asyncHandler(
     }
 );
 
+export const updateSister = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction) => {
+        const { id } = req.params;
+        const { name, phone } = req.body;
+        const file = req.file;
+        
+        // Find company by ID
+        const sisterConcern = await SisterConcern.findByPk(id);
+        if (!sisterConcern) {
+            return next(
+                new ApiError(
+                    "sisterConcern not found",
+                    404,
+                    ErrorCodes.NOT_FOUND.code
+                )
+            );
+        }
+        
+        // Update fields if provided
+        if (name) sisterConcern.name = name;
+        if (phone) sisterConcern.phone = phone;
+        if (file) sisterConcern.logo = file.filename;
+
+        // Save the updated company
+        await sisterConcern.save();
+        
+        return res.status(200).json(
+            ApiResponse.success(sisterConcern, "Company updated successfully")
+        );
+    }
+);

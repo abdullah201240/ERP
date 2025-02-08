@@ -40,7 +40,7 @@ interface SisterConcern {
     email: string;
     password: string;
     phone: string;
-    logo: string;
+    logo: string | File; // Allow both string (URL) and File
 }
 
 interface SisterConcernTableProps {
@@ -86,48 +86,48 @@ const SisterConcernTable: React.FC<SisterConcernTableProps> = ({ reload }) => {
         fetchCompanyProfile();
     }, [router]);
 
-  const fetchCompanies = useCallback(async () => {
-    if (!token || !companyId) { // Check if companyId is not null or empty
-        router.push('/');
-        return;
-    }
+    const fetchCompanies = useCallback(async () => {
+        if (!token || !companyId) { // Check if companyId is not null or empty
+            router.push('/');
+            return;
+        }
 
-    try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/sisterConcern/sisterConcern/${companyId}`, {
-            headers: {
-                'Authorization': `Bearer ${token}`
+        try {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/sisterConcern/sisterConcern/${companyId}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to fetch companies');
             }
-        });
 
-        if (!response.ok) {
-            throw new Error('Failed to fetch companies');
+            const data = await response.json();
+
+            if (data.success && Array.isArray(data.data)) {
+                setCompanies(data.data);
+            } else {
+                throw new Error('Fetched data is not in expected format');
+            }
+        } catch (err) {
+            setError((err as Error).message);
+        } finally {
+            setLoading(false);
         }
+    }, [token, router, companyId]); // Include companyId in the dependency array
 
-        const data = await response.json();
-
-        if (data.success && Array.isArray(data.data)) {
-            setCompanies(data.data);
-        } else {
-            throw new Error('Fetched data is not in expected format');
+    useEffect(() => {
+        if (companyId) { // Only run fetchCompanies if companyId is available
+            fetchCompanies();
         }
-    } catch (err) {
-        setError((err as Error).message);
-    } finally {
-        setLoading(false);
-    }
-}, [token, router, companyId]); // Include companyId in the dependency array
-
-useEffect(() => {
-    if (companyId) { // Only run fetchCompanies if companyId is available
-        fetchCompanies();
-    }
-}, [fetchCompanies, reload, companyId]); // Include companyId in the dependency array
+    }, [fetchCompanies, reload, companyId]); // Include companyId in the dependency array
 
     const handleDelete = async () => {
         if (deleteId === null || !token) return;
 
         try {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/company/auth/company/delete/${deleteId}`, {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}sisterConcern/auth/sisterConcern/delete/${deleteId}`, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${token}`
@@ -147,14 +147,21 @@ useEffect(() => {
     const handleEdit = async () => {
         if (!editCompany || !token) return;
 
+        const formData = new FormData();
+        formData.append('name', editCompany.name);
+        formData.append('phone', editCompany.phone);
+        if (editCompany.logo) {
+            formData.append('logo', editCompany.logo);
+        }
+
         try {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/company/auth/company/edit/${editCompany.id}`, {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/sisterConcern/auth/sisterConcern/edit/${editCompany.id}`, {
                 method: 'PUT',
                 headers: {
                     'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
+                    // 'Content-Type': 'multipart/form-data' // This is not needed, as the browser will set it correctly with the boundary
                 },
-                body: JSON.stringify(editCompany)
+                body: formData
             });
 
             if (!response.ok) {
@@ -167,6 +174,7 @@ useEffect(() => {
             setError((err as Error).message);
         }
     };
+
 
     const handleCancel = () => {
         setEditCompany(null);
@@ -236,20 +244,31 @@ useEffect(() => {
                                                     />
                                                 </div>
                                                 <div>
-                                                    <label className="block text-sm font-medium text-gray-700">Email</label>
-                                                    <input
-                                                        type="email"
-                                                        value={editCompany?.email || ''}
-                                                        onChange={e => setEditCompany({ ...editCompany!, email: e.target.value })}
-                                                        className="w-full border border-gray-300 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
-                                                    />
-                                                </div>
-                                                <div>
                                                     <label className="block text-sm font-medium text-gray-700">Phone</label>
                                                     <input
                                                         type="text"
                                                         value={editCompany?.phone || ''}
                                                         onChange={e => setEditCompany({ ...editCompany!, phone: e.target.value })}
+                                                        className="w-full border border-gray-300 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700">Logo</label>
+                                                    <input
+                                                        type="file"
+                                                        onChange={e => {
+                                                            const file = e.target.files?.[0];
+                                                            if (file) {
+                                                                setEditCompany(prev => {
+                                                                    if (!prev) return prev; // Prevent errors if prev is null
+                                                                    
+                                                                    return {
+                                                                        ...prev, // Preserve existing properties
+                                                                        logo: file
+                                                                    };
+                                                                });
+                                                            }
+                                                        }}
                                                         className="w-full border border-gray-300 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
                                                     />
                                                 </div>
@@ -270,9 +289,9 @@ useEffect(() => {
                                         </AlertDialogTrigger>
                                         <AlertDialogContent>
                                             <AlertDialogHeader>
-                                                <AlertDialogTitle>Confirm Company Deletion</AlertDialogTitle>
+                                                <AlertDialogTitle>Confirm Sister Concern  Deletion</AlertDialogTitle>
                                                 <AlertDialogDescription>
-                                                    Are you sure you want to delete this company? This action cannot be undone, and the company will be permanently removed from the system.
+                                                    Are you sure you want to delete this Sister Concern? This action cannot be undone, and the Sister Concern will be permanently removed from the system.
                                                 </AlertDialogDescription>
                                             </AlertDialogHeader>
                                             <AlertDialogFooter>
