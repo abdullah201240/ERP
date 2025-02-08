@@ -17,11 +17,10 @@ interface SisterConcernDetails {
 
 export default function CreateSisterConcern() {
     const [token, setToken] = useState<string | null>(null);
-    const [companyId, setCompanyId] = useState<string | null>(null);
     const [isClient, setIsClient] = useState(false);
     const [loading, setLoading] = useState(false);
     const [reloadTable, setReloadTable] = useState(false);
-    
+
     const router = useRouter();
 
     const [sisterConcernDetails, setSisterConcernDetails] = useState<SisterConcernDetails>({
@@ -31,7 +30,7 @@ export default function CreateSisterConcern() {
         email: '',
         phone: '',
         companyId: '', // Initialize as empty
-        companyEmail: '', 
+        companyEmail: '',
 
     });
 
@@ -68,8 +67,9 @@ export default function CreateSisterConcern() {
                     ...prev,
                     companyEmail: data.data.email, // Autofill email
                     companyId: data.data.id, // Store company ID
+                    
                 }));
-                setCompanyId(data.data.id);
+                
             }
         } catch (error) {
             console.error('Error fetching profile:', error);
@@ -111,12 +111,12 @@ export default function CreateSisterConcern() {
             formData.append('password', sisterConcernDetails.password);
             formData.append('email', sisterConcernDetails.email);
             formData.append('phone', sisterConcernDetails.phone);
-            formData.append('companyId', companyId || '');
+            formData.append('companyId', sisterConcernDetails.companyId || '');
             formData.append('companyEmail', sisterConcernDetails.companyEmail);
 
 
             const response = await fetch(
-                `${process.env.NEXT_PUBLIC_API_URL}company/auth/company/signup`,
+                `${process.env.NEXT_PUBLIC_API_URL}sisterConcern/auth/sisterConcern/signup`,
                 {
                     method: 'POST',
                     headers: {
@@ -132,7 +132,7 @@ export default function CreateSisterConcern() {
 
             toast.success('Company created successfully!');
             setReloadTable((prev) => !prev);
-            
+
             setSisterConcernDetails({
                 name: '',
                 logo: null,
@@ -196,6 +196,8 @@ export default function CreateSisterConcern() {
                                     type="email"
                                     name="email"
                                     value={sisterConcernDetails.email}
+                                    onChange={handleInputChange}
+                                    placeholder="Enter Email"
                                     className="block w-full rounded-md border-gray-300 shadow-sm p-2 bg-gray-100 mt-2 "
                                 />
                             </div>

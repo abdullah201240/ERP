@@ -339,7 +339,8 @@ export const deleteCompany = asyncHandler(
 export const createSister = asyncHandler(
     async (req: Request, res: Response, next: NextFunction) => {
         try {
-            const { name, email, password, phone, companyId, companyEmail } = req.body;
+            const { name, email, password, phone, companyEmail } = req.body;
+            const companyId = parseInt(req.body.companyId, 10);
 
             // Check for missing fields
             if (!name || !email || !password || !phone || !companyId || !companyEmail) {

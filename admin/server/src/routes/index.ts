@@ -1,6 +1,8 @@
 import express from "express";
 import employeeRoute from "./employeeRoute";
 import companyRoute from "./companyRoute";
+import sisterConcernRoute from "./sisterConcernRoute";
+
 
 
 
@@ -14,6 +16,8 @@ const router = express.Router();
  */
 router.use("/employee", employeeRoute);
 router.use("/company", companyRoute);
+router.use("/sisterConcern", sisterConcernRoute);
+
 
 
 
