@@ -537,3 +537,28 @@ export const getAllSisterConcern = asyncHandler(
         });
     }
 );
+export const deleteSister = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction) => {
+        const { id } = req.params;
+        
+        // Find company by ID
+        const sisterConcern = await SisterConcern.findByPk(id);
+        if (!sisterConcern) {
+            return next(
+                new ApiError(
+                    "Sister Concern not found",
+                    404,
+                    ErrorCodes.NOT_FOUND.code
+                )
+            );
+        }
+        
+        // Delete sisterConcern
+        await sisterConcern.destroy();
+        
+        return res.status(200).json(
+            ApiResponse.success(null, "Sister Concern deleted successfully")
+        );
+    }
+);
+

@@ -209,7 +209,7 @@ useEffect(() => {
                                 <TableCell className='border border-[#e5e7eb]'>{company.email}</TableCell>
                                 <TableCell className='border border-[#e5e7eb] flex items-center justify-center'>
                                     <Image
-                                        src={`${process.env.NEXT_PUBLIC_API_URL}/uploads/${company.logo}`}
+                                        src={`${process.env.NEXT_PUBLIC_API_URL}uploads/${company.logo}`}
                                         width={50}
                                         height={50}
                                         alt={'logo'}
