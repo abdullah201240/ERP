@@ -4,7 +4,6 @@ import { ErrorCodes } from '../utils/errors/ErrorCodes';
 import { AssignedToSchema, DesignPlanUpdateValidator, DesignPlanValidator, ProjectSchema } from "../validators/projectValidators";
 import ERROR_MESSAGES from "../utils/errors/errorMassage";
 import Project from "../models/project";
-import Employee from "../models/employee";
 
 import '../models/association';
 import Assigned from "../models/assigned";
@@ -15,6 +14,7 @@ import DegineBOQ from "../models/degineBOQ";
 import { AssignedDegineBoq } from "../models/association";
 import DesignInvoice from "../models/designInvoice";
 import redisClient from "../config/redisClient";
+import axios from "axios";
 
 
 // Create Project Controller
@@ -32,11 +32,20 @@ export const createProject = asyncHandler(
             );
         }
 
-        const { projectType, projectName, totalArea, projectAddress, clientName, clientAddress, clientContact, clientEmail, creatorName, creatorEmail, requirementDetails } = req.body;
+        const { projectType, sisterConcernId, projectName, totalArea, projectAddress, clientName, clientAddress, clientContact, clientEmail, creatorName, creatorEmail, requirementDetails } = req.body;
 
+        // Call the first API hosted on another server
+        const response = await axios.get(
+            `${process.env.EXTERNAL_API_URL}sisterConcern/employee/${creatorEmail}`
+        );
+
+        if (response.status !== 200 || !response.data || !response.data.data) {
+            throw new Error("Invalid response from external API");
+        }
+        // Extract employee data
+        const existingEmployee = response.data.data;
 
         // Check if employee or not
-        const existingEmployee = await Employee.findOne({ where: { email: creatorEmail } });
         if (!existingEmployee) {
             throw new ApiError(
                 ERROR_MESSAGES.EMPLOYEE_NOT_FOUND,
@@ -58,6 +67,7 @@ export const createProject = asyncHandler(
             creatorName,
             creatorEmail,
             requirementDetails,
+            sisterConcernId
         });
 
         if (!newProject) {
@@ -67,8 +77,8 @@ export const createProject = asyncHandler(
                 ErrorCodes.INTERNAL_SERVER_ERROR.code
             );
         }
-           
-         // Invalidate the cache related to projects
+
+        // Invalidate the cache related to projects
         const cacheKeys = await redisClient.keys('projects:*');
         if (cacheKeys.length > 0) {
             await redisClient.del(cacheKeys);  // Invalidate cache on delete
@@ -290,7 +300,7 @@ export const deleteAssignedTo = asyncHandler(
             );
         }
 
-        
+
         // Delete the assignment record
         await assignedTo.destroy();
 
@@ -301,7 +311,7 @@ export const deleteAssignedTo = asyncHandler(
             console.log(`Cache cleared for data related`);
 
         }
-       
+
 
         return res.status(200).json(ApiResponse.success(null, "Assignment deleted successfully"));
     }
@@ -417,10 +427,17 @@ export const createDesignPlan = asyncHandler(
         }
 
         const { projectId, assignee, stepName, stepType, startDate, endDate, remarks } = req.body;
+        // Call the first API hosted on another server
+        const response = await axios.get(
+            `${process.env.EXTERNAL_API_URL}sisterConcern/employeeById/${assignee}`
+        );
 
+        if (response.status !== 200 || !response.data || !response.data.data) {
+            throw new Error("Invalid response from external API");
+        }
+        // Extract employee data
+        const existingEmployee = response.data.data;
 
-        // Check if employee or not
-        const existingEmployee = await Employee.findOne({ where: { id: assignee } });
         if (!existingEmployee) {
             throw new ApiError(
                 ERROR_MESSAGES.EMPLOYEE_NOT_FOUND,
@@ -461,6 +478,97 @@ export const createDesignPlan = asyncHandler(
         );
     });
 
+// export const getDesignPlans = asyncHandler(
+//     async (req: Request, res: Response, next: NextFunction) => {
+//         const { projectId, stepType } = req.query as { projectId: string; stepType: string };
+
+//         // Check if the project exists
+//         const existingProject = await Project.findOne({ where: { id: projectId } });
+//         if (!existingProject) {
+//             return next(
+//                 new ApiError(
+//                     ERROR_MESSAGES.PROJECT_NOT_FOUND,
+//                     404,
+//                     ErrorCodes.NOT_FOUND?.code || "NOT_FOUND"
+//                 )
+//             );
+//         }
+
+//         const designPlans = await DesignPlan.findAll({
+//             where: { stepType, projectId },
+//             include: [
+//                 {
+//                     model: Project,
+//                     as: 'project', // Use the alias specified in the association
+//                     attributes: ['projectName'], // Include only the project name
+//                 },
+//                 {
+//                     model: Employee,
+//                     as: 'employee', // Use the alias specified in the association
+//                     attributes: ['name'], // Include only the employee name
+//                 },
+//             ],
+//         });
+
+
+//         // Respond with the fetched design plans
+//         return res
+//             .status(200)
+//             .json(
+//                 ApiResponse.success(
+//                     designPlans,
+//                     `${stepType} Design Plans fetched successfully`
+//                 )
+//             );
+//     }
+// );
+
+// export const getDesignPlansProject = asyncHandler(
+//     async (req: Request, res: Response, next: NextFunction) => {
+//         const { projectId } = req.query as { projectId: string; };
+
+//         // Check if the project exists
+//         const existingProject = await Project.findOne({ where: { id: projectId } });
+//         if (!existingProject) {
+//             return next(
+//                 new ApiError(
+//                     ERROR_MESSAGES.PROJECT_NOT_FOUND,
+//                     404,
+//                     ErrorCodes.NOT_FOUND?.code || "NOT_FOUND"
+//                 )
+//             );
+//         }
+
+//         const designPlans = await DesignPlan.findAll({
+//             where: { projectId },
+//             include: [
+//                 {
+//                     model: Project,
+//                     as: 'project', // Use the alias specified in the association
+//                     attributes: ['projectName'], // Include only the project name
+//                 },
+//                 {
+//                     model: Employee,
+//                     as: 'employee', // Use the alias specified in the association
+//                     attributes: ['name'], // Include only the employee name
+//                 },
+//             ],
+//         });
+
+
+//         // Respond with the fetched design plans
+//         return res
+//             .status(200)
+//             .json(
+//                 ApiResponse.success(
+//                     designPlans,
+//                     `Design Plans fetched successfully`
+//                 )
+//             );
+//     }
+// );
+
+
 export const getDesignPlans = asyncHandler(
     async (req: Request, res: Response, next: NextFunction) => {
         const { projectId, stepType } = req.query as { projectId: string; stepType: string };
@@ -477,38 +585,61 @@ export const getDesignPlans = asyncHandler(
             );
         }
 
+        // Fetch design plans without including Employee
         const designPlans = await DesignPlan.findAll({
             where: { stepType, projectId },
             include: [
                 {
                     model: Project,
-                    as: 'project', // Use the alias specified in the association
-                    attributes: ['projectName'], // Include only the project name
-                },
-                {
-                    model: Employee,
-                    as: 'employee', // Use the alias specified in the association
-                    attributes: ['name'], // Include only the employee name
+                    as: "project",
+                    attributes: ["projectName"],
                 },
             ],
         });
 
+        // Extract unique employee IDs
+        const employeeIds = [...new Set(designPlans.map(plan => plan.assignee))];
 
-        // Respond with the fetched design plans
-        return res
-            .status(200)
-            .json(
-                ApiResponse.success(
-                    designPlans,
-                    `${stepType} Design Plans fetched successfully`
-                )
-            );
+        // Fetch employee details from external server
+        let employeeData: Record<string, any> = {};
+        if (employeeIds.length > 0) {
+            try {
+                const response = await axios.post(`${process.env.EXTERNAL_API_URL}sisterConcern/employees`,
+                    {
+                    employeeIds,
+                });
+
+                // Convert array to object for quick lookup
+                employeeData = response.data.employees.reduce(
+                    (acc: Record<string, any>, employee: any) => {
+                        acc[employee.id] = employee;
+                        return acc;
+                    },
+                    {}
+                );
+            } catch (error) {
+                console.error("Error fetching employees:", error);
+                return next(new ApiError("Failed to fetch employee details", 500, "EMPLOYEE_FETCH_ERROR"));
+            }
+        }
+
+        // Attach employee details to design plans
+        const updatedDesignPlans = designPlans.map(plan => ({
+            ...plan.toJSON(),
+            employee: employeeData[plan.assignee] || null, // Attach employee details
+        }));
+
+        // Respond with the updated design plans
+        return res.status(200).json(
+            ApiResponse.success(updatedDesignPlans, `${stepType} Design Plans fetched successfully`)
+        );
     }
 );
 
+
 export const getDesignPlansProject = asyncHandler(
     async (req: Request, res: Response, next: NextFunction) => {
-        const { projectId } = req.query as { projectId: string; };
+        const { projectId } = req.query as { projectId: string };
 
         // Check if the project exists
         const existingProject = await Project.findOne({ where: { id: projectId } });
@@ -522,32 +653,50 @@ export const getDesignPlansProject = asyncHandler(
             );
         }
 
+        // Fetch design plans
         const designPlans = await DesignPlan.findAll({
             where: { projectId },
             include: [
                 {
                     model: Project,
                     as: 'project', // Use the alias specified in the association
-                    attributes: ['projectName'], // Include only the project name
-                },
-                {
-                    model: Employee,
-                    as: 'employee', // Use the alias specified in the association
-                    attributes: ['name'], // Include only the employee name
+                    attributes: ['projectName'],
                 },
             ],
         });
 
+        // Extract employee IDs from design plans
+        const employeeIds = designPlans.map((plan) => plan.assignee).filter(Boolean);
 
-        // Respond with the fetched design plans
-        return res
-            .status(200)
-            .json(
-                ApiResponse.success(
-                    designPlans,
-                    `Design Plans fetched successfully`
-                )
-            );
+        let employeeDataMap: Record<string, any> = {};
+
+        if (employeeIds.length > 0) {
+            try {
+                // Fetch employee details from external API
+                const employeeResponse = await axios.post(
+                    `${process.env.EXTERNAL_API_URL}sisterConcern/employees`,
+                    { employeeIds }
+                );
+                
+                employeeDataMap = employeeResponse.data.reduce((acc: any, emp: any) => {
+                    acc[emp.id] = emp;
+                    return acc;
+                }, {});
+            } catch (error) {
+                console.error("Error fetching employee data:", error);
+            }
+        }
+
+        // Merge employee data with design plans
+        const designPlansWithEmployees = designPlans.map((plan) => ({
+            ...plan.toJSON(),
+            employee: employeeDataMap[plan.assignee] || null,
+        }));
+
+        // Respond with the merged design plans
+        return res.status(200).json(
+            ApiResponse.success(designPlansWithEmployees, `Design Plans fetched successfully`)
+        );
     }
 );
 

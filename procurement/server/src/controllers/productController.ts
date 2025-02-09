@@ -1,20 +1,24 @@
 import { CookieOptions, NextFunction, Request, Response } from "express";
 import { asyncHandler, ApiError, ApiResponse } from "../utils/root";
-import { ErrorCodes } from '../utils/errors/ErrorCodes';
-import ERROR_MESSAGES from '../utils/errors/errorMassage'
 import ProductCategory from "../models/productCategory";
 import ProductUnit from '../models/productUnit';
 import Product from "../models/product";
 import { Op } from "sequelize";
 
+import redisClient from "../config/redisClient";
+const PRODUCT_CACHE_KEY = "all_products";
 
+// Helper function to remove product-related caches
+const clearProductCache = async () => {
+    await redisClient.del(PRODUCT_CACHE_KEY);
+};
 
 export const createCategory = asyncHandler(
     async (req: Request, res: Response, next: NextFunction) => {
 
-        const { 
-            name, 
-            
+        const {
+            name,
+
         } = req.body;
 
         // Check for required fields
@@ -22,7 +26,7 @@ export const createCategory = asyncHandler(
             throw new ApiError('All fields are required', 400, 'BAD_REQUEST');
         }
 
-        
+
 
         // Create the ProductCategory record
         const createProduct = await ProductCategory.create({
@@ -37,8 +41,8 @@ export const createCategory = asyncHandler(
 
 export const viewCategory = asyncHandler(
     async (req: Request, res: Response, next: NextFunction) => {
-        
-       
+
+
 
         const viewProduct = await ProductCategory.findAll();
 
@@ -79,7 +83,7 @@ export const updateCategory = asyncHandler(
 
         // Update fields
         updateProduct.name = name || updateProduct.name;
-       
+
 
 
 
@@ -99,9 +103,9 @@ export const updateCategory = asyncHandler(
 export const createUnit = asyncHandler(
     async (req: Request, res: Response, next: NextFunction) => {
 
-        const { 
-            name, 
-            
+        const {
+            name,
+
         } = req.body;
         console.log(req.body)
 
@@ -110,7 +114,7 @@ export const createUnit = asyncHandler(
             throw new ApiError('All fields are required', 400, 'BAD_REQUEST');
         }
 
-        
+
 
         // Create the ProductUnit record
         const createUnit = await ProductUnit.create({
@@ -125,8 +129,8 @@ export const createUnit = asyncHandler(
 
 export const viewUnit = asyncHandler(
     async (req: Request, res: Response, next: NextFunction) => {
-        
-       
+
+
 
         const viewUnit = await ProductUnit.findAll();
 
@@ -167,7 +171,7 @@ export const updateUnit = asyncHandler(
 
         // Update fields
         updateUnit.name = name || updateUnit.name;
-       
+
 
 
 
@@ -186,91 +190,100 @@ export const updateUnit = asyncHandler(
 
 export const createProduct = asyncHandler(
     async (req: Request, res: Response, next: NextFunction) => {
-      // Destructure required fields from the request body
-      const {
-        name,
-        brand,
-        countryOfOrigin,
-        sizeAndDimension,
-        category,
-        supplierProductCode,
-        ourProductCode,
-        mrpPrice,
-        discountPercentage,
-        discountAmount,
-        sourcePrice,
-        unit,
-        product_category
-      } = req.body;
-  
-      // Check for required fields
-      if (!name || !brand || !countryOfOrigin || !sizeAndDimension || !category || !supplierProductCode || !ourProductCode || !mrpPrice || !discountPercentage || !discountAmount || !sourcePrice || !unit || !product_category) {
-        throw new ApiError('All fields are required', 400, 'BAD_REQUEST');
-      }
-  
-      // Create the Product record
-      const createdProduct = await Product.create({
-        name,
-        brand,
-        countryOfOrigin,
-        sizeAndDimension,
-        category,
-        supplierProductCode,
-        ourProductCode,
-        mrpPrice,
-        discountPercentage,
-        discountAmount,
-        sourcePrice,
-        unit,
-        product_category
-      });
-  
-      // Return success response
-      return res.status(201).json(
-        ApiResponse.success('Product created successfully')
-      );
+        // Destructure required fields from the request body
+        const {
+            name,
+            brand,
+            countryOfOrigin,
+            sizeAndDimension,
+            category,
+            supplierProductCode,
+            ourProductCode,
+            mrpPrice,
+            discountPercentage,
+            discountAmount,
+            sourcePrice,
+            unit,
+            product_category
+        } = req.body;
+
+        // Check for required fields
+        if (!name || !brand || !countryOfOrigin || !sizeAndDimension || !category || !supplierProductCode || !ourProductCode || !mrpPrice || !discountPercentage || !discountAmount || !sourcePrice || !unit || !product_category) {
+            throw new ApiError('All fields are required', 400, 'BAD_REQUEST');
+        }
+
+        // Create the Product record
+        const createdProduct = await Product.create({
+            name,
+            brand,
+            countryOfOrigin,
+            sizeAndDimension,
+            category,
+            supplierProductCode,
+            ourProductCode,
+            mrpPrice,
+            discountPercentage,
+            discountAmount,
+            sourcePrice,
+            unit,
+            product_category
+        });
+
+        // Clear cached product list
+        await clearProductCache();
+
+        // Return success response
+        return res.status(201).json(
+            ApiResponse.success('Product created successfully')
+        );
     }
-  );
+);
 
 
 
-  export const getAllProduct = asyncHandler(
+export const getAllProduct = asyncHandler(
     async (req: Request, res: Response, next: NextFunction) => {
-      const { page = 1, limit = 10, search = "" } = req.query;
-      
-      // Parse page and limit as integers
-      const pageNumber = parseInt(page as string, 10);
-      const pageSize = parseInt(limit as string, 10);
-      const offset = (pageNumber - 1) * pageSize;
-    
-      // Fetch products with pagination and search
-      const { rows: products, count: totalProducts } = await Product.findAndCountAll({
-        where: search
-          ? {
-              name: {
-                [Op.like]: `%${search}%`, // Case-insensitive search for MariaDB/MySQL
-              },
-            }
-          : {},
-        limit: pageSize,
-        offset: offset,
-        order: [["createdAt", "ASC"]], // Sort by most recent
-      });
-    
-      return res.status(200).json({
-        success: true,
-        data: {
-          products,  // Fixed this to 'products' instead of 'employees'
-          totalProducts,  // Fixed this to 'totalProducts' instead of 'totalEmployees'
-          totalPages: Math.ceil(totalProducts / pageSize),  // Fixed this to use 'totalProducts'
-          currentPage: pageNumber,
-        },
-        message: "Products retrieved successfully",  // Updated the message
-      });
-    }
-  );
+        const { page = 1, limit = 10, search = "" } = req.query;
 
-  export const deleteProduct = asyncHandler(
+        // Parse page and limit as integers
+        const pageNumber = parseInt(page as string, 10);
+        const pageSize = parseInt(limit as string, 10);
+        const offset = (pageNumber - 1) * pageSize;
+        const cacheKey = `${PRODUCT_CACHE_KEY}_${pageNumber}_${pageSize}_${search}`;
+        // Check if products exist in Redis cache
+        const cachedData = await redisClient.get(cacheKey);
+        if (cachedData) {
+            return res.status(200).json(JSON.parse(cachedData));
+        }
+
+        // Fetch from DB if not cached
+        const { rows: products, count: totalProducts } = await Product.findAndCountAll({
+            where: search
+                ? { name: { [Op.like]: `%${search}%` } }
+                : {},
+            limit: pageSize,
+            offset,
+            order: [["createdAt", "ASC"]],
+        });
+        const response = {
+            success: true,
+            data: {
+                products,
+                totalProducts,
+                totalPages: Math.ceil(totalProducts / pageSize),
+                currentPage: pageNumber,
+            },
+            message: "Products retrieved successfully",
+        };
+        // Store response in Redis for 10 minutes
+        await redisClient.setEx(cacheKey, 600, JSON.stringify(response));
+
+        return res.status(200).json(response);
+
+    }
+);
+
+export const deleteProduct = asyncHandler(
     async (req: Request, res: Response, next: NextFunction) => {
         const { id } = req.params;
 
@@ -281,30 +294,44 @@ export const createProduct = asyncHandler(
         }
 
         await deleteProduct.destroy();
-
+        // Clear cache for this product and all products
+        await redisClient.del(`product_${id}`);
+        await clearProductCache();
         return res.status(200).json(
             ApiResponse.success(null, 'Product  deleted successfully')
         );
     }
 );
 
-export const viewProductById = asyncHandler(
-    async (req: Request, res: Response, next: NextFunction) => {
-        const { id } = req.params; // Get product ID from request parameters
+export const viewProductById = asyncHandler(async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const cacheKey = `product_${id}`;
 
-        const viewProduct = await Product.findOne({
-            where: { id }, // Find product by ID
-        });
-
-        if (!viewProduct) {
-            throw new ApiError('Product  not found', 404, 'NOT_FOUND');
-        }
-
-        return res.status(200).json(
-            ApiResponse.success(viewProduct, 'Product retrieved successfully')
-        );
+    // Check Redis cache first
+    const cachedProduct = await redisClient.get(cacheKey);
+    if (cachedProduct) {
+        return res.status(200).json(JSON.parse(cachedProduct));
     }
-);
+
+    // Fetch from DB if not found in cache
+    const product = await Product.findByPk(id);
+    if (!product) {
+        throw new ApiError("Product not found", 404, "NOT_FOUND");
+    }
+
+    // Store in Redis for 30 minutes
+    await redisClient.setEx(cacheKey, 1800, JSON.stringify({
+        success: true,
+        data: product,
+        message: "Product retrieved successfully",
+    }));
+
+    return res.status(200).json({
+        success: true,
+        data: product,
+        message: "Product retrieved successfully",
+    });
+});
 
 export const updateProduct = asyncHandler(
     async (req: Request, res: Response, next: NextFunction) => {
@@ -350,6 +377,9 @@ export const updateProduct = asyncHandler(
 
         // Save the updated product to the database
         await product.save();
+        // Clear cache for this product and all products
+        await redisClient.del(`product_${id}`);
+        await clearProductCache();
 
         return res.status(200).json(
             ApiResponse.success(product, 'Product updated successfully')

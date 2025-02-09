@@ -376,3 +376,100 @@ export const loginEmployeeOthersPlatform = asyncHandler(
   
   }
 );
+
+export const getEmployeeByEmail = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { email } = req.params; // Extract email from URL params
+
+    // Validate email (basic check)
+    if (!email || !email.includes("@")) {
+      return next(
+        new ApiError(
+          "Invalid email address",
+          400,
+          ErrorCodes.BAD_REQUEST.code
+        )
+      );
+    }
+
+    // Find employee by email
+    const employee = await Employee.findOne({ where: { email } });
+    if (!employee) {
+      return next(
+        new ApiError(
+          "Employee not found",
+          404,
+          ErrorCodes.NOT_FOUND.code
+        )
+      );
+    }
+
+    // Exclude the password from the response
+    const { password: _, ...employeeData } = employee.toJSON();
+
+    return res.status(200).json(
+      ApiResponse.success(
+        employeeData,
+        "Employee retrieved successfully"
+      )
+    );
+  }
+);
+
+
+export const getEmployeeById = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { id } = req.params; // Extract email from URL params
+
+    // Validate email (basic check)
+    if (!id ) {
+      return next(
+        new ApiError(
+          "Invalid id",
+          400,
+          ErrorCodes.BAD_REQUEST.code
+        )
+      );
+    }
+
+    // Find employee by email
+    const employee = await Employee.findOne({ where: { id } });
+    if (!employee) {
+      return next(
+        new ApiError(
+          "Employee not found",
+          404,
+          ErrorCodes.NOT_FOUND.code
+        )
+      );
+    }
+
+    // Exclude the password from the response
+    const { password: _, ...employeeData } = employee.toJSON();
+
+    return res.status(200).json(
+      ApiResponse.success(
+        employeeData,
+        "Employee retrieved successfully"
+      )
+    );
+  }
+);
+export const getEmployees = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+  
+      const { employeeIds } = req.body;
+
+      if (!employeeIds || !Array.isArray(employeeIds)) {
+          return res.status(400).json({ success: false, message: "Invalid employeeIds format" });
+      }
+
+      // Fetch employees from database
+      const employees = await Employee.findAll({
+          where: { id: employeeIds },
+      });
+      return res.status(200).json({ success: true, employees });
+
+
+}
+);

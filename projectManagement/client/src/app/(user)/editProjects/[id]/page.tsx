@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { toast } from 'react-hot-toast';
 import { FaChevronDown } from 'react-icons/fa';
@@ -30,7 +30,6 @@ export default function UpdateProjectPage() {
   const router = useRouter();
   const params = useParams();
   const pageId = params?.id;
-  const token = localStorage.getItem('accessToken');
 
   const [formData, setFormData] = useState<FormData>({
     projectType: '',
@@ -53,6 +52,26 @@ export default function UpdateProjectPage() {
     creatorName: '',
     creatorEmail: ''
   });
+  interface EmployeeDetails {
+    id: number;
+    name: string;
+    email: string;
+
+    phone: string;
+
+    dob: string;
+
+    gender: string;
+
+    companyId: string;
+
+    sisterConcernId: string;
+
+    photo: string;
+
+    employeeId: string;
+
+}
 
   const [employees, setEmployees] = useState<{ id: string; name: string }[]>([]);
   const [loading, setLoading] = useState(true);
@@ -61,19 +80,51 @@ export default function UpdateProjectPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [hasMoreEmployees, setHasMoreEmployees] = useState(true);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
+  const [employeeDetails, setEmployeeDetails] = useState<EmployeeDetails | null>(null);
 
   const toggleDropdown = () => {
     setIsDropdownOpen((prev) => !prev);
   };
 
-  const fetchEmployees = async (page: number) => {
+
+  const fetchCompanyProfile = useCallback(async () => {
+    const token = localStorage.getItem('accessToken');
+
+    try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}employee/auth/profile`, {
+            headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await response.json();
+        console.table(data.data)
+        if (data.success) {
+            setEmployeeDetails(data.data);
+        }
+    } catch (error) {
+        console.error('Error fetching profile:', error);
+    }
+}, []);
+
+useEffect(() => {
+  const token = localStorage.getItem('accessToken');
+
+  if (!token) {
+      router.push('/'); // Redirect to login page if token doesn't exist
+  } else {
+      fetchCompanyProfile();
+  }
+}, [router, fetchCompanyProfile]);
+
+const fetchEmployees = useCallback(async (page: number) => {
   try {
+    const token = localStorage.getItem('accessToken');
+
     if (!token) {
       router.push('/');
       return; // Exit the function if there's no token
     }
+    if (!employeeDetails) return;
 
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}employee/employee?page=${page}&limit=10`, {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL_ADMIN}sisterConcern/employee/${employeeDetails.sisterConcernId}?page=${page}&limit=50`, {
       headers: {
         Authorization: token, // Ensure token is not null
       },
@@ -90,8 +141,8 @@ export default function UpdateProjectPage() {
     console.error(error);
     setError('Failed to load employees');
   }
-};
-  useEffect(() => {
+}, [ router, employees.length, employeeDetails]); // Include employeeDetails in the dependency array
+useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsDropdownOpen(false);
@@ -108,7 +159,7 @@ export default function UpdateProjectPage() {
     if (isDropdownOpen) {
       fetchEmployees(currentPage);
     }
-  }, [isDropdownOpen, currentPage]);
+  }, [isDropdownOpen, currentPage, fetchEmployees]);
 
   const handleScroll: React.UIEventHandler<HTMLUListElement> = (event) => {
     const { scrollTop, scrollHeight, clientHeight } = event.currentTarget;
@@ -120,6 +171,8 @@ export default function UpdateProjectPage() {
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
+        const token = localStorage.getItem('accessToken');
+
         if (!token) {
           router.push('/'); // Redirect to login page if token doesn't exist
           return;
@@ -164,7 +217,7 @@ export default function UpdateProjectPage() {
     };
 
     fetchInitialData();
-  }, [router, token, pageId]);
+  }, [router, pageId]);
 
   const handleInputChange = (event: React.ChangeEvent<HTMLSelectElement | HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = event.target;
@@ -176,6 +229,8 @@ export default function UpdateProjectPage() {
 
   const handleSelectEmployee = async (employee: { id: string; name: string; }) => {
     try {
+      const token = localStorage.getItem('accessToken');
+
       if (!token) {
         router.push('/'); // Redirect to login page if token doesn't exist
         return;
@@ -206,6 +261,8 @@ export default function UpdateProjectPage() {
 
   const handleRemoveEmployee = async (index: number, id: string) => {
     try {
+      const token = localStorage.getItem('accessToken');
+
       if (!token) {
         router.push('/'); // Redirect to login page if token doesn't exist
         return;
@@ -236,6 +293,8 @@ export default function UpdateProjectPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      const token = localStorage.getItem('accessToken');
+
       if (!token) {
         router.push('/'); // Redirect to login page if token doesn't exist
         return;
@@ -295,8 +354,8 @@ export default function UpdateProjectPage() {
             </div>
 
             <div className="relative">
-              <label className='text-white mb-2'>Assigned To</label>
-              <div
+            <label className='text-white mb-2'>Assigned To</label>
+            <div
                 onClick={toggleDropdown}
                 className="w-full rounded-md border-gray-300 shadow-sm focus-within:border-black focus-within:ring-black focus-within:ring-opacity-50 p-2 bg-gray-100 mt-2 cursor-pointer pr-10 flex flex-wrap gap-2"
               >

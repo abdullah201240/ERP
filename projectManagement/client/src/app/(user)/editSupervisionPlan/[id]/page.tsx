@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { toast } from 'react-hot-toast';
 import { FaChevronDown } from 'react-icons/fa';
@@ -30,6 +30,26 @@ export default function UpdateProjectPage() {
     assignedTo: [],
 
   });
+  interface EmployeeDetails {
+    id: number;
+    name: string;
+    email: string;
+
+    phone: string;
+
+    dob: string;
+
+    gender: string;
+
+    companyId: string;
+
+    sisterConcernId: string;
+
+    photo: string;
+
+    employeeId: string;
+
+}
 
   const [employees, setEmployees] = useState<{ id: string; name: string }[]>([]);
   const [loading, setLoading] = useState(true);
@@ -38,10 +58,38 @@ export default function UpdateProjectPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [hasMoreEmployees, setHasMoreEmployees] = useState(true);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
+  const [employeeDetails, setEmployeeDetails] = useState<EmployeeDetails | null>(null);
 
   const toggleDropdown = () => {
     setIsDropdownOpen((prev) => !prev);
   };
+
+  const fetchCompanyProfile = useCallback(async () => {
+    const token = localStorage.getItem('accessToken');
+
+    try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}employee/auth/profile`, {
+            headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await response.json();
+        console.table(data.data)
+        if (data.success) {
+            setEmployeeDetails(data.data);
+        }
+    } catch (error) {
+        console.error('Error fetching profile:', error);
+    }
+}, []);
+
+useEffect(() => {
+  const token = localStorage.getItem('accessToken');
+
+  if (!token) {
+      router.push('/'); // Redirect to login page if token doesn't exist
+  } else {
+      fetchCompanyProfile();
+  }
+}, [router, fetchCompanyProfile]);
 
   const fetchEmployees = async (page: number) => {
     try {
@@ -49,8 +97,9 @@ export default function UpdateProjectPage() {
         router.push('/');
         return; // Exit the function if there's no token
       }
+      if (!employeeDetails) return;
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}employee/employee?page=${page}&limit=10`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL_ADMIN}sisterConcern/employee/${employeeDetails.sisterConcernId}?page=${page}&limit=50`, {
         headers: {
           Authorization: token, // Ensure token is not null
         },

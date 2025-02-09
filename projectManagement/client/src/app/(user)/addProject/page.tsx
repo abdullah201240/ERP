@@ -13,7 +13,7 @@ export default function Page() {
   const [creatorName, setCreatorName] = useState('');
   const [creatorEmail, setCreatorEmail] = useState('');
   const [loading, setLoading] = useState(false); // Loading state
-  const [user, setUser] = useState({ name: '', email: '', id: '' });
+  const [user, setUser] = useState({ name: '', email: '', id: '',sisterConcernId: '' });
   const [formData, setFormData] = useState({
     projectType: '',
     projectName: '',
@@ -57,7 +57,7 @@ export default function Page() {
             setCreatorName(data.data.name);
             setCreatorEmail(data.data.email);
 
-            setUser({ name: data.data.name, email: data.data.email, id: data.data.id });
+            setUser({ name: data.data.name, email: data.data.email, id: data.data.id , sisterConcernId: data.data.sisterConcernId });
 
 
           }
@@ -102,7 +102,8 @@ export default function Page() {
           body: JSON.stringify({
             ...formData,
             creatorName,
-            creatorEmail
+            creatorEmail,
+            sisterConcernId: user.sisterConcernId,
           })
         });
 

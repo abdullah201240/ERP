@@ -2,7 +2,6 @@ import { CookieOptions, NextFunction, Request, Response } from "express";
 import { asyncHandler, ApiError, ApiResponse } from "../utils/root";
 import { ErrorCodes } from '../utils/errors/ErrorCodes';
 import { employeeLoginValidator, employeeRegisterValidator } from "../validators/employeeValidators";
-import Employee from "../models/employee";
 import jwt from 'jsonwebtoken';
 import { Op } from "sequelize";
 import dotenv from 'dotenv';
@@ -143,40 +142,7 @@ export const logoutEmployee = asyncHandler(
 
 
 
-export const getAllEmployee = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const { page = 1, limit = 10, search = "" } = req.query;
-    // Parse page and limit as integers
-    const pageNumber = parseInt(page as string, 10);
-    const pageSize = parseInt(limit as string, 10);
-    const offset = (pageNumber - 1) * pageSize;
 
-    // Fetch employees with pagination and search
-    const { rows: employees, count: totalEmployees } = await Employee.findAndCountAll({
-      where: search
-        ? {
-          name: {
-            [Op.like]: `%${search}%`, // Case-sensitive search for MariaDB/MySQL
-          },
-        }
-        : {},
-      limit: pageSize,
-      offset: offset,
-      order: [["createdAt", "ASC"]], // Sort by most recent
-    });
-
-    return res.status(200).json({
-      success: true,
-      data: {
-        employees,  // Fixed this to 'employees' instead of 'projects'
-        totalEmployees,  // Fixed this to 'totalEmployees' instead of 'totalProjects'
-        totalPages: Math.ceil(totalEmployees / pageSize),  // Fixed this to use 'totalEmployees'
-        currentPage: pageNumber,
-      },
-      message: "Employees retrieved successfully",  // Updated the message
-    });
-  }
-);
 
 
 

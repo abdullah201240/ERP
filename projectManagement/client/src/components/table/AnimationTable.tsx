@@ -50,6 +50,26 @@ interface AnimationTableProps {
   projectId: number | null;
   reload: boolean;
 }
+interface EmployeeDetails {
+    id: number;
+    name: string;
+    email: string;
+
+    phone: string;
+
+    dob: string;
+
+    gender: string;
+
+    companyId: string;
+
+    sisterConcernId: string;
+
+    photo: string;
+
+    employeeId: string;
+
+}
 
 const AnimationTable: React.FC<AnimationTableProps> = ({ projectId , reload}) => {
     const router = useRouter();
@@ -73,7 +93,36 @@ const AnimationTable: React.FC<AnimationTableProps> = ({ projectId , reload}) =>
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [loading1, setLoading1] = useState(false);
     const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null); // State to hold the selected project ID for editing
+    const [employeeDetails, setEmployeeDetails] = useState<EmployeeDetails | null>(null);
 
+
+
+    const fetchCompanyProfile = useCallback(async () => {
+        const token = localStorage.getItem('accessToken');
+    
+        try {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}employee/auth/profile`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            const data = await response.json();
+            console.table(data.data)
+            if (data.success) {
+                setEmployeeDetails(data.data);
+            }
+        } catch (error) {
+            console.error('Error fetching profile:', error);
+        }
+    }, []);
+    
+    useEffect(() => {
+      const token = localStorage.getItem('accessToken');
+    
+      if (!token) {
+          router.push('/'); // Redirect to login page if token doesn't exist
+      } else {
+          fetchCompanyProfile();
+      }
+    }, [router, fetchCompanyProfile]);
     const fetchProjects = useCallback(async () => {
         if (!token) {
             router.push('/');
@@ -108,8 +157,10 @@ const AnimationTable: React.FC<AnimationTableProps> = ({ projectId , reload}) =>
         async (pageNumber = 1, query = '') => {
             setLoading1(true);
             try {
+                if (!employeeDetails) return;
+
                 const response = await fetch(
-                    `${process.env.NEXT_PUBLIC_API_URL}employee/employee?page=${pageNumber}&limit=10&search=${query}`,
+                    `${process.env.NEXT_PUBLIC_API_URL_ADMIN}sisterConcern/employee/${employeeDetails.sisterConcernId}?page=${pageNumber}&limit=10&search=${query}`,
                     {
                         headers: {
                             Authorization: `Bearer ${token}`,
@@ -136,7 +187,7 @@ const AnimationTable: React.FC<AnimationTableProps> = ({ projectId , reload}) =>
                 setLoading1(false);
             }
         },
-        [token]
+        [token,employeeDetails]
     );
 
     useEffect(() => {

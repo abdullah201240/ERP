@@ -2,7 +2,7 @@ import express from "express";
 import { verifyJWT } from "../middleware/sisterConcernAuth"; 
 import {  createSister, deleteSister, getAllCompany, getAllSisterConcern, getProfile, getSisterConcernProfile, loginSister, logoutCompany, logoutSisterConcernCompany, updateCompany, updateSister } from "../controllers/companyController";
 import upload from "../middleware/uploadMiddleware";
-import { createEmployee, deleteEmployee, getAllEmployee, loginEmployee, loginEmployeeOthersPlatform, logoutEmployee, updateEmployee } from "../controllers/employeeController";
+import { createEmployee, deleteEmployee, getAllEmployee, getEmployeeByEmail, getEmployeeById, getEmployees, loginEmployee, loginEmployeeOthersPlatform, logoutEmployee, updateEmployee } from "../controllers/employeeController";
 
 const router = express.Router();
 
@@ -25,7 +25,10 @@ router.put("/employee/:id",upload.single("photo"), updateEmployee);
 router.delete("/employee/:id", deleteEmployee);
 router.post("/others/auth/login", loginEmployeeOthersPlatform);
 
+router.get("/employee/:email", getEmployeeByEmail);
 
+router.get("/employeeById/:id", getEmployeeById);
+router.post("/employees", getEmployees);
 
 
 
