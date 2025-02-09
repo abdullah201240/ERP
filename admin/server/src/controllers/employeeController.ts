@@ -320,3 +320,59 @@ export const deleteEmployee = asyncHandler(
     });
   }
 );
+
+
+export const loginEmployeeOthersPlatform = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    console.log(req.body)
+    // Validate request body with Zod
+    const validationResult = employeeLoginValidator.safeParse(req.body);
+
+    if (!validationResult.success) {
+      const errorMessages = validationResult.error.errors.map((err) => err.message);
+      return next(
+        new ApiError(
+          "Validation Error",
+          400,
+          ErrorCodes.VALIDATION_ERROR.code,
+          errorMessages.join(", ")
+        )
+      );
+    }
+
+    const { email, password } = validationResult.data;
+
+    // Find employee by email
+    const employee = await Employee.findOne({ where: { email } });
+    if (!employee) {
+      return next(
+        new ApiError(
+          "Employee does not exist",
+          404,
+          ErrorCodes.NOT_FOUND.code
+        )
+      );
+    }
+
+    // Check if the password matches
+    const isPasswordValid = await bcrypt.compare(password, employee.password);
+    if (!isPasswordValid) {
+      return next(
+        new ApiError(
+          "Invalid email or password",
+          401,
+          ErrorCodes.UNAUTHORIZED.code
+        )
+      );
+    }
+
+    // If all is okay, return employee data (excluding password)
+    const { password: _, ...employeeData } = employee.toJSON();
+
+    return res.status(200).json({
+      message: "Employee logged in successfully",
+      data: employeeData
+  });
+  
+  }
+);

@@ -3,90 +3,23 @@ import { asyncHandler, ApiError, ApiResponse } from "../utils/root";
 import { ErrorCodes } from '../utils/errors/ErrorCodes';
 import { employeeLoginValidator, employeeRegisterValidator } from "../validators/employeeValidators";
 import Employee from "../models/employee";
-import bcrypt from 'bcryptjs';
-import ERROR_MESSAGES from '../utils/errors/errorMassage'
 import jwt from 'jsonwebtoken';
 import { Op } from "sequelize";
 import dotenv from 'dotenv';
-
-import { getChannel } from '../utils/rabbitmq';
+import axios from "axios";
 
 const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET || "LD9cv1kBfgRHVIg9GG_OGzh9TUkcyqgZAaM0o3DmVkx08MCFRSzMocyO3UtNdDNtoCJ0X0-5nLwK7fdO"; // Fallback to a hardcoded secret if not in env
 
 dotenv.config();
 
 
-export const createEmployee = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const result = employeeRegisterValidator.safeParse(req.body);
-
-    if (!result.success) {
-      // ZodError includes an array of issues, format them for a response
-      const errors = result.error.errors.map((error) => error.message).join(", ");
-      throw new ApiError(
-        "All fields are required",
-        400,
-        ErrorCodes.BAD_REQUEST.code,
-        errors
-      );
-    }
-
-    const { name, email, password, phone, dob, gender } = req.body;
-
-    // Check for missing fields
-    if (!name || !email || !password || !phone || !dob || !gender) {
-      throw new ApiError(
-        ERROR_MESSAGES.MISSING_FIELDS,
-        400,
-        ErrorCodes.BAD_REQUEST.code
-      );
-    }
-
-    // Check if employee already exists
-    const existingEmployee = await Employee.findOne({ where: { email } });
-    if (existingEmployee) {
-      throw new ApiError(
-        ERROR_MESSAGES.EMPLOYEE_EXISTS,
-        409,
-        ErrorCodes.CONFLICT?.code || "CONFLICT"
-      );
-    }
-
-    // Hash the password before storing it
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    // Create the new employee in the database
-    const newEmployee = await Employee.create({
-      name,
-      email,
-      password: hashedPassword,
-      phone,
-      dob,
-      gender,
-    });
-
-
-
-
-    if (!newEmployee) {
-      throw new ApiError(
-        ERROR_MESSAGES.INTERNAL_ERROR,
-        500,
-        ErrorCodes.INTERNAL_SERVER_ERROR.code
-      );
-    }
-
-    // Exclude the password from the response
-    const { password: _, ...employeeResponse } = newEmployee.toJSON();
-
-    return res
-      .status(201)
-      .json({ message: "Employee created successfully", employee: employeeResponse });
-  }
-);
 
 export const loginEmployee = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
+    if (!process.env.EXTERNAL_API_URL) {
+      throw new Error("EXTERNAL_API_URL is not defined");
+    }
+    
     // Validate request body with Zod
     const validationResult = employeeLoginValidator.safeParse(req.body);
 
@@ -104,33 +37,24 @@ export const loginEmployee = asyncHandler(
 
     const { email, password } = validationResult.data;
 
-    // Find employee by email
-    const employee = await Employee.findOne({ where: { email } });
-    if (!employee) {
-      return next(
-        new ApiError(
-          "Employee does not exist",
-          404,
-          ErrorCodes.NOT_FOUND.code
-        )
-      );
+    
+    // Call the first API hosted on another server
+    const response = await axios.post(
+      `${process.env.EXTERNAL_API_URL}sisterConcern/others/auth/login`,
+      { email, password }
+    );
+    
+    if (response.status !== 200 || !response.data || !response.data.data) {
+      throw new Error("Invalid response from external API");
     }
+    // Extract employee data
+    const employeeData = response.data.data;
 
-    // Check if the password matches
-    const isPasswordValid = await bcrypt.compare(password, employee.password);
-    if (!isPasswordValid) {
-      return next(
-        new ApiError(
-          "Invalid email or password",
-          401,
-          ErrorCodes.UNAUTHORIZED.code
-        )
-      );
-    }
+
 
     // Generate access token
     const accessToken = jwt.sign(
-      { id: employee.id, email: employee.email, name: employee.name },
+      { id: employeeData.id, email: employeeData.email, name: employeeData.name ,companyId: employeeData.companyId , sisterConcernId: employeeData.sisterConcernId , photo: employeeData.photo ,dob: employeeData.dob , gender: employeeData.gender,phone: employeeData.phone,employeeId: employeeData.employeeId },
       ACCESS_TOKEN_SECRET as string,
       { expiresIn: process.env.ACCESS_TOKEN_EXPIRY || "1h" }
     );
@@ -158,23 +82,23 @@ export const loginEmployee = asyncHandler(
 
 export const getProfile = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
-    // Extract employee from the request (added by verifyJWT middleware)
-    const employee = req as Request & { employee: Employee }; // Manually cast the request type
+    // Extract user from the request (added by verifyJWT middleware)
+    const user = req as Request & { user: jwt.JwtPayload }; // Access 'user' set by verifyJWT
 
-
-    if (!employee) {
+    if (!user) {
       return next(
         new ApiError(
-          "Employee not found",
+          "User not found",
           404,
           ErrorCodes.NOT_FOUND.code
         )
       );
     }
-    const { id, name, email, phone, dob, gender } = employee.employee.dataValues; // Extract only required fields
 
+    // Assuming the JWT payload contains all the required fields directly
+    const { id, name, email, phone, dob, gender ,companyId , sisterConcernId ,photo,employeeId } = user.user; // Extract from the payload
 
-    // Return the employee details
+    // Return the user profile details
     return res.status(200).json(
       ApiResponse.success(
         {
@@ -183,13 +107,18 @@ export const getProfile = asyncHandler(
           email,
           phone,
           dob,
-          gender
+          gender,
+          companyId,
+          sisterConcernId,
+          photo,
+          employeeId
         },
         "Profile retrieved successfully"
       )
     );
   }
 );
+
 
 export const logoutEmployee = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -252,114 +181,6 @@ export const getAllEmployee = asyncHandler(
 
 
 
-// Function to process received employee data (from RabbitMQ)
-export const processEmployeeData = async (data: string) => {
-  try {
-    const employee = JSON.parse(data); // Parse received data
-    console.log("Received Employee Data:", employee);
 
-    // Validate the employee data
-    const result = employeeRegisterValidator.safeParse(employee);
-    if (!result.success) {
-      const errors = result.error.errors.map((error) => error.message).join(", ");
-      throw new ApiError(
-        "Validation failed",
-        400,
-        ErrorCodes.BAD_REQUEST.code,
-        errors
-      );
-    }
 
-    const { name, email, password, phone, dob, gender } = employee;
-
-    // Check for missing fields
-    if (!name || !email || !password || !phone || !dob || !gender) {
-      throw new ApiError(
-        ERROR_MESSAGES.MISSING_FIELDS,
-        400,
-        ErrorCodes.BAD_REQUEST.code
-      );
-    }
-
-    // Check if employee already exists
-    const existingEmployee = await Employee.findOne({ where: { email } });
-    if (existingEmployee) {
-      throw new ApiError(
-        ERROR_MESSAGES.EMPLOYEE_EXISTS,
-        409,
-        ErrorCodes.CONFLICT?.code || "CONFLICT"
-      );
-    }
-
-    // Hash the password before storing it
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    // Create the new employee in the database
-    const newEmployee = await Employee.create({
-      name,
-      email,
-      password: hashedPassword,
-      phone,
-      dob,
-      gender,
-    });
-
-    if (!newEmployee) {
-      throw new ApiError(
-        ERROR_MESSAGES.INTERNAL_ERROR,
-        500,
-        ErrorCodes.INTERNAL_SERVER_ERROR.code
-      );
-    }
-
-    console.log("✅ Employee created successfully:", newEmployee.toJSON());
-  } catch (error) {
-    console.error("❌ Error processing employee data:", error);
-    // You may want to rethrow the error or handle it differently
-    throw new ApiError(
-      ERROR_MESSAGES.INTERNAL_ERROR,
-      500,
-      ErrorCodes.INTERNAL_SERVER_ERROR.code,
-      
-    );
-  }
-};
-
-// Express handler for processing employee data (with req and res)
-export const processEmployeeHandler = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const data = req.body.data; // Assuming the data is in the body under 'data'
-      if (!data) {
-        throw new ApiError("No data provided", 400, ErrorCodes.BAD_REQUEST.code);
-      }
-
-      await processEmployeeData(data); // Process the employee data
-      res.status(200).json({ message: "Employee data processed successfully" });
-    } catch (error) {
-      next(error); // Pass error to the next middleware
-    }
-  }
-);
-
-// Function to start the consumer (for RabbitMQ)
-export const startConsumer = () => {
-  const channel = getChannel();
-  const queue = 'employee_created';
-  channel.assertQueue(queue, { durable: false });
-
-  console.log(`Waiting for messages in queue: ${queue}`);
-
-  channel.consume(queue, async (msg) => {
-    if (msg) {
-      const messageContent = msg.content.toString();
-      try {
-        await processEmployeeData(messageContent); // Await the processing of the data
-      } catch (error) {
-        console.error("Error processing message:", error);
-      }
-      channel.ack(msg); // Acknowledge message (removes from queue)
-    }
-  });
-};
 
