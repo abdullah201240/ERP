@@ -20,6 +20,26 @@ interface ProjectDetails {
     clientContact: string;
     projectName: string;
 }
+interface EmployeeDetails {
+    id: number;
+    name: string;
+    email: string;
+
+    phone: string;
+
+    dob: string;
+
+    gender: string;
+
+    companyId: string;
+
+    sisterConcernId: string;
+
+    photo: string;
+
+    employeeId: string;
+
+}
 
 export default function SupervisionForm() {
     const [token, setToken] = useState<string | null>(null); // State to store token
@@ -39,6 +59,7 @@ export default function SupervisionForm() {
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [reloadTable, setReloadTable] = useState(false);
+    const [employeeDetails, setEmployeeDetails] = useState<EmployeeDetails | null>(null);
 
     useEffect(() => {
         // Check if we are running on the client-side (to access localStorage)
@@ -51,13 +72,38 @@ export default function SupervisionForm() {
             }
         }
     }, [router]);
+    const fetchCompanyProfile = useCallback(async () => {
+        try {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}employee/auth/profile`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            const data = await response.json();
+            console.table(data.data)
+            if (data.success) {
+                setEmployeeDetails(data.data);
+            }
+        } catch (error) {
+            console.error('Error fetching profile:', error);
+        }
+    }, [token]);
+    useEffect(() => {
+        const token = localStorage.getItem('accessToken');
+
+        if (!token) {
+            router.push('/'); // Redirect to login page if token doesn't exist
+        } else {
+            fetchCompanyProfile();
+        }
+    }, [router, fetchCompanyProfile]);
 
     const fetchProjects = useCallback(
         async (pageNumber = 1, query = '') => {
             setLoading(true);
             try {
+                if (!employeeDetails) return;
+
                 const response = await fetch(
-                    `${process.env.NEXT_PUBLIC_API_URL}projects/view-all-projects?page=${pageNumber}&limit=10&search=${query}`,
+                    `${process.env.NEXT_PUBLIC_API_URL}projects/view-all-projects/${employeeDetails.sisterConcernId}?page=${pageNumber}&limit=10&search=${query}`,
                     {
                         headers: {
                             Authorization: `Bearer ${token}`,
@@ -85,7 +131,7 @@ export default function SupervisionForm() {
                 setLoading(false);
             }
         },
-        [token] // Adding token as a dependency
+        [token,employeeDetails] // Adding token as a dependency
     );
     useEffect(() => {
         const token = localStorage.getItem('accessToken');

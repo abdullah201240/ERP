@@ -20,6 +20,26 @@ interface ProjectDetails {
     clientContact: string;
     projectName: string;
 }
+interface EmployeeDetails {
+    id: number;
+    name: string;
+    email: string;
+
+    phone: string;
+
+    dob: string;
+
+    gender: string;
+
+    companyId: string;
+
+    sisterConcernId: string;
+
+    photo: string;
+
+    employeeId: string;
+
+}
 
 export default function PreProjectPlanForm() {
     const router = useRouter();
@@ -39,25 +59,52 @@ export default function PreProjectPlanForm() {
     const [totalPages, setTotalPages] = useState(1);
     const [reloadTable, setReloadTable] = useState(false);
     const [token, setToken] = useState<string | null>(null); // State to store token
+    const [employeeDetails, setEmployeeDetails] = useState<EmployeeDetails | null>(null);
 
     useEffect(() => {
         // Check if we are running on the client-side (to access localStorage)
-        if (typeof window !== 'undefined') {
+       
             const storedToken = localStorage.getItem('accessToken');
             if (!storedToken) {
                 router.push('/'); // Redirect if no token is found
             } else {
                 setToken(storedToken); // Set the token to state
-            }
+            
         }
     }, [router]);
+    const fetchCompanyProfile = useCallback(async () => {
+        const storedToken = localStorage.getItem('accessToken');
+
+        try {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}employee/auth/profile`, {
+                headers: { Authorization: `Bearer ${storedToken}` },
+            });
+            const data = await response.json();
+            console.table(data.data)
+            if (data.success) {
+                setEmployeeDetails(data.data);
+            }
+        } catch (error) {
+            console.error('Error fetching profile:', error);
+        }
+    }, []);
+    useEffect(() => {
+        const token = localStorage.getItem('accessToken');
+        if (!token) {
+            router.push('/'); // Redirect to login page if token doesn't exist
+        } else {
+            fetchCompanyProfile();
+        }
+    }, [router, token, fetchCompanyProfile]);
 
     const fetchProjects = useCallback(
         async (pageNumber = 1, query = '') => {
             setLoading(true);
             try {
+                if (!employeeDetails) return;
+
                 const response = await fetch(
-                    `${process.env.NEXT_PUBLIC_API_URL}projects/view-all-projects?page=${pageNumber}&limit=10&search=${query}`,
+                    `${process.env.NEXT_PUBLIC_API_URL}projects/view-all-projects/${employeeDetails.sisterConcernId}?page=${pageNumber}&limit=10&search=${query}`,
                     {
                         headers: {
                             Authorization: `Bearer ${token}`,
@@ -85,7 +132,7 @@ export default function PreProjectPlanForm() {
                 setLoading(false);
             }
         },
-        [token] // Adding token as a dependency
+        [token,employeeDetails] // Adding token as a dependency
     );
     useEffect(() => {
         const token = localStorage.getItem('accessToken');

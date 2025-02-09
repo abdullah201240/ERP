@@ -1,5 +1,5 @@
 'use client';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import {
     Table,
     TableBody,
@@ -36,10 +36,32 @@ interface Project {
     daysRemaining?: number;
     daysPassed?: number;
 }
+interface EmployeeDetails {
+    id: number;
+    name: string;
+    email: string;
+
+    phone: string;
+
+    dob: string;
+
+    gender: string;
+
+    companyId: string;
+
+    sisterConcernId: string;
+
+    photo: string;
+
+    employeeId: string;
+
+}
 
 export default function DesignDevelopmentTable() {
     const router = useRouter();
     const [projects, setProjects] = useState<Project[]>([]);
+    const [employeeDetails, setEmployeeDetails] = useState<EmployeeDetails | null>(null);
+
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
     const [totalProjects, setTotalProjects] = useState<number>(0);
@@ -49,60 +71,91 @@ export default function DesignDevelopmentTable() {
     // Pagination state
     const [currentPage, setCurrentPage] = useState<number>(1);
     const itemsPerPage = 10;
+    // Memoize the fetchCompanyProfile to avoid recreating the function unnecessarily
+    const fetchCompanyProfile = useCallback(async () => {
+        try {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}employee/auth/profile`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            const data = await response.json();
+            console.table(data.data)
+            if (data.success) {
+                setEmployeeDetails(data.data);
+            }
+        } catch (error) {
+            console.error('Error fetching profile:', error);
+        }
+    }, [token]);
 
+    // Memoize the fetchProjects function to avoid unnecessary re-renders
+    const fetchProjects = useCallback(async () => {
+        try {
+
+            if (!employeeDetails) return;
+            const controller = new AbortController();
+
+            const response = await fetch(
+                `${process.env.NEXT_PUBLIC_API_URL}projects/view-all-projects/${employeeDetails.sisterConcernId}?page=${currentPage}&limit=${itemsPerPage}&search=${searchQuery}`, 
+                {
+                  method: 'GET',
+                  headers: { Authorization: `Bearer ${token}` },
+                  signal: controller.signal, // Move this inside the options object
+                }
+              );
+              
+
+            if (!response.ok) {
+                throw new Error('Failed to fetch projects');
+            }
+            const data = await response.json();
+            console.log(data.data);
+
+            if (data.success && Array.isArray(data.data.projects)) {
+                const updatedProjects = data.data.projects.map((project: Project) => {
+                    const startDate = new Date(project.startDate);
+                    const endDate = new Date(project.endDate);
+                    const currentDate = new Date();
+
+                    const remainingTime = endDate.getTime() - currentDate.getTime();
+                    const daysRemaining = Math.max(0, Math.floor(remainingTime / (1000 * 60 * 60 * 24)));
+
+                    const passedTime = currentDate.getTime() - startDate.getTime();
+                    const daysPassed = Math.max(0, Math.floor(passedTime / (1000 * 60 * 60 * 24)));
+
+                    return {
+                        ...project,
+                        daysRemaining,
+                        daysPassed,
+                    };
+                });
+                setProjects(updatedProjects);
+                setTotalProjects(data.data.totalProjects);
+            } else {
+                throw new Error('Fetched data is not in expected format');
+            }
+        } catch (err) {
+            setError((err as Error).message);
+        } finally {
+            setLoading(false);
+        }
+    }, [token, currentPage, searchQuery, employeeDetails]);
+
+    // Trigger fetch functions when necessary
     useEffect(() => {
         if (!token) {
             router.push('/'); // Redirect to login page if token doesn't exist
         } else {
-            const fetchProjects = async () => {
-                try {
-                    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}projects/view-all-projects?page=${currentPage}&limit=${itemsPerPage}&search=${searchQuery}`, {
-                        headers: {
-                            'Authorization': token
-                        }
-                    });
-                    
-                    if (!response.ok) {
-                        throw new Error('Failed to fetch projects');
-                    }
-                    const data = await response.json();
-                    console.log(data.data);
+            fetchCompanyProfile();
+        }
+    }, [router, token, fetchCompanyProfile]);
 
-                    if (data.success && Array.isArray(data.data.projects)) {
-                        const updatedProjects = data.data.projects.map((project: Project) => {
-                            const startDate = new Date(project.startDate);
-                            const endDate = new Date(project.endDate);
-                            const currentDate = new Date();
-
-                            const remainingTime = endDate.getTime() - currentDate.getTime();
-                            const daysRemaining = Math.max(0, Math.floor(remainingTime / (1000 * 60 * 60 * 24)));
-
-                            const passedTime = currentDate.getTime() - startDate.getTime();
-                            const daysPassed = Math.max(0, Math.floor(passedTime / (1000 * 60 * 60 * 24)));
-
-                            return {
-                                ...project,
-                                daysRemaining,
-                                daysPassed,
-                            };
-                        });
-                        setProjects(updatedProjects);
-                        setTotalProjects(data.data.totalProjects);
-                    } else {
-                        throw new Error('Fetched data is not in expected format');
-                    }
-                } catch (err) {
-                    setError((err as Error).message);
-                } finally {
-                    setLoading(false);
-                }
-            };
-
+    useEffect(() => {
+        if (employeeDetails) {
             fetchProjects();
         }
-    }, [router, token, currentPage, searchQuery]); // Add searchQuery to dependencies
+    }, [employeeDetails, currentPage, searchQuery, fetchProjects]);
 
-    const totalPages = Math.ceil(totalProjects / itemsPerPage);
+    const totalPages = useMemo(() => Math.ceil(totalProjects / itemsPerPage), [totalProjects]);
 
     const handleNextPage = () => {
         if (currentPage < totalPages) {
@@ -129,9 +182,7 @@ export default function DesignDevelopmentTable() {
         return <div>Error: {error}</div>;
     }
 
-    if (projects.length === 0) {
-        return <div>No projects found</div>;
-    }
+    
 
     return (
         <div>
@@ -161,27 +212,33 @@ export default function DesignDevelopmentTable() {
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                    {projects.map((project, index) => (
-                        <TableRow key={project.id} className='text-center'>
-                            <TableCell className='text-center border border-[#e5e7eb]'>{index + 1 + (currentPage - 1) * itemsPerPage}</TableCell>
-                            <TableCell className='border border-[#e5e7eb]'>{project.projectName}</TableCell>
-                            <TableCell className='border border-[#e5e7eb]'>{project.assigned && project.assigned.length > 0 ? project.assigned.map(a => a.eName).join(', ') : 'N/A'}</TableCell>
-                            <TableCell className='border border-[#e5e7eb]'>{project.supervisorName}</TableCell>
-                            <TableCell className='border border-[#e5e7eb]'>{project.supervisorName}</TableCell>
-                            <TableCell className='border border-[#e5e7eb]'>{project.startDate}</TableCell>
-                            <TableCell className='border border-[#e5e7eb]'>{project.projectDeadline}</TableCell>
-                            <TableCell className='border border-[#e5e7eb]'>{project.daysPassed || 'N/A'}</TableCell>
-                            <TableCell className='border border-[#e5e7eb]'>{project.daysRemaining}</TableCell>
-                            <TableCell className='border border-[#e5e7eb]'>{project.supervisorName}</TableCell>
-                            <TableCell className='border border-[#e5e7eb]'>{project.supervisorName}</TableCell>
-                            <TableCell className='border border-[#e5e7eb]'>{project.supervisorName}%</TableCell>
-                            <TableCell className='border border-[#e5e7eb]'>
-                                <Link href={`/projects/${project.id}`} >
-                                    <p className="bg-gradient-to-r from-blue-500 to-indigo-600 px-4 py-2 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 ease-in-out transform hover:scale-105 hover:bg-gradient-to-r hover:from-indigo-600 hover:to-blue-500 focus:outline-none focus:ring-2 focus:ring-indigo-300">View</p>
-                                </Link>
-                            </TableCell>
+                    {projects.length === 0 ? (
+                        <TableRow>
+                            <TableCell colSpan={12} className="text-center">No projects found</TableCell>
                         </TableRow>
-                    ))}
+                    ) : (
+                        projects.map((project, index) => (
+                            <TableRow key={project.id} className='text-center'>
+                                <TableCell className='text-center border border-[#e5e7eb]'>{index + 1 + (currentPage - 1) * itemsPerPage}</TableCell>
+                                <TableCell className='border border-[#e5e7eb]'>{project.projectName}</TableCell>
+                                <TableCell className='border border-[#e5e7eb]'>{project.assigned && project.assigned.length > 0 ? project.assigned.map(a => a.eName).join(', ') : 'N/A'}</TableCell>
+                                <TableCell className='border border-[#e5e7eb]'>{project.supervisorName}</TableCell>
+                                <TableCell className='border border-[#e5e7eb]'>{project.supervisorName}</TableCell>
+                                <TableCell className='border border-[#e5e7eb]'>{project.startDate}</TableCell>
+                                <TableCell className='border border-[#e5e7eb]'>{project.projectDeadline}</TableCell>
+                                <TableCell className='border border-[#e5e7eb]'>{project.daysPassed || 'N/A'}</TableCell>
+                                <TableCell className='border border-[#e5e7eb]'>{project.daysRemaining}</TableCell>
+                                <TableCell className='border border-[#e5e7eb]'>{project.supervisorName}</TableCell>
+                                <TableCell className='border border-[#e5e7eb]'>{project.supervisorName}</TableCell>
+                                <TableCell className='border border-[#e5e7eb]'>{project.supervisorName}%</TableCell>
+                                <TableCell className='border border-[#e5e7eb]'>
+                                    <Link href={`/projects/${project.id}`} >
+                                        <p className="bg-gradient-to-r from-blue-500 to-indigo-600 px-4 py-2 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 ease-in-out transform hover:scale-105 hover:bg-gradient-to-r hover:from-indigo-600 hover:to-blue-500 focus:outline-none focus:ring-2 focus:ring-indigo-300">View</p>
+                                    </Link>
+                                </TableCell>
+                            </TableRow>
+                        ))
+                    )}
                 </TableBody>
             </Table>
 

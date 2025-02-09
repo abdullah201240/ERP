@@ -21,6 +21,8 @@ interface ProjectAttributes {
   endDate?: string; // Optional
   projectDeadline?: string;
   estimatedBudget?: string;
+  sisterConcernId?: number; // Added attribute
+
 }
 
 interface ProjectCreationAttributes extends Optional<ProjectAttributes, 'id'> {}
@@ -45,6 +47,8 @@ class Project extends Model<ProjectAttributes, ProjectCreationAttributes> implem
   public endDate?: string; // Optional
   public projectDeadline?: string;
   public estimatedBudget?: string;
+  public sisterConcernId?: number; // Added attribute
+
 }
 
 Project.init(
@@ -121,6 +125,10 @@ Project.init(
     },
     estimatedBudget:{
       type: DataTypes.STRING,
+      allowNull: true, // Optional
+    },
+    sisterConcernId: {
+      type: DataTypes.INTEGER,
       allowNull: true, // Optional
     }
 

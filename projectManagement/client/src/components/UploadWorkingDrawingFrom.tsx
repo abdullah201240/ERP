@@ -27,6 +27,26 @@ interface MyFormData {
     unit: string;
     category: string;
 }
+interface EmployeeDetails {
+    id: number;
+    name: string;
+    email: string;
+
+    phone: string;
+
+    dob: string;
+
+    gender: string;
+
+    companyId: string;
+
+    sisterConcernId: string;
+
+    photo: string;
+
+    employeeId: string;
+
+}
 
 export default function UploadWorkingDrawingFrom() {
     const router = useRouter();
@@ -58,6 +78,7 @@ export default function UploadWorkingDrawingFrom() {
     const [units, setUnits] = useState<{ id: string; name: string }[]>([]);
     const [uploadDesignWorkingDrawings, setUploadDesignWorkingDrawings] = useState<File[]>([]);
     const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
+    const [employeeDetails, setEmployeeDetails] = useState<EmployeeDetails | null>(null);
 
     useEffect(() => {
         if (typeof window !== 'undefined') {
@@ -69,13 +90,38 @@ export default function UploadWorkingDrawingFrom() {
             }
         }
     }, [router]);
+    const fetchCompanyProfile = useCallback(async () => {
+        try {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}employee/auth/profile`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            const data = await response.json();
+            console.table(data.data)
+            if (data.success) {
+                setEmployeeDetails(data.data);
+            }
+        } catch (error) {
+            console.error('Error fetching profile:', error);
+        }
+    }, [token]);
+    useEffect(() => {
+        const token = localStorage.getItem('accessToken');
+
+        if (!token) {
+            router.push('/'); // Redirect to login page if token doesn't exist
+        } else {
+            fetchCompanyProfile();
+        }
+    }, [router, fetchCompanyProfile]);
 
     const fetchProjects = useCallback(
         async (pageNumber = 1, query = '') => {
             setLoading(true);
             try {
+                if (!employeeDetails) return;
+
                 const response = await fetch(
-                    `${process.env.NEXT_PUBLIC_API_URL}projects/view-all-projects?page=${pageNumber}&limit=50&search=${query}`,
+                    `${process.env.NEXT_PUBLIC_API_URL}projects/view-all-projects/${employeeDetails.sisterConcernId}?page=${pageNumber}&limit=10&search=${query}`,
                     {
                         headers: {
                             Authorization: `Bearer ${token}`,
@@ -102,7 +148,7 @@ export default function UploadWorkingDrawingFrom() {
                 setLoading(false);
             }
         },
-        [token]
+        [token,employeeDetails]
     );
 
     useEffect(() => {

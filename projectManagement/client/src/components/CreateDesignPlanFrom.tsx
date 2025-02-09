@@ -19,7 +19,26 @@ interface Project {
     clientContact: string;
 }
 
+interface EmployeeDetails {
+    id: number;
+    name: string;
+    email: string;
 
+    phone: string;
+
+    dob: string;
+
+    gender: string;
+
+    companyId: string;
+
+    sisterConcernId: string;
+
+    photo: string;
+
+    employeeId: string;
+
+}
 
 export default function CreateDesignPlanFrom() {
     const [token, setToken] = useState<string | null>(null); // State to store token
@@ -48,6 +67,8 @@ export default function CreateDesignPlanFrom() {
     const [endDate, setEndDate] = useState('');
     const [remarks, setRemarks] = useState('');
     const [reloadTable, setReloadTable] = useState(false);
+    const [employeeDetails, setEmployeeDetails] = useState<EmployeeDetails | null>(null);
+
     useEffect(() => {
         // Check if we are running on the client-side (to access localStorage)
         if (typeof window !== 'undefined') {
@@ -72,14 +93,32 @@ export default function CreateDesignPlanFrom() {
     };
 
 
+    const fetchCompanyProfile = useCallback(async () => {
+        try {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}employee/auth/profile`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            const data = await response.json();
+            console.table(data.data)
+            if (data.success) {
+                setEmployeeDetails(data.data);
+            }
+        } catch (error) {
+            console.error('Error fetching profile:', error);
+        }
+    }, [token]);
+
 
 
     const fetchProjects = useCallback(
         async (pageNumber = 1, query = '') => {
             setLoading(true);
             try {
+                if (!employeeDetails) return;
+                const token = localStorage.getItem('accessToken');
+
                 const response = await fetch(
-                    `${process.env.NEXT_PUBLIC_API_URL}projects/view-all-projects?page=${pageNumber}&limit=10&search=${query}`,
+                    `${process.env.NEXT_PUBLIC_API_URL}projects/view-all-projects/${employeeDetails.sisterConcernId}?page=${pageNumber}&limit=10&search=${query}`,
                     {
                         headers: {
                             Authorization: `Bearer ${token}`,
@@ -107,8 +146,9 @@ export default function CreateDesignPlanFrom() {
                 setLoading(false);
             }
         },
-        [token] // Adding token as a dependency
+        [employeeDetails] // Adding token as a dependency
     );
+
     const fetchEmployee = useCallback(
         async (pageNumber = 1, query = '') => {
             setLoading1(true);
@@ -143,6 +183,15 @@ export default function CreateDesignPlanFrom() {
         },
         [token] // Adding token as a dependency
     );
+    useEffect(() => {
+        const token = localStorage.getItem('accessToken');
+
+        if (!token) {
+            router.push('/'); // Redirect to login page if token doesn't exist
+        } else {
+            fetchCompanyProfile();
+        }
+    }, [router, token, fetchCompanyProfile]);
     useEffect(() => {
         const token = localStorage.getItem('accessToken');
 

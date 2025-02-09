@@ -1,6 +1,6 @@
 import express from "express";
 import { verifyJWT } from "../middleware/auth"; 
-import { createAssignedTo, createDegineBOQ, createDesignPlan, createProject, createService, degineBOQPart, degineInvoiceCreate, deleteAssignedTo, deleteDegineBOQById, deleteDegineBOQPartById, deleteDesignPlan, deleteProject, deleteService, getAllBOQ, getDesignPlans, getDesignPlansProject, getProject, getProjectAll, getProjectById, getProjectsPaginated, updateCompletionPercentage, updateDegineBOQById, updateDesignPlan, updateProject, updateService, viewAllDegineBOQPart, viewAllDegineBOQs, viewAllDegineInvoice, viewAllDegineInvoiceById, viewAllServices, viewDegineBOQById, viewServiceById } from "../controllers/projectController";
+import { createAssignedTo, createDegineBOQ, createDesignPlan, createProject, createService, degineBOQPart, degineInvoiceCreate, deleteAssignedTo, deleteDegineBOQById, deleteDegineBOQPartById, deleteDesignPlan, deleteProject, deleteService, getAllBOQ, getDesignPlans, getDesignPlansProject, getProjectById, getProjectsPaginated, updateCompletionPercentage, updateDegineBOQById, updateDesignPlan, updateProject, updateService, viewAllDegineBOQPart, viewAllDegineBOQs, viewAllDegineInvoice, viewAllDegineInvoiceById, viewAllServices, viewDegineBOQById, viewServiceById } from "../controllers/projectController";
 
 const router = express.Router();
 
@@ -9,8 +9,7 @@ router.post('/create-project', verifyJWT, createProject);
 router.put("/project/:id",verifyJWT, updateProject); // Add update route
 
 // Route to fetch all projects
-router.get('/all-projects', verifyJWT,getProject);
-router.get('/view-all-projects',verifyJWT, getProjectsPaginated);
+router.get('/view-all-projects/:id', getProjectsPaginated);
 
 
 

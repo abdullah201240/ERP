@@ -14,6 +14,7 @@ import Service from "../models/service";
 import DegineBOQ from "../models/degineBOQ";
 import { AssignedDegineBoq } from "../models/association";
 import DesignInvoice from "../models/designInvoice";
+import redisClient from "../config/redisClient";
 
 
 // Create Project Controller
@@ -66,52 +67,18 @@ export const createProject = asyncHandler(
                 ErrorCodes.INTERNAL_SERVER_ERROR.code
             );
         }
+           
+         // Invalidate the cache related to projects
+        const cacheKeys = await redisClient.keys('projects:*');
+        if (cacheKeys.length > 0) {
+            await redisClient.del(cacheKeys);  // Invalidate cache on delete
+            console.log(`Cache cleared for data related`);
+
+        }
         return res.status(201).json(
             ApiResponse.success(newProject, "Project created successfully")
         );
     });
-// View Project 
-export const getProject = asyncHandler(
-    async (req: Request, res: Response, next: NextFunction) => {
-        // Get the page and limit from query parameters, default to page 1 and limit 10
-        const page = parseInt(req.query.page as string) || 1;
-        const limit = parseInt(req.query.limit as string) || 10;
-        const search = req.query.search as string || '';
-
-
-        // Calculate the offset for pagination
-        const offset = (page - 1) * limit;
-
-        // Fetch projects with pagination
-        const projects = await Project.findAll({
-            include: [
-                {
-                    model: Assigned,
-                    as: "assigned", // Alias defined in the relationship
-                },
-            ],
-            limit: limit, // Limit to 10 records per page
-            offset: offset, // Apply offset for pagination
-            order: [["createdAt", "DESC"]],
-        });
-
-        // Get the total number of projects to calculate the total pages
-        const totalProjects = await Project.count();
-
-        return res.status(200).json({
-            success: true,
-            data: {
-                projects: projects,
-                pagination: {
-                    currentPage: page,
-                    totalPages: Math.ceil(totalProjects / limit),
-                    totalProjects: totalProjects,
-                },
-            },
-            message: "Projects retrieved successfully",
-        });
-    }
-);
 
 
 // View Project by ID Controller
@@ -160,6 +127,13 @@ export const deleteProject = asyncHandler(
         }
 
         await project.destroy();
+        // Invalidate the cache related to projects
+        const cacheKeys = await redisClient.keys('projects:*');
+        if (cacheKeys.length > 0) {
+            await redisClient.del(cacheKeys);  // Invalidate cache on delete
+            console.log(`Cache cleared for data related`);
+
+        }
 
         return res.status(200).json(ApiResponse.success(null, "Project deleted successfully"));
     }
@@ -240,6 +214,14 @@ export const updateProject = asyncHandler(
 
         // Save the updated project to the database
         await project.save();
+        // Invalidate the cache related to projects
+        const cacheKeys = await redisClient.keys('projects:*');
+        if (cacheKeys.length > 0) {
+            await redisClient.del(cacheKeys);  // Invalidate cache on delete
+            console.log(`Cache cleared for data related`);
+
+        }
+
 
         return res
             .status(200)
@@ -280,6 +262,13 @@ export const createAssignedTo = asyncHandler(
                 ErrorCodes.INTERNAL_SERVER_ERROR.code
             );
         }
+        // Invalidate the cache related to projects
+        const cacheKeys = await redisClient.keys('projects:*');
+        if (cacheKeys.length > 0) {
+            await redisClient.del(cacheKeys);  // Invalidate cache on delete
+            console.log(`Cache cleared for data related`);
+
+        }
         return res.status(201).json(
             ApiResponse.success(newAssigned, "Assigned created successfully")
         );
@@ -290,6 +279,7 @@ export const deleteAssignedTo = asyncHandler(
     async (req: Request, res: Response, next: NextFunction) => {
         const { id } = req.params;
 
+        // Find the assignment by its ID
         const assignedTo = await Assigned.findByPk(id);
 
         if (!assignedTo) {
@@ -300,78 +290,112 @@ export const deleteAssignedTo = asyncHandler(
             );
         }
 
+        
+        // Delete the assignment record
         await assignedTo.destroy();
 
-        return res.status(200).json(ApiResponse.success(null, "Project deleted successfully"));
+        // Invalidate the cache related to projects
+        const cacheKeys = await redisClient.keys('projects:*');
+        if (cacheKeys.length > 0) {
+            await redisClient.del(cacheKeys);  // Invalidate cache on delete
+            console.log(`Cache cleared for data related`);
+
+        }
+       
+
+        return res.status(200).json(ApiResponse.success(null, "Assignment deleted successfully"));
     }
 );
 
-export const getProjectAll = asyncHandler(
-    async (req: Request, res: Response, next: NextFunction) => {
 
 
-        // Fetch projects with pagination
-        const projects = await Project.findAll({
-            include: [
-                {
-                    model: Assigned,
-                    as: "assigned", // Alias defined in the relationship
-                },
-            ],
-
-        });
-
-        return res.status(200).json({
-            success: true,
-            data: {
-                projects: projects,
-            },
-            message: "Projects retrieved successfully",
-        });
-    }
-);
 
 export const getProjectsPaginated = asyncHandler(
     async (req: Request, res: Response, next: NextFunction) => {
         const { page = 1, limit = 10, search = "" } = req.query;
+        const { id } = req.params;
 
         // Parse page and limit as integers
         const pageNumber = parseInt(page as string, 10);
         const pageSize = parseInt(limit as string, 10);
         const offset = (pageNumber - 1) * pageSize;
 
-        // Fetch projects with pagination and search
-        const { rows: projects, count: totalProjects } = await Project.findAndCountAll({
-            where: search
-                ? {
-                    projectName: {
-                        [Op.like]: `%${search}%`, // Case-sensitive search for MariaDB/MySQL
-                    },
-                }
-                : {},
-            include: [
-                {
-                    model: Assigned,
-                    as: "assigned", // Alias defined in the relationship
-                },
-            ],
-            limit: pageSize,
-            offset: offset,
-            order: [["createdAt", "DESC"]], // Sort by most recent
-        });
+        // Prepare the where clause for the search
+        const whereCondition: any = {
+            sisterConcernId: id,
+        };
 
-        return res.status(200).json({
-            success: true,
-            data: {
-                projects,
-                totalProjects,
-                totalPages: Math.ceil(totalProjects / pageSize),
-                currentPage: pageNumber,
-            },
-            message: "Projects retrieved successfully",
-        });
+        if (search) {
+            whereCondition.projectName = {
+                [Op.like]: `%${search}%`, // Case-insensitive search
+            };
+        }
+
+        // Create a unique cache key for this query
+        const cacheKey = `projects:${id}:${pageNumber}:${pageSize}:${search}`;
+
+        // Check Redis for cached data
+        let cachedData;
+        try {
+            cachedData = await redisClient.get(cacheKey);
+        } catch (err) {
+            console.error("Error checking Redis cache:", err);
+            return res.status(500).json({ success: false, message: "Internal server error" });
+        }
+
+        if (cachedData) {
+            console.log("Cache hit");
+            return res.json(JSON.parse(cachedData)); // Send cached response
+        }
+
+        console.log("Cache miss");
+
+        // Fetch projects with pagination and search
+        try {
+            const { rows: projects, count: totalProjects } = await Project.findAndCountAll({
+                where: whereCondition,
+                include: [
+                    {
+                        model: Assigned,
+                        as: "assigned", // Alias defined in the relationship
+                    },
+                ],
+                limit: pageSize,
+                offset: offset,
+                order: [["createdAt", "DESC"]], // Sort by most recent
+            });
+
+            const responseData = {
+                success: true,
+                data: {
+                    projects,
+                    totalProjects,
+                    totalPages: Math.ceil(totalProjects / pageSize),
+                    currentPage: pageNumber,
+                },
+                message: "Projects retrieved successfully",
+            };
+
+            // Cache the data in Redis with an expiration time (10 minutes)
+            try {
+                await redisClient.setEx(cacheKey, 600, JSON.stringify(responseData));
+            } catch (err) {
+                console.error("Error caching data in Redis:", err);
+            }
+
+            return res.json(responseData); // Return fresh data as response
+        } catch (err) {
+            console.error("Error fetching projects:", err);
+            return res.status(500).json({ success: false, message: "Error fetching projects" });
+        }
     }
 );
+
+
+
+
+
+
 
 
 
@@ -499,7 +523,7 @@ export const getDesignPlansProject = asyncHandler(
         }
 
         const designPlans = await DesignPlan.findAll({
-            where: {  projectId },
+            where: { projectId },
             include: [
                 {
                     model: Project,
@@ -930,14 +954,14 @@ export const getAllBOQ = asyncHandler(
 export const degineBOQPart = asyncHandler(
     async (req: Request, res: Response, next: NextFunction) => {
 
-        const { 
-            boqId, 
-            serviceId, 
-            serviceName, 
-            serviceDescription, 
-            totalFees, 
-            serviceAmount, 
-            servicePercentage 
+        const {
+            boqId,
+            serviceId,
+            serviceName,
+            serviceDescription,
+            totalFees,
+            serviceAmount,
+            servicePercentage
         } = req.body;
 
         // Check for required fields
@@ -949,9 +973,9 @@ export const degineBOQPart = asyncHandler(
         let finalAmount: number;
 
         if (servicePercentage) {
-             // If servicePercentage is provided, calculate the finalAmount as percentage of totalFees
-             finalAmount = (totalFees * servicePercentage) / 100;
-            
+            // If servicePercentage is provided, calculate the finalAmount as percentage of totalFees
+            finalAmount = (totalFees * servicePercentage) / 100;
+
         } else if (serviceAmount) {
             // If serviceAmount is provided, use it directly
             finalAmount = serviceAmount;
@@ -981,13 +1005,13 @@ export const degineBOQPart = asyncHandler(
 
 export const viewAllDegineBOQPart = asyncHandler(
     async (req: Request, res: Response, next: NextFunction) => {
-        
+
         const { boqId } = req.params;
 
         const assignedDegineBoq = await AssignedDegineBoq.findAll(
 
             {
-                where:{
+                where: {
                     boqId
                 }
             }
@@ -1021,13 +1045,13 @@ export const deleteDegineBOQPartById = asyncHandler(
 export const degineInvoiceCreate = asyncHandler(
     async (req: Request, res: Response, next: NextFunction) => {
 
-        const { 
-            boqId, 
-            boqName, 
-            clientContact, 
-            clientName, 
-            nowPayAmount, 
-            projectAddress, 
+        const {
+            boqId,
+            boqName,
+            clientContact,
+            clientName,
+            nowPayAmount,
+            projectAddress,
             subject,
             totalFees,
             totalArea
@@ -1063,13 +1087,13 @@ export const degineInvoiceCreate = asyncHandler(
 
 export const viewAllDegineInvoice = asyncHandler(
     async (req: Request, res: Response, next: NextFunction) => {
-        
+
         const { boqId } = req.params;
 
         const designInvoice = await DesignInvoice.findAll(
 
             {
-                where:{
+                where: {
                     boqId
                 }
             }
