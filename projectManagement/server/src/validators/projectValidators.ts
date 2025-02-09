@@ -34,7 +34,7 @@ const DesignPlanValidator = z.object({
 
 const DesignPlanUpdateValidator = z.object({
   id: z.number().optional(), // Optional because it's auto-incremented
-  assignee: z.string().optional(),
+  assignee: z.number().optional(),
   stepName: z.string().min(1, "Step name is required."),
   stepType: z.string().min(1, "Step type is required."),
   startDate: z.string().min(1, "Start date is required."),

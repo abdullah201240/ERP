@@ -736,7 +736,6 @@ export const updateDesignPlan = asyncHandler(
     async (req: Request, res: Response, next: NextFunction) => {
         const { id } = req.params;
 
-
         // Validate the request body
         const result = DesignPlanUpdateValidator.safeParse(req.body);
         if (!result.success) {
