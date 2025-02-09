@@ -61,6 +61,7 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({ reload }) => {
     const [currentPage, setCurrentPage] = useState<number>(1);
     const [pageSize] = useState<number>(10);
     const [totalPages, setTotalPages] = useState<number>(0);
+    const [searchQuery, setSearchQuery] = useState<string>(''); // State for search query
 
     const token = typeof window !== 'undefined' ? localStorage.getItem('accessTokenCompany') : null;
 
@@ -98,7 +99,7 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({ reload }) => {
         }
 
         try {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/sisterConcern/employee/${sisterConcernId}?page=${currentPage}&limit=${pageSize}`, {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}sisterConcern/employee/${sisterConcernId}?page=${currentPage}&limit=${pageSize}&search=${searchQuery}`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -119,7 +120,7 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({ reload }) => {
         } finally {
             setLoading(false);
         }
-    }, [token, router, sisterConcernId, currentPage, pageSize]); // Include companyId in the dependency array
+    }, [token, router, sisterConcernId, currentPage, pageSize,searchQuery]); // Include companyId in the dependency array
 
     useEffect(() => {
         if (sisterConcernId) { // Only run fetchCompanies if companyId is available
@@ -131,7 +132,7 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({ reload }) => {
         if (deleteId === null || !token) return;
 
         try {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}sisterConcern/auth/sisterConcern/delete/${deleteId}`, {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}sisterConcern/employee/${deleteId}`, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${token}`
@@ -164,7 +165,7 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({ reload }) => {
         }
 
         try {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/sisterConcern/auth/sisterConcern/edit/${editCompany.id}`, {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}sisterConcern/employee/${editCompany.id}`, {
                 method: 'PUT',
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -192,6 +193,10 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({ reload }) => {
     const handlePageChange = (newPage: number) => {
         setCurrentPage(newPage);
     };
+    const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        setSearchQuery(event.target.value);
+        setCurrentPage(1); // Reset to first page on new search
+    };
     if (loading) {
         return <div>Loading...</div>;
     }
@@ -201,7 +206,17 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({ reload }) => {
     }
 
     return (
-        <div className='mt-12'>
+        <div className='mt-12 bg-white'>
+            <h1 className='text-center text-xl pt-4'>All Employee</h1>
+
+
+             <input
+                type="text"
+                placeholder="Search Employee..."
+                value={searchQuery}
+                onChange={handleSearchChange}
+                className="border p-2 mb-4 ml-4"
+            />
             <Table>
                 <TableHeader className='bg-[#2A515B] text-white'>
                     <TableRow className='text-center'>
@@ -223,8 +238,8 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({ reload }) => {
                 <TableBody>
                     {employees.length === 0 ? (
                         <TableRow>
-                            <TableCell colSpan={6} className='text-center border border-[#e5e7eb]'>
-                                No companies found
+                            <TableCell colSpan={9} className='text-center border border-[#e5e7eb]'>
+                                No Employee found
                             </TableCell>
                         </TableRow>
                     ) : (

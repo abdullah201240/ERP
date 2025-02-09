@@ -21,7 +21,6 @@ export const createEmployee = asyncHandler(
     const { name, email, password, phone, employeeId, dob, gender } = req.body;
     const companyId = parseInt(req.body.companyId, 10);
     const sisterConcernId = parseInt(req.body.sisterConcernId, 10);
-    console.log(req.body)
     // Check for missing fields
     if (!name || !email || !password || !phone || !dob || !gender) {
       throw new ApiError(
@@ -255,3 +254,69 @@ export const getAllEmployee = asyncHandler(
 
 
 
+export const updateEmployee = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { id } = req.params; // Employee ID from URL params
+    const { name, email, phone, dob, gender, companyId, sisterConcernId } = req.body;
+
+    // Convert companyId and sisterConcernId to integers if provided
+    const updatedCompanyId = companyId ? parseInt(companyId, 10) : undefined;
+    const updatedSisterConcernId = sisterConcernId ? parseInt(sisterConcernId, 10) : undefined;
+
+    // Find the employee by ID
+    const employee = await Employee.findByPk(id);
+    if (!employee) {
+      return next(new ApiError("Employee not found", 404, ErrorCodes.NOT_FOUND.code));
+    }
+
+    // Check if the email is being updated and ensure it's not taken by another employee
+    if (email && email !== employee.email) {
+      const existingEmployee = await Employee.findOne({ where: { email } });
+      if (existingEmployee) {
+        return next(new ApiError("Email already in use", 409, ErrorCodes.CONFLICT.code));
+      }
+    }
+
+    // Handle file upload if a new photo is provided
+    let photo = employee.photo;
+    if (req.file) {
+      photo = req.file.filename; // Update photo filename
+    }
+
+    // Update employee information
+    await employee.update({
+      name: name || employee.name,
+      email: email || employee.email,
+      phone: phone || employee.phone,
+      dob: dob || employee.dob,
+      gender: gender || employee.gender,
+      companyId: updatedCompanyId ?? employee.companyId,
+      sisterConcernId: updatedSisterConcernId ?? employee.sisterConcernId,
+      photo,
+    });
+
+    return res.status(200).json({
+      message: "Employee updated successfully",
+      employee: employee.toJSON(),
+    });
+  }
+);
+
+export const deleteEmployee = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { id } = req.params; // Employee ID from URL params
+
+    // Find the employee by ID
+    const employee = await Employee.findByPk(id);
+    if (!employee) {
+      return next(new ApiError("Employee not found", 404, ErrorCodes.NOT_FOUND.code));
+    }
+
+    // Delete the employee from the database
+    await employee.destroy();
+
+    return res.status(200).json({
+      message: "Employee deleted successfully",
+    });
+  }
+);
