@@ -11,8 +11,8 @@ import { Toaster } from "react-hot-toast";
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-      title: "IQ | Edit Project Site Visit Plan ",
-      description: "Edit Project Site Visit Plan",
+      title: "Digirib",
+      description: "Digirib",
     };
 
 export default function RootLayout({
