@@ -1,13 +1,12 @@
 import { CookieOptions, NextFunction, Request, Response } from "express";
 import { asyncHandler, ApiError, ApiResponse } from "../utils/root";
 import { ErrorCodes } from '../utils/errors/ErrorCodes';
-import { employeeLoginValidator, employeeRegisterValidator } from "../validators/employeeValidators";
+import { employeeLoginValidator } from "../validators/employeeValidators";
 import Employee from "../models/employee";
 import bcrypt from 'bcryptjs';
 import ERROR_MESSAGES from '../utils/errors/errorMassage'
 import jwt, { SignOptions } from 'jsonwebtoken';
 import { Op } from "sequelize";
-import { getChannel } from '../utils/rabbitmq';
 
 const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET || "LD9cv1kBfgRHVIg9GG_OGzh9TUkcyqgZAaM0o3DmVkx08MCFRSzMocyO3UtNdDNtoCJ0X0-5nLwK7fdO"; // Fallback to a hardcoded secret if not in env
 if (!ACCESS_TOKEN_SECRET) {
