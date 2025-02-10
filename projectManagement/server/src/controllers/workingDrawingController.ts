@@ -316,3 +316,52 @@ export const updateDrawing = asyncHandler(
         );
     }
 );
+
+export const deleteWorkingDrawingImage = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction) => {
+        const { id } = req.params;
+
+        const image = await WorkingDrawingImage.findByPk(id);
+
+        if (!image) {
+            throw new ApiError('Image not found', 404, 'NOT_FOUND');
+        }
+
+        const imagePath = path.join(__dirname, '../../uploads', image.imageName);
+
+        if (fs.existsSync(imagePath)) {
+            fs.unlinkSync(imagePath); // Delete the image file
+        }
+
+        await image.destroy();
+
+        return res.status(200).json(
+            ApiResponse.success(null, 'Working Drawing Image deleted successfully')
+        );
+    }
+);
+export const addWorkingDrawingImage = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction) => {
+        const { workingDrawingId } = req.body;
+
+        if (!req.file) {
+            throw new ApiError('No file uploaded', 400, 'BAD_REQUEST');
+        }
+
+        const file = req.file as Express.Multer.File;
+
+
+        if (!workingDrawingId) {
+            throw new ApiError('Working Drawing not found', 404, 'NOT_FOUND');
+        }
+
+        const newImage = await WorkingDrawingImage.create({
+            imageName: file.filename,
+            workingDrawingId,
+        });
+
+        return res.status(201).json(
+            ApiResponse.success(newImage, 'Working Drawing Image added successfully')
+        );
+    }
+);

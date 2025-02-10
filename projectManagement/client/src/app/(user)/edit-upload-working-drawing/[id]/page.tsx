@@ -74,7 +74,7 @@ export default function UpdateProjectPage() {
         const projectData = await projectResponse.json();
         setFormData((prev) => ({
           ...prev,
-          ...projectData.data,
+          ...projectData?.data ?? {}, // Ensure it doesn’t break
         }));
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
@@ -83,7 +83,7 @@ export default function UpdateProjectPage() {
         setLoading(false);
       }
     };
-
+    if (!pageId) return;
     fetchInitialData();
   }, [router, pageId]);
 
@@ -123,7 +123,7 @@ export default function UpdateProjectPage() {
       const token = localStorage.getItem('accessToken');
 
       if (!token) {
-        router.push('/'); // Redirect to login page if token doesn't exist
+        router.push('/'); // Redirect to login page if token doesn't exist   
         return;
       }
       console.log(JSON.stringify(formData))
@@ -148,14 +148,97 @@ export default function UpdateProjectPage() {
     }
   };
 
+  const handleDeleteImage = async (imageId: number) => {
+    try {
+      const token = localStorage.getItem('accessToken');
+
+      if (!token) {
+        router.push('/'); // Redirect to login page if token doesn't exist
+        return;
+      }
+
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}workingDrawing/working-drawing-image/${imageId}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        toast.error('Failed to delete image');
+        throw new Error('Failed to delete image');
+      }
+
+      // Remove the image from the state
+      setFormData(prev => ({
+        ...prev,
+        images: prev.images.filter(image => image.id !== imageId),
+      }));
+
+      toast.success('Image deleted successfully!');
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
+      toast.error(errorMessage);
+      setError(errorMessage);
+    }
+  };
+
+  const handleAddImage = async (event: ChangeEvent<HTMLInputElement>) => {
+    try {
+      const token = localStorage.getItem('accessToken');
+
+      if (!token) {
+        router.push('/'); // Redirect to login page if token doesn't exist
+        return;
+      }
+
+      const file = event.target.files?.[0];
+      if (!file) return;
+
+      const formData = new FormData();
+      formData.append('imageName', file);
+      formData.append('workingDrawingId', String(pageId));
+
+
+
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}workingDrawing/working-drawing-image`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
+
+      if (!response.ok) {
+        toast.error('Failed to upload image');
+        throw new Error('Failed to upload image');
+      }
+
+      const result = await response.json();
+      const newImage = { id: result.data.id, imageName: result.data.imageName };
+
+      // Add the new image to the state
+      setFormData(prev => ({
+        ...prev,
+        images: [...prev.images, newImage],
+      }));
+
+      toast.success('Image uploaded successfully!');
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
+      toast.error(errorMessage);
+      setError(errorMessage);
+    }
+  };
+
   if (loading) {
-    return <div>Loading...</div>;
+    return <div className="flex justify-center items-center h-screen">Loading...</div>;
   }
 
   if (error) {
-    return <div>Error: {error}</div>;
+    toast.error(error);
+    return <div className="text-red-500">{error}</div>;
   }
-
   return (
     <div className="container mx-auto max-w-6xl mb-16">
       <h1 className="text-2xl text-black mb-6">Update woking Drawing</h1>
@@ -281,7 +364,7 @@ export default function UpdateProjectPage() {
             </div>
 
             <div>
-              <label className="text-white mb-2">Category</label>
+              <label htmlFor="category" className="text-white mb-2">Category</label>
               <select
                 id="category"
                 name="category"
@@ -311,9 +394,24 @@ export default function UpdateProjectPage() {
                       height={100}
                       className="w-full h-32 object-cover rounded-md"
                     />
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteImage(image.id)}
+                      className="absolute top-0 right-0 bg-red-500 text-white p-1 rounded-full"
+                    >
+                      &times;
+                    </button>
                   </div>
                 ))}
               </div>
+              <input
+                type="file"
+                id="imageUpload"
+                name="imageUpload"
+                onChange={handleAddImage}
+                className="mt-4"
+                accept="image/*"
+              />
             </div>
           </div>
 

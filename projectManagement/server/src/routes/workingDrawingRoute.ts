@@ -1,6 +1,6 @@
 import express from "express";
 import { verifyJWT } from "../middleware/auth"; 
-import { createCategory, createUploadDrawing, deleteCategory, deleteDrawing, updateCategory, updateDrawing, viewAllDrawings, viewCategory, viewDrawingById } from "../controllers/workingDrawingController";
+import { addWorkingDrawingImage, createCategory, createUploadDrawing, deleteCategory, deleteDrawing, deleteWorkingDrawingImage, updateCategory, updateDrawing, viewAllDrawings, viewCategory, viewDrawingById } from "../controllers/workingDrawingController";
 import upload from "../middleware/uploadMiddleware";
 const router = express.Router();
 
@@ -22,5 +22,11 @@ router.delete('/drawing/:id', deleteDrawing);
 
 // Update a working drawing by ID
 router.put('/drawing/:id', updateDrawing);
+// Route to delete a Working Drawing Image
+router.delete('/working-drawing-image/:id', deleteWorkingDrawingImage);
+
+// Route to add a Working Drawing Image
+router.post('/working-drawing-image',upload.single('imageName'), addWorkingDrawingImage);
+
 
 export default router;
