@@ -229,7 +229,7 @@ export const logoutEmployee = asyncHandler(
 
 export const getAllEmployee = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
-    const { page = 1, limit = 10, search = "" } = req.query;
+    const { page = 1, limit = 10, search } = req.query;
     const { id } = req.params; // Get sisterConcernId from params
 
     // Parse page and limit as integers
@@ -237,36 +237,38 @@ export const getAllEmployee = asyncHandler(
     const pageSize = parseInt(limit as string, 10);
     const offset = (pageNumber - 1) * pageSize;
 
+    // Ensure search is a string and handle null or undefined
+    const searchQuery = search ? String(search).trim() : "";
+
     // Generate a unique cache key based on query parameters and sisterConcernId
-    const cacheKey = `employees:${id}:page=${pageNumber}:limit=${pageSize}:search=${search}`;
-    
+    const cacheKey = `employees:${id}:page=${pageNumber}:limit=${pageSize}:search=${searchQuery || "all"}`;
 
     // Try to fetch the data from Redis first
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
-      console.log('Retrieving data from cache');
+      console.log("Retrieving data from cache");
       return res.status(200).json(JSON.parse(cachedData));
-    }
-    else{
-      console.log('MISS data from cache');
-
+    } else {
+      console.log("MISS data from cache");
     }
 
-    // If not in cache, fetch from database
+    // Define where condition
+    const whereCondition: any = { sisterConcernId: id };
+
+    // Apply search filter if it's not empty
+    if (searchQuery) {
+      whereCondition.name = { [Op.like]: `%${searchQuery}%` }; // Case-insensitive search
+    }
+
+    // Fetch data from the database
     const { rows: employees, count: totalEmployees } = await Employee.findAndCountAll({
-      where: {
-        sisterConcernId: id, // Filter by sisterConcernId
-        ...(search && {
-          name: {
-            [Op.like]: `%${search}%`, // Case-insensitive search
-          },
-        }),
-      },
+      where: whereCondition,
       limit: pageSize,
       offset: offset,
-      order: [["createdAt", "ASC"]], // Sort by most recent
+      order: [["createdAt", "ASC"]],
     });
 
+    // Prepare response
     const response = {
       success: true,
       data: {
@@ -284,6 +286,7 @@ export const getAllEmployee = asyncHandler(
     return res.status(200).json(response);
   }
 );
+
 
 
 

@@ -74,7 +74,7 @@ export default function CreateCompany() {
         event.preventDefault();
 
         // Validate required fields
-        if (!companyDetails.name || !companyDetails.logo || !companyDetails.password || !companyDetails.email || !companyDetails.phone || !companyDetails.motherAccountEmail || !companyDetails.motherAccountPassword) {
+        if (!companyDetails.name || !companyDetails.logo || !companyDetails.password || !companyDetails.email || !companyDetails.phone || !companyDetails.motherAccountEmail || !companyDetails.motherAccountPassword ||!companyDetails.numberOfSister) {
             toast.error('Please fill in all the required fields!');
             return;
         }
@@ -96,7 +96,7 @@ export default function CreateCompany() {
 
             // Simulate API call to create company
             const response = await fetch(
-                `${process.env.NEXT_PUBLIC_API_URL}company//auth/company/signup`,
+                `${process.env.NEXT_PUBLIC_API_URL}company/auth/company/signup`,
                 {
                     method: 'POST',
                     headers: {

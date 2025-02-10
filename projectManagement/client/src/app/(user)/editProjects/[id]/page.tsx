@@ -114,7 +114,9 @@ useEffect(() => {
   }
 }, [router, fetchCompanyProfile]);
 
-const fetchEmployees = useCallback(async (page: number) => {
+
+
+const fetchEmployees = async (page: number) => {
   try {
     const token = localStorage.getItem('accessToken');
 
@@ -124,7 +126,7 @@ const fetchEmployees = useCallback(async (page: number) => {
     }
     if (!employeeDetails) return;
 
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL_ADMIN}sisterConcern/employee/${employeeDetails.sisterConcernId}?page=${page}&limit=50`, {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL_ADMIN}sisterConcern/employee/${employeeDetails.sisterConcernId}?page=${page}&limit=10`, {
       headers: {
         Authorization: token, // Ensure token is not null
       },
@@ -141,25 +143,26 @@ const fetchEmployees = useCallback(async (page: number) => {
     console.error(error);
     setError('Failed to load employees');
   }
-}, [ router, employees.length, employeeDetails]); // Include employeeDetails in the dependency array
+};
+
 useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsDropdownOpen(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
-
-  useEffect(() => {
-    if (isDropdownOpen) {
-      fetchEmployees(currentPage);
+  const handleClickOutside = (event: MouseEvent) => {
+    if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      setIsDropdownOpen(false);
     }
-  }, [isDropdownOpen, currentPage, fetchEmployees]);
+  };
+
+  document.addEventListener('mousedown', handleClickOutside);
+  return () => {
+    document.removeEventListener('mousedown', handleClickOutside);
+  };
+}, []);
+
+useEffect(() => {
+  if (isDropdownOpen) {
+    fetchEmployees(currentPage);
+  }
+}, [isDropdownOpen, currentPage]);
 
   const handleScroll: React.UIEventHandler<HTMLUListElement> = (event) => {
     const { scrollTop, scrollHeight, clientHeight } = event.currentTarget;

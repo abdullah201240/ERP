@@ -99,7 +99,7 @@ useEffect(() => {
       }
       if (!employeeDetails) return;
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL_ADMIN}sisterConcern/employee/${employeeDetails.sisterConcernId}?page=${page}&limit=50`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL_ADMIN}sisterConcern/employee/${employeeDetails.sisterConcernId}?page=${page}&limit=10`, {
         headers: {
           Authorization: token, // Ensure token is not null
         },

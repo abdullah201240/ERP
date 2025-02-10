@@ -40,7 +40,6 @@ interface EmployeeDetails {
 }
 
 export default function UpdateDesignPlanFrom() {
-    const [token, setToken] = useState<string | null>(null); // State to store token
     const router = useRouter();
 
     const [projects, setProjects] = useState<Project[]>([]);
@@ -54,15 +53,12 @@ export default function UpdateDesignPlanFrom() {
     const [employeeDetails, setEmployeeDetails] = useState<EmployeeDetails | null>(null);
 
     useEffect(() => {
-        // Check if we are running on the client-side (to access localStorage)
-        if (typeof window !== 'undefined') {
+       
             const storedToken = localStorage.getItem('accessToken');
             if (!storedToken) {
                 router.push('/'); // Redirect if no token is found
-            } else {
-                setToken(storedToken); // Set the token to state
-            }
-        }
+            } 
+        
     }, [router]);
 
     const renderTable = (projectId: number | null) => {
@@ -78,8 +74,10 @@ export default function UpdateDesignPlanFrom() {
 
     const fetchCompanyProfile = useCallback(async () => {
         try {
+            const storedToken = localStorage.getItem('accessToken');
+
             const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}employee/auth/profile`, {
-                headers: { Authorization: `Bearer ${token}` },
+                headers: { Authorization: `Bearer ${storedToken}` },
             });
             const data = await response.json();
             console.table(data.data)
@@ -89,7 +87,7 @@ export default function UpdateDesignPlanFrom() {
         } catch (error) {
             console.error('Error fetching profile:', error);
         }
-    }, [token]);
+    }, []);
     useEffect(() => {
         const token = localStorage.getItem('accessToken');
 
@@ -106,6 +104,8 @@ export default function UpdateDesignPlanFrom() {
             setLoading(true);
             try {
                 if (!employeeDetails) return;
+                const token = localStorage.getItem('accessToken');
+
                 const response = await fetch(
                     `${process.env.NEXT_PUBLIC_API_URL}projects/view-all-projects/${employeeDetails.sisterConcernId}?page=${pageNumber}&limit=10&search=${query}`,
                     {
@@ -135,7 +135,7 @@ export default function UpdateDesignPlanFrom() {
                 setLoading(false);
             }
         },
-        [token,employeeDetails] // Adding token as a dependency
+        [employeeDetails] // Adding token as a dependency
     );
    
     useEffect(() => {
@@ -147,7 +147,7 @@ export default function UpdateDesignPlanFrom() {
             fetchProjects(1, searchQuery);
             
         }
-    }, [token, searchQuery, router,fetchProjects]);
+    }, [ searchQuery, router,fetchProjects]);
 
     const handleInputChange = (inputValue: string) => {
         setSearchQuery(inputValue);
@@ -181,7 +181,7 @@ export default function UpdateDesignPlanFrom() {
             fetchProjects(1, searchQuery);
            
         }
-    }, [token, searchQuery, router, fetchProjects]);
+    }, [ searchQuery, router, fetchProjects]);
 
 
     return (

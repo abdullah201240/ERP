@@ -57,17 +57,16 @@ const SisterConcernTable: React.FC<SisterConcernTableProps> = ({ reload }) => {
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [companyId, setCompanyId] = useState<string>('');
 
-    const token = typeof window !== 'undefined' ? localStorage.getItem('accessTokenCompany') : null;
 
     useEffect(() => {
         const fetchCompanyProfile = async () => {
-            if (typeof window !== 'undefined') {
+         
                 const storedToken = localStorage.getItem('accessTokenCompany');
                 if (!storedToken) {
                     router.push('/');
                 } else {
                     try {
-                        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/company/auth/company/profile`, {
+                        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}company/auth/company/profile`, {
                             headers: {
                                 Authorization: `Bearer ${storedToken}`,
                             },
@@ -82,18 +81,20 @@ const SisterConcernTable: React.FC<SisterConcernTableProps> = ({ reload }) => {
                     }
                 }
             }
-        };
+       
         fetchCompanyProfile();
     }, [router]);
 
     const fetchCompanies = useCallback(async () => {
+        const token = localStorage.getItem('accessTokenCompany');
+
         if (!token || !companyId) { // Check if companyId is not null or empty
             router.push('/');
             return;
         }
 
         try {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/sisterConcern/sisterConcern/${companyId}`, {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}sisterConcern/sisterConcern/${companyId}`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -115,7 +116,7 @@ const SisterConcernTable: React.FC<SisterConcernTableProps> = ({ reload }) => {
         } finally {
             setLoading(false);
         }
-    }, [token, router, companyId]); // Include companyId in the dependency array
+    }, [ router, companyId]); // Include companyId in the dependency array
 
     useEffect(() => {
         if (companyId) { // Only run fetchCompanies if companyId is available
@@ -124,6 +125,8 @@ const SisterConcernTable: React.FC<SisterConcernTableProps> = ({ reload }) => {
     }, [fetchCompanies, reload, companyId]); // Include companyId in the dependency array
 
     const handleDelete = async () => {
+        const token = localStorage.getItem('accessTokenCompany');
+
         if (deleteId === null || !token) return;
 
         try {
@@ -145,6 +148,8 @@ const SisterConcernTable: React.FC<SisterConcernTableProps> = ({ reload }) => {
     };
 
     const handleEdit = async () => {
+        const token = localStorage.getItem('accessTokenCompany');
+
         if (!editCompany || !token) return;
 
         const formData = new FormData();
@@ -153,9 +158,10 @@ const SisterConcernTable: React.FC<SisterConcernTableProps> = ({ reload }) => {
         if (editCompany.logo) {
             formData.append('logo', editCompany.logo);
         }
+        console.log(editCompany.id)
 
         try {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/sisterConcern/auth/sisterConcern/edit/${editCompany.id}`, {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}sisterConcern/auth/sisterConcern/edit/${editCompany.id}`, {
                 method: 'PUT',
                 headers: {
                     'Authorization': `Bearer ${token}`,

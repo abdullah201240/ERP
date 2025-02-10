@@ -341,7 +341,6 @@ export const createSister = asyncHandler(
         try {
             const { name, email, password, phone, companyEmail } = req.body;
             const companyId = parseInt(req.body.companyId, 10);
-
             // Check for missing fields
             if (!name || !email || !password || !phone || !companyId || !companyEmail) {
                 return next(new ApiError(ERROR_MESSAGES.MISSING_FIELDS, 400, ErrorCodes.BAD_REQUEST.code));
@@ -527,9 +526,15 @@ export const logoutSisterConcernCompany = asyncHandler(
 
 export const getAllSisterConcern = asyncHandler(
     async (req: Request, res: Response, next: NextFunction) => {
+        const { id } = req.params;
 
         // Fetch Company with pagination and search
-        const sisterConcern = await SisterConcern.findAll();
+        const sisterConcern = await SisterConcern.findAll({
+          where: {
+            companyId:id
+          }
+
+        });
 
         return res.status(200).json({
             success: true,
@@ -566,9 +571,22 @@ export const deleteSister = asyncHandler(
 export const updateSister = asyncHandler(
     async (req: Request, res: Response, next: NextFunction) => {
         const { id } = req.params;
+        console.log('test')
+
+        console.log(id)
         const { name, phone } = req.body;
         const file = req.file;
-        
+        const sisterId = parseInt(id, 10); // Convert id to integer
+
+        if (isNaN(sisterId)) {
+            return next(
+                new ApiError(
+                    "Invalid ID provided",
+                    400,
+                )
+            );
+        }
+        console.log(sisterId)
         // Find company by ID
         const sisterConcern = await SisterConcern.findByPk(id);
         if (!sisterConcern) {

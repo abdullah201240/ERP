@@ -13,7 +13,7 @@ router.get("/auth/sisterConcern/profile", verifyJWT, getSisterConcernProfile);
 router.post("/auth/sisterConcern/logout", verifyJWT, logoutSisterConcernCompany);
 router.get("/sisterConcern/:id", getAllSisterConcern);
 
-router.put("/auth/sisterConcern/edit/:id", verifyJWT, upload.single("logo"), updateSister);
+router.put("/auth/sisterConcern/edit/:id", upload.single("logo"), updateSister);
 router.delete("/auth/sisterConcern/delete/:id", verifyJWT, deleteSister);
 
 router.post("/auth/signup",upload.single("photo"), createEmployee);

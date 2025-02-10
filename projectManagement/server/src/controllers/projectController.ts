@@ -431,12 +431,15 @@ export const createDesignPlan = asyncHandler(
         const response = await axios.get(
             `${process.env.EXTERNAL_API_URL}sisterConcern/employeeById/${assignee}`
         );
+      
 
-        if (response.status !== 200 || !response.data || !response.data.data) {
+
+
+        if (response.status !== 200 || !response.data) {
             throw new Error("Invalid response from external API");
         }
         // Extract employee data
-        const existingEmployee = response.data.data;
+        const existingEmployee = response.data;
 
         if (!existingEmployee) {
             throw new ApiError(

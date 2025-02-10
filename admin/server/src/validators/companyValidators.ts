@@ -2,13 +2,10 @@ import { z } from 'zod';
 
 
 const companyRegisterValidator = z.object({
-    name: z.string()
-      .min(3, 'Name must be at least 3 characters long')
-      .max(50, 'Name must be at most 50 characters long'),
+    name: z.string(),
   
     email: z.string()
-      .email('Invalid email')
-      .min(1, 'Email is required'),
+      .email('Invalid email'),
   
     password: z.string()
       .min(8, 'Password must be at least 8 characters long')
