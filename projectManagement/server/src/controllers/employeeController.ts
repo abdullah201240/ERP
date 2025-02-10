@@ -1,9 +1,8 @@
 import { CookieOptions, NextFunction, Request, Response } from "express";
 import { asyncHandler, ApiError, ApiResponse } from "../utils/root";
 import { ErrorCodes } from '../utils/errors/ErrorCodes';
-import { employeeLoginValidator, employeeRegisterValidator } from "../validators/employeeValidators";
+import { employeeLoginValidator } from "../validators/employeeValidators";
 import jwt from 'jsonwebtoken';
-import { Op } from "sequelize";
 import dotenv from 'dotenv';
 import axios from "axios";
 

@@ -1,6 +1,5 @@
 import {NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
-import Employee from "../models/employee";
 import { asyncHandler, ApiError, ErrorCodes } from "../utils/root";
 
 const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET;
@@ -52,21 +51,8 @@ export const verifyJWT = asyncHandler(
                 );
             }
 
-            // Find the employee using the decoded ID
-            const employee = await Employee.findOne({ where: { id: payload.id } });
-
-            if (!employee) {
-                return next(
-                    new ApiError(
-                        "Unauthorized request: Employee not found",
-                        401,
-                        ErrorCodes.UNAUTHORIZED.code
-                    )
-                );
-            }
-
-            // Attach the employee object to the request
-            (req as Request & { employee: Employee }).employee = employee;
+             // Attach the decoded payload to the request object
+             (req as Request & { user: jwt.JwtPayload }).user = payload;
 
             // Proceed to the next middleware
             next();

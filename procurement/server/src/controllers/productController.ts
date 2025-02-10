@@ -18,11 +18,12 @@ export const createCategory = asyncHandler(
 
         const {
             name,
+            sisterConcernId
 
         } = req.body;
 
         // Check for required fields
-        if (!name) {
+        if (!name || !sisterConcernId) {
             throw new ApiError('All fields are required', 400, 'BAD_REQUEST');
         }
 
@@ -30,7 +31,8 @@ export const createCategory = asyncHandler(
 
         // Create the ProductCategory record
         const createProduct = await ProductCategory.create({
-            name
+            name,
+            sisterConcernId
         });
 
         return res.status(201).json(
@@ -73,7 +75,7 @@ export const deleteCategory = asyncHandler(
 export const updateCategory = asyncHandler(
     async (req: Request, res: Response, next: NextFunction) => {
         const { id } = req.params;
-        const { name } = req.body;
+        const { name , sisterConcernId} = req.body;
 
         const updateProduct = await ProductCategory.findByPk(id);
 
@@ -83,8 +85,10 @@ export const updateCategory = asyncHandler(
 
         // Update fields
         updateProduct.name = name || updateProduct.name;
+        updateProduct.sisterConcernId = sisterConcernId || updateProduct.sisterConcernId;
 
 
+        
 
 
 
@@ -105,12 +109,12 @@ export const createUnit = asyncHandler(
 
         const {
             name,
+            sisterConcernId
 
         } = req.body;
-        console.log(req.body)
 
         // Check for required fields
-        if (!name) {
+        if (!name || !sisterConcernId) {
             throw new ApiError('All fields are required', 400, 'BAD_REQUEST');
         }
 
@@ -118,7 +122,8 @@ export const createUnit = asyncHandler(
 
         // Create the ProductUnit record
         const createUnit = await ProductUnit.create({
-            name
+            name,
+            sisterConcernId
         });
 
         return res.status(201).json(
@@ -161,7 +166,7 @@ export const deleteUnit = asyncHandler(
 export const updateUnit = asyncHandler(
     async (req: Request, res: Response, next: NextFunction) => {
         const { id } = req.params;
-        const { name } = req.body;
+        const { name, sisterConcernId } = req.body;
 
         const updateUnit = await ProductUnit.findByPk(id);
 
@@ -171,8 +176,9 @@ export const updateUnit = asyncHandler(
 
         // Update fields
         updateUnit.name = name || updateUnit.name;
+        updateUnit.sisterConcernId = sisterConcernId || updateUnit.sisterConcernId;
 
-
+        
 
 
 
@@ -204,11 +210,12 @@ export const createProduct = asyncHandler(
             discountAmount,
             sourcePrice,
             unit,
-            product_category
+            product_category,
+            sisterConcernId
         } = req.body;
 
         // Check for required fields
-        if (!name || !brand || !countryOfOrigin || !sizeAndDimension || !category || !supplierProductCode || !ourProductCode || !mrpPrice || !discountPercentage || !discountAmount || !sourcePrice || !unit || !product_category) {
+        if (!name ||!sisterConcernId || !brand || !countryOfOrigin || !sizeAndDimension || !category || !supplierProductCode || !ourProductCode || !mrpPrice || !discountPercentage || !discountAmount || !sourcePrice || !unit || !product_category) {
             throw new ApiError('All fields are required', 400, 'BAD_REQUEST');
         }
 
@@ -226,7 +233,8 @@ export const createProduct = asyncHandler(
             discountAmount,
             sourcePrice,
             unit,
-            product_category
+            product_category,
+            sisterConcernId
         });
 
         // Clear cached product list
@@ -357,7 +365,8 @@ export const updateProduct = asyncHandler(
             discountAmount,
             sourcePrice,
             unit,
-            product_category
+            product_category,
+            sisterConcernId
         } = req.body;
 
         // Update the product fields
@@ -374,7 +383,9 @@ export const updateProduct = asyncHandler(
         product.sourcePrice = sourcePrice || product.sourcePrice;
         product.unit = unit || product.unit;
         product.product_category = product_category || product.product_category;
+        product.sisterConcernId = sisterConcernId || product.sisterConcernId;
 
+        
         // Save the updated product to the database
         await product.save();
         // Clear cache for this product and all products

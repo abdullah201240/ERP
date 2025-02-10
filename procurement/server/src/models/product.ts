@@ -16,6 +16,7 @@ interface ProductAttributes {
   sourcePrice: string;
   unit: string;
   product_category: string;
+  sisterConcernId: number; // New column
 }
 
 interface ProductCreationAttributes extends Optional<ProductAttributes, 'id'> {}
@@ -35,6 +36,7 @@ class Product extends Model<ProductAttributes, ProductCreationAttributes> implem
   public sourcePrice!: string;
   public unit!: string;
   public product_category!: string;
+  public sisterConcernId!: number;
 }
 
 Product.init(
@@ -97,12 +99,16 @@ Product.init(
       type: DataTypes.STRING,
       allowNull: false,
     },
+    sisterConcernId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
   },
   {
-    sequelize: db, // Use the passed `sequelizeInstance`
+    sequelize: db,
     modelName: 'Product',
-    tableName: 'products', // Specify table name if different from model name
-    timestamps: true, // Enable `createdAt` and `updatedAt`
+    tableName: 'products',
+    timestamps: true,
   }
 );
 
