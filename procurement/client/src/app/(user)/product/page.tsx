@@ -7,7 +7,7 @@ import Link from 'next/link';
 
 export default function Home() {
   const router = useRouter();
-  
+
 
   useEffect(() => {
     const checkTokenAndFetchProfile = async () => {

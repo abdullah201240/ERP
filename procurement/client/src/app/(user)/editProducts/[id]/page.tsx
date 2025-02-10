@@ -24,6 +24,7 @@ export default function EditProductPage() {
     });
     const [categories, setCategories] = useState([]);
     const [units, setUnits] = useState([]);
+    const [user, setUser] = useState({ name: '', email: '', id: '',sisterConcernId: '' });
 
     useEffect(() => {
         const token = localStorage.getItem('accessTokenpq');
@@ -32,6 +33,38 @@ export default function EditProductPage() {
             return;
         }
     }, [router]);
+
+    useEffect(() => {
+        // Retrieve the access token from localStorage
+        const token = localStorage.getItem('accessTokenpq');
+        // Check if the token exists
+        if (!token) {
+          router.push('/'); // Redirect to login page if token doesn't exist
+        } else {
+          // Fetch user profile data from the API
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}employee/auth/profile`, {
+            headers: {
+              'Authorization': token
+            }
+          })
+       
+            .then(res => res.json())
+            .then(data => {
+              if (data) {
+    
+                setUser({ name: data.data.name, email: data.data.email, id: data.data.id , sisterConcernId: data.data.sisterConcernId });
+    
+    
+              }
+            })
+            .catch(err => {
+              console.error('Error fetching user data:', err);
+              router.push('/'); // Redirect to login page in case of any error
+            });
+        }
+      }, [router]);
+
+
 
     const fetchCategories = useCallback(async () => {
         try {
@@ -181,7 +214,10 @@ export default function EditProductPage() {
                         'Content-Type': 'application/json',
                         Authorization: `Bearer ${token}`,
                     },
-                    body: JSON.stringify(formData),
+                    body: JSON.stringify({
+                        ...formData,
+                        sisterConcernId: user.sisterConcernId,
+                      })
                 });
 
                 if (response.ok) {

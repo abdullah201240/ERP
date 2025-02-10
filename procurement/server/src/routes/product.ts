@@ -6,18 +6,18 @@ const router = express.Router();
 
 
 router.post("/category",verifyJWT, createCategory);
-router.get("/category",verifyJWT, viewCategory);
+router.get("/category/:id",verifyJWT, viewCategory);
 router.delete("/category/:id", verifyJWT, deleteCategory);
 router.put("/category/:id", verifyJWT, updateCategory);
 
 router.post("/unit",verifyJWT, createUnit);
-router.get("/unit", viewUnit);
+router.get("/unit/:id", viewUnit);
 router.delete("/unit/:id", verifyJWT, deleteUnit);
 router.put("/unit/:id", verifyJWT, updateUnit);
 
 
 router.post("/product",verifyJWT, createProduct);
-router.get("/product", getAllProduct);
+router.get("/product/:id", getAllProduct);
 router.delete("/product/:id", verifyJWT, deleteProduct);
 router.get("/product/:id",verifyJWT, viewProductById);
 router.put("/product/:id",verifyJWT, updateProduct);

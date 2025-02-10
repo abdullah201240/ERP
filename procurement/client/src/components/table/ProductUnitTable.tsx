@@ -42,8 +42,38 @@ const ProductunitTable: React.FC<ProductunitTableProps> = ({ reload }) => {
     const [editedName, setEditedName] = useState<string>("");
     const router = useRouter();
 
-    // Fetch units from API
+    const [user, setUser] = useState({ name: '', email: '', id: '',sisterConcernId: '' });
 
+
+    useEffect(() => {
+      // Retrieve the access token from localStorage
+      const token = localStorage.getItem('accessTokenpq');
+      // Check if the token exists
+      if (!token) {
+        router.push('/'); // Redirect to login page if token doesn't exist
+      } else {
+        // Fetch user profile data from the API
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}employee/auth/profile`, {
+          headers: {
+            'Authorization': token
+          }
+        })
+     
+          .then(res => res.json())
+          .then(data => {
+            if (data) {
+  
+              setUser({ name: data.data.name, email: data.data.email, id: data.data.id , sisterConcernId: data.data.sisterConcernId });
+  
+  
+            }
+          })
+          .catch(err => {
+            console.error('Error fetching user data:', err);
+            router.push('/'); // Redirect to login page in case of any error
+          });
+      }
+    }, [router]);
 
 
     const fetchunits = useCallback(async () => {
@@ -54,7 +84,7 @@ const ProductunitTable: React.FC<ProductunitTableProps> = ({ reload }) => {
                 router.push('/'); // Adjust the path to your login page
                 return; // Exit the function early
             }
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}product/unit`, {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}product/unit/${user.sisterConcernId}`, {
                 headers: {
                     'Authorization': token,
 
@@ -74,7 +104,7 @@ const ProductunitTable: React.FC<ProductunitTableProps> = ({ reload }) => {
             console.error("Error fetching categories:", error);
             setunits([]); // Default to an empty array in case of error
         }
-    }, [router]);
+    }, [router,user]);
     useEffect(() => {
         fetchunits();
     }, [reload, fetchunits]);

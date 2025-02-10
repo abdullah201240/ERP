@@ -43,10 +43,16 @@ export const createCategory = asyncHandler(
 
 export const viewCategory = asyncHandler(
     async (req: Request, res: Response, next: NextFunction) => {
+        const { id } = req.params;
 
 
 
-        const viewProduct = await ProductCategory.findAll();
+        const viewProduct = await ProductCategory.findAll({
+            where: {
+                sisterConcernId: id
+            }
+        });
+        
 
         return res.status(200).json(
             ApiResponse.success(viewProduct, 'View Product Category retrieved successfully')
@@ -135,9 +141,14 @@ export const createUnit = asyncHandler(
 export const viewUnit = asyncHandler(
     async (req: Request, res: Response, next: NextFunction) => {
 
+        const { id } = req.params;
 
 
-        const viewUnit = await ProductUnit.findAll();
+        const viewUnit = await ProductUnit.findAll({
+            where: {
+                sisterConcernId: id
+            }
+        });
 
         return res.status(200).json(
             ApiResponse.success(viewUnit, 'View Product Category retrieved successfully')
@@ -252,12 +263,14 @@ export const createProduct = asyncHandler(
 export const getAllProduct = asyncHandler(
     async (req: Request, res: Response, next: NextFunction) => {
         const { page = 1, limit = 10, search = "" } = req.query;
+        const { id } = req.params;
 
         // Parse page and limit as integers
         const pageNumber = parseInt(page as string, 10);
         const pageSize = parseInt(limit as string, 10);
         const offset = (pageNumber - 1) * pageSize;
-        const cacheKey = `${PRODUCT_CACHE_KEY}_${pageNumber}_${pageSize}_${search}`;
+        const cacheKey = `${PRODUCT_CACHE_KEY}_${id}_${pageNumber}_${pageSize}_${search}`;
+
         // Check if products exist in Redis cache
         const cachedData = await redisClient.get(cacheKey);
         if (cachedData) {
@@ -266,13 +279,15 @@ export const getAllProduct = asyncHandler(
 
         // Fetch from DB if not cached
         const { rows: products, count: totalProducts } = await Product.findAndCountAll({
-            where: search
-                ? { name: { [Op.like]: `%${search}%` } }
-                : {},
+            where: {
+                sisterConcernId: id,
+                ...(search ? { name: { [Op.like]: `%${search}%` } } : {}),
+            },
             limit: pageSize,
             offset,
             order: [["createdAt", "ASC"]],
         });
+
         const response = {
             success: true,
             data: {
@@ -283,13 +298,14 @@ export const getAllProduct = asyncHandler(
             },
             message: "Products retrieved successfully",
         };
+
         // Store response in Redis for 10 minutes
         await redisClient.setEx(cacheKey, 600, JSON.stringify(response));
 
         return res.status(200).json(response);
-
     }
 );
+
 
 export const deleteProduct = asyncHandler(
     async (req: Request, res: Response, next: NextFunction) => {

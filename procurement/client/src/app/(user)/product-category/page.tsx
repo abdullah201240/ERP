@@ -7,7 +7,38 @@ export default function ProductCategoryPage() {
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [categoryName, setCategoryName] = useState('');
   const [reloadTable, setReloadTable] = useState(false);
+  const [user, setUser] = useState({ name: '', email: '', id: '',sisterConcernId: '' });
   const router = useRouter();
+
+  useEffect(() => {
+    // Retrieve the access token from localStorage
+    const token = localStorage.getItem('accessTokenpq');
+    // Check if the token exists
+    if (!token) {
+      router.push('/'); // Redirect to login page if token doesn't exist
+    } else {
+      // Fetch user profile data from the API
+      fetch(`${process.env.NEXT_PUBLIC_API_URL}employee/auth/profile`, {
+        headers: {
+          'Authorization': token
+        }
+      })
+   
+        .then(res => res.json())
+        .then(data => {
+          if (data) {
+
+            setUser({ name: data.data.name, email: data.data.email, id: data.data.id , sisterConcernId: data.data.sisterConcernId });
+
+
+          }
+        })
+        .catch(err => {
+          console.error('Error fetching user data:', err);
+          router.push('/'); // Redirect to login page in case of any error
+        });
+    }
+  }, [router]);
 
   useEffect(() => {
     const checkTokenAndFetchProfile = async () => {
@@ -66,7 +97,8 @@ export default function ProductCategoryPage() {
           'Authorization': token,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ name: categoryName }),
+        body: JSON.stringify({ name: categoryName ,
+          sisterConcernId: user.sisterConcernId}),
       });
 
       if (response.ok) {
