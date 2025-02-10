@@ -1,4 +1,4 @@
-import { CookieOptions, NextFunction, Request, Response } from "express";
+import {  NextFunction, Request, Response } from "express";
 import { asyncHandler, ApiError, ApiResponse } from "../utils/root";
 import ProductCategory from "../models/productCategory";
 import ProductUnit from '../models/productUnit';
