@@ -1,7 +1,7 @@
 'use client';
 import React, {  useState } from 'react';
 import Image from 'next/image';
-import Logo from '@/app/assets/img/Logo.webp';
+import Logo from '@/app/assets/img/Logo.png';
 import { toast } from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 export default function Page() {

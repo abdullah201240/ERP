@@ -12,7 +12,7 @@ const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
       title: "Digirib",
-      description: "Dashboard",
+      description: "Digirib",
     };
 
 export default function RootLayout({
