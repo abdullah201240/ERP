@@ -156,7 +156,7 @@ export default function CreateDesignPlanFrom() {
                 if (!employeeDetails) return;
 
                 const response = await fetch(
-                 `${process.env.NEXT_PUBLIC_API_URL_ADMIN}sisterConcern/employee/${employeeDetails.sisterConcernId}?page=${pageNumber}&limit=50&search=${query}`,
+                 `${process.env.NEXT_PUBLIC_API_URL_ADMIN}sisterConcern/employee/${employeeDetails.sisterConcernId}?page=${pageNumber}&limit=10&search=${query}`,
                     {
                         headers: {
                             Authorization: `Bearer ${token}`,

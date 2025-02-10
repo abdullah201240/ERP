@@ -7,11 +7,22 @@ import bcrypt from 'bcryptjs';
 import ERROR_MESSAGES from '../utils/errors/errorMassage'
 import jwt, { SignOptions } from 'jsonwebtoken';
 import { Op } from "sequelize";
+import redisClient from "../config/redisClient";
+
+
+
+const EMPLOYEE_CACHE_KEY = "employees";
+
+// Helper function to remove product-related caches
+const clearEmployeeCache = async () => {
+  await redisClient.del(EMPLOYEE_CACHE_KEY);
+};
 
 const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET || "LD9cv1kBfgRHVIg9GG_OGzh9TUkcyqgZAaM0o3DmVkx08MCFRSzMocyO3UtNdDNtoCJ0X0-5nLwK7fdO"; // Fallback to a hardcoded secret if not in env
 if (!ACCESS_TOKEN_SECRET) {
   throw new Error('ACCESS_TOKEN_SECRET is not defined in environment variables');
 }
+
 
 
 export const createEmployee = asyncHandler(
@@ -77,6 +88,8 @@ export const createEmployee = asyncHandler(
 
     // Exclude the password from the response
     const { password: _, ...employeeResponse } = newEmployee.toJSON();
+    // Clear cached product list
+    await clearEmployeeCache();
 
     return res
       .status(201)
@@ -224,7 +237,22 @@ export const getAllEmployee = asyncHandler(
     const pageSize = parseInt(limit as string, 10);
     const offset = (pageNumber - 1) * pageSize;
 
-    // Fetch employees with pagination, search, and filtering by sisterConcernId
+    // Generate a unique cache key based on query parameters and sisterConcernId
+    const cacheKey = `employees:${id}:page=${pageNumber}:limit=${pageSize}:search=${search}`;
+    
+
+    // Try to fetch the data from Redis first
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      console.log('Retrieving data from cache');
+      return res.status(200).json(JSON.parse(cachedData));
+    }
+    else{
+      console.log('MISS data from cache');
+
+    }
+
+    // If not in cache, fetch from database
     const { rows: employees, count: totalEmployees } = await Employee.findAndCountAll({
       where: {
         sisterConcernId: id, // Filter by sisterConcernId
@@ -239,7 +267,7 @@ export const getAllEmployee = asyncHandler(
       order: [["createdAt", "ASC"]], // Sort by most recent
     });
 
-    return res.status(200).json({
+    const response = {
       success: true,
       data: {
         employees,
@@ -248,7 +276,12 @@ export const getAllEmployee = asyncHandler(
         currentPage: pageNumber,
       },
       message: "Employees retrieved successfully",
-    });
+    };
+
+    // Store the data in Redis, set an expiration time as needed
+    await redisClient.setEx(cacheKey, 3600, JSON.stringify(response)); // Expires in 1 hour
+
+    return res.status(200).json(response);
   }
 );
 
@@ -294,7 +327,8 @@ export const updateEmployee = asyncHandler(
       sisterConcernId: updatedSisterConcernId ?? employee.sisterConcernId,
       photo,
     });
-
+    // Clear cached product list
+    await clearEmployeeCache();
     return res.status(200).json({
       message: "Employee updated successfully",
       employee: employee.toJSON(),
@@ -314,7 +348,8 @@ export const deleteEmployee = asyncHandler(
 
     // Delete the employee from the database
     await employee.destroy();
-
+    // Clear cached product list
+    await clearEmployeeCache();
     return res.status(200).json({
       message: "Employee deleted successfully",
     });
@@ -372,8 +407,8 @@ export const loginEmployeeOthersPlatform = asyncHandler(
     return res.status(200).json({
       message: "Employee logged in successfully",
       data: employeeData
-  });
-  
+    });
+
   }
 );
 
@@ -392,7 +427,17 @@ export const getEmployeeByEmail = asyncHandler(
       );
     }
 
-    // Find employee by email
+    // Generate a unique cache key using the email
+    const cacheKey = `employees:email:${email}`;
+
+    // Try to fetch the data from Redis first
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      console.log('Retrieving data from cache');
+      return res.status(200).json(JSON.parse(cachedData));
+    }
+
+    // If not in cache, fetch from database
     const employee = await Employee.findOne({ where: { email } });
     if (!employee) {
       return next(
@@ -407,6 +452,9 @@ export const getEmployeeByEmail = asyncHandler(
     // Exclude the password from the response
     const { password: _, ...employeeData } = employee.toJSON();
 
+    // Store the data in Redis, set an expiration time as needed
+    await redisClient.setEx(cacheKey, 3600, JSON.stringify(employeeData)); // Expires in 1 hour
+
     return res.status(200).json(
       ApiResponse.success(
         employeeData,
@@ -419,33 +467,32 @@ export const getEmployeeByEmail = asyncHandler(
 
 export const getEmployeeById = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
-    const { id } = req.params; // Extract email from URL params
+    const { id } = req.params;
 
-    // Validate email (basic check)
-    if (!id ) {
-      return next(
-        new ApiError(
-          "Invalid id",
-          400,
-          ErrorCodes.BAD_REQUEST.code
-        )
-      );
+    if (!id) {
+      return next(new ApiError("Invalid id", 400, ErrorCodes.BAD_REQUEST.code));
     }
 
-    // Find employee by email
+    // Try to fetch the data from Redis first
+    const cacheKey = `employees:${id}`;
+    const cachedData = await redisClient.get(cacheKey);
+
+    if (cachedData) {
+      console.log('Retrieving data from cache');
+      return res.status(200).json(JSON.parse(cachedData));
+    }
+
+    // If not in cache, fetch from database
     const employee = await Employee.findOne({ where: { id } });
     if (!employee) {
-      return next(
-        new ApiError(
-          "Employee not found",
-          404,
-          ErrorCodes.NOT_FOUND.code
-        )
-      );
+      return next(new ApiError("Employee not found", 404, ErrorCodes.NOT_FOUND.code));
     }
 
     // Exclude the password from the response
     const { password: _, ...employeeData } = employee.toJSON();
+
+    // Store the data in Redis, set an expiration time as needed
+    await redisClient.setEx(cacheKey, 3600, JSON.stringify(employeeData)); // Expires in 1 hour
 
     return res.status(200).json(
       ApiResponse.success(
@@ -455,21 +502,47 @@ export const getEmployeeById = asyncHandler(
     );
   }
 );
+
+
+
+
 export const getEmployees = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
-  
-      const { employeeIds } = req.body;
+    const { employeeIds } = req.body;
 
-      if (!employeeIds || !Array.isArray(employeeIds)) {
-          return res.status(400).json({ success: false, message: "Invalid employeeIds format" });
+    if (!employeeIds || !Array.isArray(employeeIds)) {
+      return res.status(400).json({ success: false, message: "Invalid employeeIds format" });
+    }
+
+    const employees = [];
+    const missingIds = [];
+
+    // Check cache for each employee ID
+    for (const id of employeeIds) {
+      const cacheKey = `employees:${id}`;
+      const cachedEmployee = await redisClient.get(cacheKey);
+      if (cachedEmployee) {
+        employees.push(JSON.parse(cachedEmployee));
+      } else {
+        missingIds.push(id);
       }
+    }
 
-      // Fetch employees from database
-      const employees = await Employee.findAll({
-          where: { id: employeeIds },
+    // Fetch missing employees from the database
+    if (missingIds.length > 0) {
+      const fetchedEmployees = await Employee.findAll({
+        where: { id: missingIds },
       });
-      return res.status(200).json({ success: true, employees });
 
+      // Cache newly fetched employees and add them to the response array
+      for (const employee of fetchedEmployees) {
+        const { password: _, ...employeeData } = employee.toJSON();
+        const cacheKey = `employees:${employee.id}`;
+        await redisClient.setEx(cacheKey, 3600, JSON.stringify(employeeData)); // Expires in 1 hour
+        employees.push(employeeData);
+      }
+    }
 
-}
+    return res.status(200).json({ success: true, employees });
+  }
 );
