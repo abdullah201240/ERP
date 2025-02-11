@@ -45,6 +45,39 @@ export default function Home() {
   const [updatedService, setUpdatedService] = useState({ name: '', description: '' }); // Store form inputs for updating service
   const [updateServiceNameError, setUpdateServiceNameError] = useState('');
   const [updateServiceDescriptionError, setUpdateServiceDescriptionError] = useState('');
+  const [user, setUser] = useState({ name: '', email: '', id: '', sisterConcernId: '' });
+
+
+
+  useEffect(() => {
+    // Retrieve the access token from localStorage
+    const token = localStorage.getItem('accessToken');
+    // Check if the token exists
+    if (!token) {
+      router.push('/'); // Redirect to login page if token doesn't exist
+    } else {
+      // Fetch user profile data from the API
+      fetch(`${process.env.NEXT_PUBLIC_API_URL}employee/auth/profile`, {
+        headers: {
+          'Authorization': token
+        }
+      })
+
+        .then(res => res.json())
+        .then(data => {
+          if (data) {
+
+            setUser({ name: data.data.name, email: data.data.email, id: data.data.id, sisterConcernId: data.data.sisterConcernId });
+
+
+          }
+        })
+        .catch(err => {
+          console.error('Error fetching user data:', err);
+          router.push('/'); // Redirect to login page in case of any error
+        });
+    }
+  }, [router]);
 
   // Fetch services on component mount
   useEffect(() => {
@@ -55,13 +88,16 @@ export default function Home() {
         router.push('/'); // Redirect to login if token is not found
         return;
       }
-
+      if (!user.sisterConcernId) {
+        return
+      }
       try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}projects/services`, {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/projects/services?sisterConcernId=${user.sisterConcernId}`, {
           headers: {
-            'Authorization': token,
+            'Authorization': `Bearer ${token}`, // Ensure proper format for Authorization header if using Bearer token
           },
         });
+
 
         if (!response.ok) {
           throw new Error('Failed to fetch services');
@@ -75,7 +111,7 @@ export default function Home() {
     };
 
     fetchServices();
-  }, [router]);
+  }, [router, user]);
 
   // Handle service deletion
   const handleDelete = async () => {
@@ -141,7 +177,11 @@ export default function Home() {
           'Content-Type': 'application/json',
           'Authorization': token,
         },
-        body: JSON.stringify(newService),
+        body: JSON.stringify({
+          ...newService,
+
+          sisterConcernId: user.sisterConcernId,
+        })
       });
 
       if (!response.ok) {

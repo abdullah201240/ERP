@@ -825,13 +825,13 @@ export const updateCompletionPercentage = asyncHandler(
 // Create a new service
 export const createService = asyncHandler(
     async (req: Request, res: Response, next: NextFunction) => {
-        const { name, description } = req.body;
+        const { name, description ,sisterConcernId } = req.body;
 
         if (!name || !description) {
             throw new ApiError('Name and description are required', 400, ErrorCodes.BAD_REQUEST.code);
         }
 
-        const service = await Service.create({ name, description });
+        const service = await Service.create({ name, description,sisterConcernId });
 
         return res.status(201).json(
             ApiResponse.success(service, 'Service created successfully')
@@ -839,10 +839,25 @@ export const createService = asyncHandler(
     }
 );
 
-// Get all services
 export const viewAllServices = asyncHandler(
     async (req: Request, res: Response, next: NextFunction) => {
-        const services = await Service.findAll();
+        const sisterConcernId = req.query.sisterConcernId;
+
+        if (!sisterConcernId) {
+            throw new ApiError('Sister Concern ID is required', 400, ErrorCodes.BAD_REQUEST.code);
+        }
+
+        // Convert sisterConcernId to a number
+        const numericSisterConcernId = Number(sisterConcernId);
+        if (isNaN(numericSisterConcernId)) {
+            throw new ApiError('Invalid Sister Concern ID', 400, ErrorCodes.BAD_REQUEST.code);
+        }
+
+        const services = await Service.findAll({
+            where: {
+                sisterConcernId: numericSisterConcernId
+            }
+        });
 
         return res.status(200).json(
             ApiResponse.success(services, 'Services retrieved successfully')

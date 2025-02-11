@@ -6,6 +6,7 @@ interface ServiceAttributes {
   id: number;
   name: string;
   description: string;
+  sisterConcernId: number; // New column
 }
 
 interface ServiceCreationAttributes extends Optional<ServiceAttributes, 'id'> {}
@@ -15,6 +16,7 @@ class Service extends Model<ServiceAttributes, ServiceCreationAttributes> implem
   public id!: number;
   public name!: string;
   public description!: string;
+  public sisterConcernId!: number; // New column
 }
 
 Service.init(
@@ -33,7 +35,10 @@ Service.init(
       type: DataTypes.TEXT,
       allowNull: false,
     },
-    
+    sisterConcernId: { // New column definition
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
   },
   {
     sequelize: db, // Use the passed `sequelizeInstance`
