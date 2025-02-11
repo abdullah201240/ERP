@@ -51,9 +51,10 @@ const CreateDesignInvoiceTable: React.FC<CreateDesignInvoiceTableProps> = ({ rel
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
     const [deleteId, setDeleteId] = useState<number | null>(null);
-    const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
 
     const fetchDegineBOQ = useCallback(async () => {
+        const token = localStorage.getItem('accessToken');
+
         if (!token) {
             router.push('/');
         } else {
@@ -76,7 +77,7 @@ const CreateDesignInvoiceTable: React.FC<CreateDesignInvoiceTableProps> = ({ rel
                 setLoading(false);
             }
         }
-    }, [token, router, boqId]);
+    }, [ router, boqId]);
 
     useEffect(() => {
         fetchDegineBOQ();
@@ -85,6 +86,7 @@ const CreateDesignInvoiceTable: React.FC<CreateDesignInvoiceTableProps> = ({ rel
     // Handle delete
     const handleDelete = async () => {
         if (deleteId === null) return;
+        const token = localStorage.getItem('accessToken');
 
         if (!token) {
             router.push('/');

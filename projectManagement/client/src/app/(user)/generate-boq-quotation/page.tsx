@@ -8,7 +8,6 @@ export default function Page() {
   useEffect(() => {
     const checkTokenAndFetchProfile = async () => {
       // Ensure we're in the browser before accessing localStorage
-      if (typeof window === 'undefined') return;
 
       // Check if the access token exists in localStorage
       const token = localStorage.getItem('accessToken');
@@ -32,9 +31,7 @@ export default function Page() {
           return;
         }
 
-        // If successful, handle the response data here if needed
-        const data = await response.json();
-        console.log(data); // For debugging or processing the profile data
+       
 
       } catch (error) {
         console.error("Error fetching profile:", error);

@@ -50,17 +50,48 @@ const DesignBOQTable: React.FC<DesignBOQTableProps> = ({ reload }) => {
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
     const [deleteId, setDeleteId] = useState<number | null>(null);
-    const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+    const [user, setUser] = useState({ name: '', email: '', id: '', sisterConcernId: '' });
 
+    const fetchCompanyProfile = useCallback(async () => {
+        const token = localStorage.getItem('accessToken');
+
+        try {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}employee/auth/profile`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            const data = await response.json();
+            console.table(data.data)
+            if (data.success) {
+                setUser({ name: data.data.name, email: data.data.email, id: data.data.id, sisterConcernId: data.data.sisterConcernId });
+
+            }
+        } catch (error) {
+            console.error('Error fetching profile:', error);
+        }
+    }, []);
+    useEffect(() => {
+        const token = localStorage.getItem('accessToken');
+
+        if (!token) {
+            router.push('/'); // Redirect to login page if token doesn't exist
+        } else {
+            fetchCompanyProfile();
+        }
+    }, [router, fetchCompanyProfile]);
 
 
     // Fetch projects
     const fetchProjects = useCallback(async () => {
+        const token = localStorage.getItem('accessToken');
+
         if (!token) {
             router.push('/');
         } else {
+            if(!user.sisterConcernId){
+                return
+            }
             try {
-                const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}projects/degineBOQ`, {
+                const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}projects/degineBOQ?sisterConcernId=${user.sisterConcernId}`, {
                     headers: {
                         'Authorization': token
                     }
@@ -83,7 +114,7 @@ const DesignBOQTable: React.FC<DesignBOQTableProps> = ({ reload }) => {
                 setLoading(false);
             }
         }
-    }, [token, router]);
+    }, [router,user]);
 
     useEffect(() => {
         fetchProjects();
@@ -92,6 +123,7 @@ const DesignBOQTable: React.FC<DesignBOQTableProps> = ({ reload }) => {
     // Handle delete
     const handleDelete = async () => {
         if (deleteId === null) return;
+        const token = localStorage.getItem('accessToken');
 
         if (!token) {
             router.push('/');
@@ -154,8 +186,8 @@ const DesignBOQTable: React.FC<DesignBOQTableProps> = ({ reload }) => {
                 <TableBody>
                     {projects.length === 0 ? (
                         <TableRow>
-                            <TableCell colSpan={7} className='text-center border border-[#e5e7eb]'>
-                                No projects found
+                            <TableCell colSpan={10} className='text-center border border-[#e5e7eb]'>
+                                No Boq found
                             </TableCell>
                         </TableRow>
                     ) : (

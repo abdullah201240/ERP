@@ -948,11 +948,12 @@ export const createDegineBOQ = asyncHandler(
             feesProposal,
             feesProposalNote1,
             feesProposalNote2,
-            date
+            date,
+            sisterConcernId
 
         } = req.body;
 
-        if (!projectId || !projectName || !clientName || !clientContact || !projectAddress || !totalArea || !inputPerSftFees || !totalFees || !termsCondition || !designation || !signName) {
+        if (!projectId || !projectName || !clientName || !clientContact || !projectAddress || !totalArea || !inputPerSftFees || !totalFees || !termsCondition || !designation || !signName ||!sisterConcernId) {
             throw new ApiError('All fields are required', 400, 'BAD_REQUEST');
         }
 
@@ -975,6 +976,7 @@ export const createDegineBOQ = asyncHandler(
             feesProposalNote1,
             feesProposalNote2,
             date,
+            sisterConcernId
         });
 
         return res.status(201).json(
@@ -985,7 +987,26 @@ export const createDegineBOQ = asyncHandler(
 
 export const viewAllDegineBOQs = asyncHandler(
     async (req: Request, res: Response, next: NextFunction) => {
-        const degineBOQs = await DegineBOQ.findAll();
+        const sisterConcernId = req.query.sisterConcernId;
+
+        if (!sisterConcernId) {
+            throw new ApiError('Sister Concern ID is required', 400, ErrorCodes.BAD_REQUEST.code);
+        }
+
+        // Convert sisterConcernId to a number
+        const numericSisterConcernId = Number(sisterConcernId);
+        if (isNaN(numericSisterConcernId)) {
+            throw new ApiError('Invalid Sister Concern ID', 400, ErrorCodes.BAD_REQUEST.code);
+        }
+        // Fetch DegineBOQs sorted by id in descending order
+        const degineBOQs = await DegineBOQ.findAll({
+            where: {
+                sisterConcernId: numericSisterConcernId
+            },
+            order: [
+                ['id', 'DESC'] // Order by 'id' in descending order
+            ]
+        });
 
         return res.status(200).json(
             ApiResponse.success(degineBOQs, 'DegineBOQs retrieved successfully')
@@ -1077,6 +1098,7 @@ export const getAllBOQ = asyncHandler(
         // Get the page and limit from query parameters, default to page 1 and limit 10
         const page = parseInt(req.query.page as string) || 1;
         const limit = parseInt(req.query.limit as string) || 10;
+        const { id } = req.params;
 
 
         // Calculate the offset for pagination
@@ -1090,6 +1112,9 @@ export const getAllBOQ = asyncHandler(
                     as: "assigned", // Alias defined in the relationship
                 },
             ],
+            where: {
+                sisterConcernId: id, // Filter based on sisterConsernId
+            },
             limit: limit, // Limit to 10 records per page
             offset: offset, // Apply offset for pagination
             order: [["createdAt", "DESC"]],

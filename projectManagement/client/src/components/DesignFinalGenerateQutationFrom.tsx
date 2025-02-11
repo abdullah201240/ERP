@@ -42,7 +42,6 @@ interface Service {
 }
 
 export default function DesignFinalGenerateQutationFrom() {
-    const [token, setToken] = useState<string | null>(null);
     const router = useRouter();
     const [isClient, setIsClient] = useState(false);
 
@@ -65,28 +64,60 @@ export default function DesignFinalGenerateQutationFrom() {
     const [reloadTable, setReloadTable] = useState(false);
     const [isPercentage, setIsPercentage] = useState(false); // Track if percentage checkbox is checked
     const [services, setServices] = useState<Service[]>([]); // New state for services
+    const [user, setUser] = useState({ name: '', email: '', id: '', sisterConcernId: '' });
+
+
 
     useEffect(() => {
-        if (typeof window !== 'undefined') { // Ensure this runs only on the client-side
-            const storedToken = localStorage.getItem('accessToken');
-            if (!storedToken) {
+        
+            const token = localStorage.getItem('accessToken');
+            if (!token) {
                 router.push('/');
-            } else {
-                setToken(storedToken);
-            }
-        }
+            } 
+        
     }, [router]);
 
     useEffect(() => {
         setIsClient(true); // Marks that we are in the client-side
     }, []);
+    const fetchCompanyProfile = useCallback(async () => {
+        const token = localStorage.getItem('accessToken');
+
+        try {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}employee/auth/profile`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            const data = await response.json();
+            if (data.success) {
+                setUser({ name: data.data.name, email: data.data.email, id: data.data.id, sisterConcernId: data.data.sisterConcernId });
+
+            }
+        } catch (error) {
+            console.error('Error fetching profile:', error);
+        }
+    }, []);
+    useEffect(() => {
+        const token = localStorage.getItem('accessToken');
+
+        if (!token) {
+            router.push('/'); // Redirect to login page if token doesn't exist
+        } else {
+            fetchCompanyProfile();
+        }
+    }, [router, fetchCompanyProfile]);
 
     const fetchProjects = useCallback(
         async (pageNumber = 1, query = '') => {
             setLoading(true);
+            if(!user.sisterConcernId){
+                return
+            }
             try {
+                
+                const token = localStorage.getItem('accessToken');
+
                 const response = await fetch(
-                    `${process.env.NEXT_PUBLIC_API_URL}projects/getAllBOQ?page=${pageNumber}&limit=10&search=${query}`,
+                    `${process.env.NEXT_PUBLIC_API_URL}projects/getAllBOQ/${user.sisterConcernId}?page=${pageNumber}&limit=10&search=${query}`,
                     { headers: { Authorization: `Bearer ${token}` } }
                 );
 
@@ -108,11 +139,13 @@ export default function DesignFinalGenerateQutationFrom() {
                 setLoading(false);
             }
         },
-        [token]
+        [user]
     );
     // Fetch Services
     const fetchServices = useCallback(async () => {
         try {
+            const token = localStorage.getItem('accessToken');
+
             const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}projects/services`,
                 { headers: { Authorization: `Bearer ${token}` } }
             );
@@ -125,13 +158,15 @@ export default function DesignFinalGenerateQutationFrom() {
         } catch (error) {
             console.error('Error fetching services:', error);
         }
-    }, [token]);
+    }, []);
     useEffect(() => {
+        const token = localStorage.getItem('accessToken');
+
         if (token) {
             fetchProjects(1, searchQuery);
             fetchServices(); // Fetch services when the token is available
         }
-    }, [token, searchQuery, fetchProjects, fetchServices]);
+    }, [ searchQuery, fetchProjects, fetchServices]);
 
     const handleInputChange = (inputValue: string) => {
         setSearchQuery(inputValue);
@@ -219,6 +254,8 @@ export default function DesignFinalGenerateQutationFrom() {
 
         try {
             setLoading(true);
+            const token = localStorage.getItem('accessToken');
+
             const response = await fetch(
                 `${process.env.NEXT_PUBLIC_API_URL}projects/degineBOQPart`,
                 {

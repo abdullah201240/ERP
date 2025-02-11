@@ -53,7 +53,6 @@ interface EmployeeDetails {
 }
 
 export default function DesignGenerateQutationForm() {
-    const [token, setToken] = useState<string | null>(null);
     const router = useRouter();
     const [isClient, setIsClient] = useState(false);
 
@@ -84,23 +83,28 @@ export default function DesignGenerateQutationForm() {
     const [date, setDate] = useState('');
     const [employeeDetails, setEmployeeDetails] = useState<EmployeeDetails | null>(null);
 
+    const [user, setUser] = useState({ name: '', email: '', id: '', sisterConcernId: '' });
+
+
+
 
     useEffect(() => {
-        if (typeof window !== 'undefined') { // Ensure this runs only on the client-side
-            const storedToken = localStorage.getItem('accessToken');
-            if (!storedToken) {
-                router.push('/');
-            } else {
-                setDate(new Date().toISOString().split('T')[0])
-                setToken(storedToken);
-            }
+
+        const storedToken = localStorage.getItem('accessToken');
+        if (!storedToken) {
+            router.push('/');
+        } else {
+            setDate(new Date().toISOString().split('T')[0])
         }
+
     }, [router]);
     useEffect(() => {
         setIsClient(true); // Marks that we are in the client-side
     }, []);
 
     const fetchCompanyProfile = useCallback(async () => {
+        const token = localStorage.getItem('accessToken');
+
         try {
             const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}employee/auth/profile`, {
                 headers: { Authorization: `Bearer ${token}` },
@@ -109,11 +113,13 @@ export default function DesignGenerateQutationForm() {
             console.table(data.data)
             if (data.success) {
                 setEmployeeDetails(data.data);
+                setUser({ name: data.data.name, email: data.data.email, id: data.data.id, sisterConcernId: data.data.sisterConcernId });
+
             }
         } catch (error) {
             console.error('Error fetching profile:', error);
         }
-    }, [token]);
+    }, []);
     useEffect(() => {
         const token = localStorage.getItem('accessToken');
 
@@ -130,6 +136,8 @@ export default function DesignGenerateQutationForm() {
             setLoading(true);
             try {
                 if (!employeeDetails) return;
+                const token = localStorage.getItem('accessToken');
+
                 const response = await fetch(
                     `${process.env.NEXT_PUBLIC_API_URL}projects/view-all-projects/${employeeDetails.sisterConcernId}?page=${pageNumber}&limit=10&search=${query}`,
                     { headers: { Authorization: `Bearer ${token}` } }
@@ -153,14 +161,16 @@ export default function DesignGenerateQutationForm() {
                 setLoading(false);
             }
         },
-        [token,employeeDetails]
+        [employeeDetails]
     );
 
     useEffect(() => {
+        const token = localStorage.getItem('accessToken');
+
         if (token) {
             fetchProjects(1, searchQuery);
         }
-    }, [token, searchQuery, fetchProjects]);
+    }, [searchQuery, fetchProjects]);
 
     const handleInputChange = (inputValue: string) => {
         setSearchQuery(inputValue);
@@ -222,6 +232,8 @@ export default function DesignGenerateQutationForm() {
             feesProposalNote1,     // Add feesProposalNote1
             feesProposalNote2,
             date,
+            sisterConcernId: user.sisterConcernId,
+
 
             termsCondition: projectDetails.termsCondition,
             ...projectDetails,
@@ -229,7 +241,7 @@ export default function DesignGenerateQutationForm() {
 
         try {
             setLoading(true);
-            console.log(JSON.stringify(payload))
+            const token = localStorage.getItem('accessToken');
             const response = await fetch(
                 `${process.env.NEXT_PUBLIC_API_URL}projects/degineBOQ`,
                 {
@@ -267,6 +279,16 @@ export default function DesignGenerateQutationForm() {
         } finally {
             setLoading(false);
         }
+    };
+    const handlePaste = (event: React.ClipboardEvent<HTMLDivElement>) => {
+        const clipboardData = event.clipboardData;
+        const pastedData = clipboardData.getData('text');
+    
+        // Assuming `setProjectDetails` and `projectDetails` are from your existing state management
+        setProjectDetails((prevState: ProjectDetails) => ({
+            ...prevState,
+            termsCondition: prevState.termsCondition + pastedData,
+        }));
     };
     if (!isClient) {
         return null; // Or show a loading state
@@ -433,19 +455,20 @@ export default function DesignGenerateQutationForm() {
                             <label htmlFor="termsCondition" className="block text-white  mb-2">
                                 Terms & Condition
                             </label>
-                            <ReactEditor
-                                value={projectDetails.termsCondition || ""}  // Default to an empty string
-                                onChange={(value: string) => {
-                                    setProjectDetails({
-                                        ...projectDetails,
-                                        termsCondition: value,
-                                    });
-                                }}
-                                mainProps={{ className: "black" }}
-                                placeholder="Terms & Condition"
-                                className="w-full"
-                            />
-
+                            <div onPaste={handlePaste}>
+                                <ReactEditor
+                                    value={projectDetails.termsCondition || ""}
+                                    onChange={(value) => {
+                                        setProjectDetails({
+                                            ...projectDetails,
+                                            termsCondition: value,
+                                        });
+                                    }}
+                                    mainProps={{ className: "black" }}
+                                    placeholder="Terms & Condition"
+                                    className="w-full"
+                                />
+                            </div>
                         </div>
 
 

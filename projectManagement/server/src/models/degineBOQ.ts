@@ -14,13 +14,14 @@ interface DegineBOQAttributes {
   termsCondition: string;
   signName: string;
   designation: string;
-  projectId: string;  // New field
-  subject?: string;          // Optional
-  firstPera?: string;       // Optional
-  secondPera?: string;      // Optional
+  projectId: string;
+  sisterConcernId: number;  // New field
+  subject?: string;
+  firstPera?: string;
+  secondPera?: string;
   feesProposal?: string;
-  feesProposalNote1?: string; // Optional
-  feesProposalNote2?: string; // Optional
+  feesProposalNote1?: string;
+  feesProposalNote2?: string;
   date?: string;
 }
 
@@ -38,16 +39,15 @@ class DegineBOQ extends Model<DegineBOQAttributes, DegineBOQCreationAttributes> 
   public termsCondition!: string;
   public signName!: string;
   public designation!: string;
-  public projectId!: string;  // New field
-  public subject?: string;    // Optional field
-  public firstPera?: string; // Optional field
-  public secondPera?: string; // Optional field
+  public projectId!: string;
+  public sisterConcernId!: number; // New field
+  public subject?: string;
+  public firstPera?: string;
+  public secondPera?: string;
   public feesProposal?: string;
-  public feesProposalNote1?: string; // Optional field
-  public feesProposalNote2?: string; // Optional field
-  public date?: string; // Optional field
-
-  
+  public feesProposalNote1?: string;
+  public feesProposalNote2?: string;
+  public date?: string;
 }
 
 DegineBOQ.init(
@@ -98,38 +98,42 @@ DegineBOQ.init(
       type: DataTypes.STRING,
       allowNull: true,
     },
-    projectId: {  // New field
-      type: DataTypes.STRING,
-      allowNull: true, // Can be null initially
-    },
-    subject: {  // New optional field
+    projectId: {
       type: DataTypes.STRING,
       allowNull: true,
     },
-    firstPera: { // New optional field
-      type: DataTypes.TEXT,
-      allowNull: true,
+    sisterConcernId: { // New field
+      type: DataTypes.INTEGER,
+      allowNull: false,  // Assuming every record must belong to a sister concern
     },
-    secondPera: { // New optional field
-      type: DataTypes.TEXT,
-      allowNull: true,
-    },
-    feesProposal: {  // New optional field
-      type: DataTypes.TEXT,
-      allowNull: true,
-    },
-    feesProposalNote1: {  // New optional field
-      type: DataTypes.TEXT,
-      allowNull: true,
-    },
-    feesProposalNote2: {  // New optional field
-      type: DataTypes.TEXT,
-      allowNull: true,
-    },
-    date:{
+    subject: {
       type: DataTypes.STRING,
       allowNull: true,
-    }
+    },
+    firstPera: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
+    secondPera: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
+    feesProposal: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
+    feesProposalNote1: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
+    feesProposalNote2: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
+    date: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
   },
   {
     sequelize: db,

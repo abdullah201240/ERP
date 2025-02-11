@@ -59,7 +59,7 @@ router.post('/degineBOQ',verifyJWT, createDegineBOQ);
 // Route to get all DegineBOQs
 router.get('/degineBOQ', viewAllDegineBOQs);
 
-router.get('/getAllBOQ', getAllBOQ);
+router.get('/getAllBOQ/:id', getAllBOQ);
 
 
 

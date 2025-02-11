@@ -33,7 +33,6 @@ interface BoqDetails {
 }
 
 export default function CreateDesignInvoiceForm() {
-    const [token, setToken] = useState<string | null>(null);
     const router = useRouter();
     const [isClient, setIsClient] = useState(false);
 
@@ -56,28 +55,55 @@ export default function CreateDesignInvoiceForm() {
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [reloadTable, setReloadTable] = useState(false);
+    const [user, setUser] = useState({ name: '', email: '', id: '', sisterConcernId: '' });
 
     useEffect(() => {
-        if (typeof window !== 'undefined') {
+        
             const storedToken = localStorage.getItem('accessToken');
             if (!storedToken) {
                 router.push('/');
-            } else {
-                setToken(storedToken);
-            }
-        }
+            } 
     }, [router]);
 
     useEffect(() => {
         setIsClient(true);
     }, []);
+    const fetchCompanyProfile = useCallback(async () => {
+        const token = localStorage.getItem('accessToken');
 
+        try {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}employee/auth/profile`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            const data = await response.json();
+            if (data.success) {
+                setUser({ name: data.data.name, email: data.data.email, id: data.data.id, sisterConcernId: data.data.sisterConcernId });
+
+            }
+        } catch (error) {
+            console.error('Error fetching profile:', error);
+        }
+    }, []);
+    useEffect(() => {
+        const token = localStorage.getItem('accessToken');
+
+        if (!token) {
+            router.push('/'); // Redirect to login page if token doesn't exist
+        } else {
+            fetchCompanyProfile();
+        }
+    }, [router, fetchCompanyProfile]);
     const fetchBoqs = useCallback(
         async (pageNumber = 1, query = '') => {
             setLoading(true);
             try {
+                const token = localStorage.getItem('accessToken');
+                if(user.sisterConcernId){
+                    return
+                }
+
                 const response = await fetch(
-                    `${process.env.NEXT_PUBLIC_API_URL}projects/getAllBOQ?page=${pageNumber}&limit=10&search=${query}`,
+                    `${process.env.NEXT_PUBLIC_API_URL}projects/getAllBOQ/${user.sisterConcernId}?page=${pageNumber}&limit=10&search=${query}`,
                     { headers: { Authorization: `Bearer ${token}` } }
                 );
 
@@ -99,14 +125,16 @@ export default function CreateDesignInvoiceForm() {
                 setLoading(false);
             }
         },
-        [token]
+        [user]
     );
 
     useEffect(() => {
+        const token = localStorage.getItem('accessToken');
+
         if (token) {
             fetchBoqs(1, searchQuery);
         }
-    }, [token, searchQuery, fetchBoqs]);
+    }, [ searchQuery, fetchBoqs]);
 
     const handleInputChange = (inputValue: string) => {
         setSearchQuery(inputValue);
@@ -163,7 +191,8 @@ export default function CreateDesignInvoiceForm() {
 
         try {
             setLoading(true);
-           
+            const token = localStorage.getItem('accessToken');
+
             // Simulate API call
             const response = await fetch(
                 `${process.env.NEXT_PUBLIC_API_URL}projects/degineInvoice`,
