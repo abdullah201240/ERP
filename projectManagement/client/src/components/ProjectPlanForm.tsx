@@ -60,6 +60,7 @@ export default function ProjectPlanForm() {
     const [totalPages, setTotalPages] = useState(1);
     const [reloadTable, setReloadTable] = useState(false);
     const [employeeDetails, setEmployeeDetails] = useState<EmployeeDetails | null>(null);
+    const [projectSelected, setProjectSelected] = useState(false);
 
     useEffect(() => {
         // Check if we are running on the client-side (to access localStorage
@@ -174,6 +175,8 @@ export default function ProjectPlanForm() {
                 });
             }
         }
+        // Set a state variable to indicate that a project has been selected
+        setProjectSelected(!!newValue);
     };
 
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -199,15 +202,7 @@ export default function ProjectPlanForm() {
                 toast.error('Failed to add Project Site Visit Plan');
             } else {
                 toast.success('Project Site Visit Plan added successfully!');
-                // Reset the form fields
-                setSelectedProject(null);
-                setProjectDetails({
-                    projectAddress: '',
-                    clientName: '',
-                    clientContact: '',
-                    projectName: '',
-                });
-                setVisitDateTime('');
+                
 
                 // Trigger table reload
                 setReloadTable((prev) => !prev);
@@ -316,7 +311,9 @@ export default function ProjectPlanForm() {
                 <h1 className="text-center text-xl mb-4">Project Site Visit Plan </h1>
 
                 <div className="w-[98vw] md:w-full">
-                    <ProjectPlanTable reload={reloadTable} />
+                    {projectSelected && selectedProject !== null && (
+                        <ProjectPlanTable reload={reloadTable} projectId={selectedProject} />
+                    )}
                 </div>
 
             </div>

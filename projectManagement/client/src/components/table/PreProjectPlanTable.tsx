@@ -27,6 +27,7 @@ import { RiDeleteBin6Line } from "react-icons/ri";
 import Link from 'next/link';
 interface PreProjectPlanTableProps {
     reload: boolean;
+    projectId: number;
 }
 
 interface PreProjectSiteVisitPlan {
@@ -40,7 +41,7 @@ interface PreProjectSiteVisitPlan {
     assigned: { eName: string; eid: string; id: string }[];
 }
 
-const PreProjectPlanTable: React.FC<PreProjectPlanTableProps> = ({ reload }) => {
+const PreProjectPlanTable: React.FC<PreProjectPlanTableProps> = ({ reload , projectId}) => {
     const router = useRouter();
     const [projects, setProjects] = useState<PreProjectSiteVisitPlan[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
@@ -61,7 +62,7 @@ const PreProjectPlanTable: React.FC<PreProjectPlanTableProps> = ({ reload }) => 
         }
         else {
             try {
-                const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}siteVisit/view-all-pre-project-site-visit-plan?page=${currentPage}&limit=${itemsPerPage}&search=${searchQuery}`, {
+                const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}siteVisit/view-all-pre-project-site-visit-plan/${projectId}?page=${currentPage}&limit=${itemsPerPage}&search=${searchQuery}`, {
                     headers: {
                         'Authorization': token
                     }
@@ -84,7 +85,7 @@ const PreProjectPlanTable: React.FC<PreProjectPlanTableProps> = ({ reload }) => 
                 setLoading(false);
             }
         }
-    }, [token, currentPage, itemsPerPage, searchQuery, router]);
+    }, [token, currentPage, itemsPerPage, searchQuery, router,projectId]);
 
     useEffect(() => {
         fetchProjects();

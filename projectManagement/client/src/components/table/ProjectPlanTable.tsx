@@ -27,6 +27,7 @@ import { RiDeleteBin6Line } from "react-icons/ri";
 import Link from 'next/link';
 interface ProjectPlanTableProps {
     reload: boolean;
+    projectId: number;
 }
 
 interface ProjectSiteVisitPlan {
@@ -40,7 +41,7 @@ interface ProjectSiteVisitPlan {
     assigned: { eName: string; eid: string; id: string }[];
 }
 
-const ProjectPlanTable: React.FC<ProjectPlanTableProps> = ({ reload }) => {
+const ProjectPlanTable: React.FC<ProjectPlanTableProps> = ({ reload ,projectId }) => {
     const router = useRouter();
     const [projects, setProjects] = useState<ProjectSiteVisitPlan[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
@@ -61,7 +62,7 @@ const ProjectPlanTable: React.FC<ProjectPlanTableProps> = ({ reload }) => {
         }
         else {
             try {
-                const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}siteVisit/view-all-project-site-visit-plan?page=${currentPage}&limit=${itemsPerPage}&search=${searchQuery}`, {
+                const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}siteVisit/view-all-project-site-visit-plan/${projectId}?page=${currentPage}&limit=${itemsPerPage}&search=${searchQuery}`, {
                     headers: {
                         'Authorization': token
                     }
@@ -72,19 +73,17 @@ const ProjectPlanTable: React.FC<ProjectPlanTableProps> = ({ reload }) => {
                 }
                 const data = await response.json();
 
-                if (data.success && Array.isArray(data.data.preProjectSiteVisitPlan)) {
-                    setProjects(data.data.preProjectSiteVisitPlan);
-                    setTotalProjects(data.data.totalPreSiteVisitPlan);
-                } else {
-                    throw new Error('Fetched data is not in expected format');
-                }
+                
+                setProjects(data.data.projectSiteVisitPlan || []);
+                setTotalProjects(data.data.totalProjectSiteVisitPlan || 0);
+                
             } catch (err) {
                 setError((err as Error).message);
             } finally {
                 setLoading(false);
             }
         }
-    }, [token, currentPage, itemsPerPage, searchQuery, router]);
+    }, [token, currentPage, itemsPerPage, searchQuery, router,projectId]);
 
     useEffect(() => {
         fetchProjects();

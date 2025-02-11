@@ -60,16 +60,17 @@ export default function PreProjectPlanForm() {
     const [reloadTable, setReloadTable] = useState(false);
     const [token, setToken] = useState<string | null>(null); // State to store token
     const [employeeDetails, setEmployeeDetails] = useState<EmployeeDetails | null>(null);
+    const [projectSelected, setProjectSelected] = useState(false);
 
     useEffect(() => {
         // Check if we are running on the client-side (to access localStorage)
-       
-            const storedToken = localStorage.getItem('accessToken');
-            if (!storedToken) {
-                router.push('/'); // Redirect if no token is found
-            } else {
-                setToken(storedToken); // Set the token to state
-            
+
+        const storedToken = localStorage.getItem('accessToken');
+        if (!storedToken) {
+            router.push('/'); // Redirect if no token is found
+        } else {
+            setToken(storedToken); // Set the token to state
+
         }
     }, [router]);
     const fetchCompanyProfile = useCallback(async () => {
@@ -132,7 +133,7 @@ export default function PreProjectPlanForm() {
                 setLoading(false);
             }
         },
-        [token,employeeDetails] // Adding token as a dependency
+        [token, employeeDetails] // Adding token as a dependency
     );
     useEffect(() => {
         const token = localStorage.getItem('accessToken');
@@ -173,6 +174,8 @@ export default function PreProjectPlanForm() {
                 });
             }
         }
+        // Set a state variable to indicate that a project has been selected
+        setProjectSelected(!!newValue);
     };
 
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -198,15 +201,7 @@ export default function PreProjectPlanForm() {
                 toast.error('Failed to add Pre-Project Site Visit Plan');
             } else {
                 toast.success('Pre-Project Site Visit Plan added successfully!');
-                // Reset the form fields
-                setSelectedProject(null);
-                setProjectDetails({
-                    projectAddress: '',
-                    clientName: '',
-                    clientContact: '',
-                    projectName: '',
-                });
-                setVisitDateTime('');
+                
 
                 // Trigger table reload
                 setReloadTable((prev) => !prev);
@@ -315,7 +310,10 @@ export default function PreProjectPlanForm() {
                 <h1 className="text-center text-xl mb-4"> Pre Project Site Visit Plan </h1>
 
                 <div className="w-[98vw] md:w-full">
-                    <PreProjectPlanTable reload={reloadTable} />
+                    {projectSelected && selectedProject !== null && (
+                        <PreProjectPlanTable reload={reloadTable} projectId={selectedProject} />
+                    )}
+
                 </div>
 
             </div>

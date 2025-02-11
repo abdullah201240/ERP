@@ -60,6 +60,7 @@ export default function SupervisionForm() {
     const [totalPages, setTotalPages] = useState(1);
     const [reloadTable, setReloadTable] = useState(false);
     const [employeeDetails, setEmployeeDetails] = useState<EmployeeDetails | null>(null);
+    const [projectSelected, setProjectSelected] = useState(false);
 
     useEffect(() => {
         // Check if we are running on the client-side (to access localStorage)
@@ -172,6 +173,8 @@ export default function SupervisionForm() {
                 });
             }
         }
+        // Set a state variable to indicate that a project has been selected
+        setProjectSelected(!!newValue);
     };
 
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -197,15 +200,7 @@ export default function SupervisionForm() {
                 toast.error('Failed to add Supervision Site Visit Plan');
             } else {
                 toast.success('supervision Site Visit Plan added successfully!');
-                // Reset the form fields
-                setSelectedProject(null);
-                setProjectDetails({
-                    projectAddress: '',
-                    clientName: '',
-                    clientContact: '',
-                    projectName: '',
-                });
-                setVisitDateTime('');
+                
 
                 // Trigger table reload
                 setReloadTable((prev) => !prev);
@@ -314,7 +309,9 @@ export default function SupervisionForm() {
                 <h1 className="text-center text-xl mb-4">Supervision Site Visit Plan </h1>
 
                 <div className="w-[98vw] md:w-full">
-                    <SupervisionTable reload={reloadTable} />
+                {projectSelected && selectedProject !== null && (
+                        <SupervisionTable reload={reloadTable} projectId={selectedProject} />
+                    )}
                 </div>
 
             </div>

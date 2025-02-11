@@ -5,7 +5,7 @@ import { createPreProjectAssignedTo, createPreSiteVisitPlan, createProjectAssign
 const router = express.Router();
 
 router.post('/create-pre-site-visit-plan', verifyJWT, createPreSiteVisitPlan);
-router.get('/view-all-pre-project-site-visit-plan',verifyJWT, getPreProjectSiteVisitPlan);
+router.get('/view-all-pre-project-site-visit-plan/:projectId',verifyJWT, getPreProjectSiteVisitPlan);
 
 router.get("/pre-site-visit-plan/:id",verifyJWT, viewPreSiteVisitPlanById);
 
@@ -20,7 +20,7 @@ router.put("/pre-site-visit-plan/:id",verifyJWT, updatePreProjectSiteVisitPlan);
 
 
 router.post('/create-project-site-visit-plan', verifyJWT, createProjectSiteVisitPlan);
-router.get('/view-all-project-site-visit-plan',verifyJWT, getProjectSiteVisitPlan);
+router.get('/view-all-project-site-visit-plan/:projectId',verifyJWT, getProjectSiteVisitPlan);
 
 router.get("/project-site-visit-plan/:id",verifyJWT, viewProjectSiteVisitPlanById);
 
@@ -35,7 +35,7 @@ router.put("/project-site-visit-plan/:id",verifyJWT, updateProjectSiteVisitPlan)
 
 
 router.post('/create-supervision-site-visit-plan', verifyJWT, createSupervisionSiteVisitPlan);
-router.get('/view-all-supervision-site-visit-plan',verifyJWT, getSupervisionSiteVisitPlan);
+router.get('/view-all-supervision-site-visit-plan/:projectId',verifyJWT, getSupervisionSiteVisitPlan);
 
 router.get("/supervision-site-visit-plan/:id",verifyJWT, viewSupervisionSiteVisitPlanById);
 

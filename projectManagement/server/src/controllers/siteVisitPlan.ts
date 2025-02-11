@@ -63,25 +63,26 @@ export const createPreSiteVisitPlan = asyncHandler(
 
 
 
-export const getPreProjectSiteVisitPlan
-    = asyncHandler(
+    export const getPreProjectSiteVisitPlan = asyncHandler(
         async (req: Request, res: Response, next: NextFunction) => {
             const { page = 1, limit = 10, search = "" } = req.query;
-
+            const { projectId } = req.params;
+    
             // Parse page and limit as integers
             const pageNumber = parseInt(page as string, 10);
             const pageSize = parseInt(limit as string, 10);
             const offset = (pageNumber - 1) * pageSize;
-
-            // Fetch projects with pagination and search
+    
+            // Fetch projects with pagination, search, and filtering by projectId
             const { rows: preProjectSiteVisitPlan, count: totalPreSiteVisitPlan } = await PreSiteVisitPlan.findAndCountAll({
-                where: search
-                    ? {
+                where: {
+                    projectId, // Filter by projectId
+                    ...(search && {
                         projectName: {
                             [Op.like]: `%${search}%`, // Case-sensitive search for MariaDB/MySQL
                         },
-                    }
-                    : {},
+                    }),
+                },
                 include: [
                     {
                         model: AssignedPreSiteVisitPlan,
@@ -92,7 +93,7 @@ export const getPreProjectSiteVisitPlan
                 offset: offset,
                 order: [["createdAt", "DESC"]], // Sort by most recent
             });
-
+    
             return res.status(200).json({
                 success: true,
                 data: {
@@ -105,6 +106,7 @@ export const getPreProjectSiteVisitPlan
             });
         }
     );
+    
 
 
 export const deletePreSiteVisitPlan = asyncHandler(
@@ -238,7 +240,6 @@ export const deleteAssignedToPreProject = asyncHandler(
 export const updatePreProjectSiteVisitPlan = asyncHandler(
     async (req: Request, res: Response, next: NextFunction) => {
         const { id } = req.params;
-        console.log(req.body)
         // Validate project existence
         const project = await PreSiteVisitPlan.findByPk(id);
         if (!project) {
@@ -317,7 +318,6 @@ export const updatePreProjectSiteVisitPlan = asyncHandler(
 
 export const createSupervisionSiteVisitPlan = asyncHandler(
     async (req: Request, res: Response, next: NextFunction) => {
-        console.log(req.body)
 
         const result = SupervisionSiteVisitPlanSchema.safeParse(req.body);
 
@@ -368,25 +368,26 @@ export const createSupervisionSiteVisitPlan = asyncHandler(
 
 
 
-export const getSupervisionSiteVisitPlan
-    = asyncHandler(
+    export const getSupervisionSiteVisitPlan = asyncHandler(
         async (req: Request, res: Response, next: NextFunction) => {
             const { page = 1, limit = 10, search = "" } = req.query;
-
+            const { projectId } = req.params;
+    
             // Parse page and limit as integers
             const pageNumber = parseInt(page as string, 10);
             const pageSize = parseInt(limit as string, 10);
             const offset = (pageNumber - 1) * pageSize;
-
-            // Fetch projects with pagination and search
-            const { rows: preProjectSiteVisitPlan, count: totalPreSiteVisitPlan } = await SupervisionSiteVisitPlan.findAndCountAll({
-                where: search
-                    ? {
+    
+            // Fetch supervision site visit plans with pagination, search, and filtering by projectId
+            const { rows: supervisionSiteVisitPlan, count: totalSupervisionSiteVisitPlan } = await SupervisionSiteVisitPlan.findAndCountAll({
+                where: {
+                    projectId, // Filter by projectId
+                    ...(search && {
                         projectName: {
                             [Op.like]: `%${search}%`, // Case-sensitive search for MariaDB/MySQL
                         },
-                    }
-                    : {},
+                    }),
+                },
                 include: [
                     {
                         model: AssignedSupervisionSiteVisitPlan,
@@ -397,20 +398,20 @@ export const getSupervisionSiteVisitPlan
                 offset: offset,
                 order: [["createdAt", "DESC"]], // Sort by most recent
             });
-
+    
             return res.status(200).json({
                 success: true,
                 data: {
-                    preProjectSiteVisitPlan,
-                    totalPreSiteVisitPlan,
-                    totalPages: Math.ceil(totalPreSiteVisitPlan / pageSize),
+                    supervisionSiteVisitPlan,
+                    totalSupervisionSiteVisitPlan,
+                    totalPages: Math.ceil(totalSupervisionSiteVisitPlan / pageSize),
                     currentPage: pageNumber,
                 },
                 message: "Supervision Site Visit Plan retrieved successfully",
             });
         }
     );
-
+    
 
 export const deleteSupervisionSiteVisitPlan = asyncHandler(
     async (req: Request, res: Response, next: NextFunction) => {
@@ -665,25 +666,26 @@ export const createProjectSiteVisitPlan = asyncHandler(
 
 
 
-export const getProjectSiteVisitPlan
-    = asyncHandler(
+    export const getProjectSiteVisitPlan = asyncHandler(
         async (req: Request, res: Response, next: NextFunction) => {
             const { page = 1, limit = 10, search = "" } = req.query;
-
+            const { projectId } = req.params;
+    
             // Parse page and limit as integers
             const pageNumber = parseInt(page as string, 10);
             const pageSize = parseInt(limit as string, 10);
             const offset = (pageNumber - 1) * pageSize;
-
-            // Fetch projects with pagination and search
-            const { rows: preProjectSiteVisitPlan, count: totalPreSiteVisitPlan } = await ProjectSiteVisitPlan.findAndCountAll({
-                where: search
-                    ? {
+    
+            // Fetch projects with pagination, search, and filtering by projectId
+            const { rows: projectSiteVisitPlan, count: totalProjectSiteVisitPlan } = await ProjectSiteVisitPlan.findAndCountAll({
+                where: {
+                    projectId, // Filter by projectId
+                    ...(search && {
                         projectName: {
                             [Op.like]: `%${search}%`, // Case-sensitive search for MariaDB/MySQL
                         },
-                    }
-                    : {},
+                    }),
+                },
                 include: [
                     {
                         model: AssignedProjectSiteVisitPlan,
@@ -694,19 +696,20 @@ export const getProjectSiteVisitPlan
                 offset: offset,
                 order: [["createdAt", "DESC"]], // Sort by most recent
             });
-
+    
             return res.status(200).json({
                 success: true,
                 data: {
-                    preProjectSiteVisitPlan,
-                    totalPreSiteVisitPlan,
-                    totalPages: Math.ceil(totalPreSiteVisitPlan / pageSize),
+                    projectSiteVisitPlan,
+                    totalProjectSiteVisitPlan,
+                    totalPages: Math.ceil(totalProjectSiteVisitPlan / pageSize),
                     currentPage: pageNumber,
                 },
                 message: "Project Site Visit Plan retrieved successfully",
             });
         }
     );
+    
 
 
 export const deleteProjectSiteVisitPlan = asyncHandler(
