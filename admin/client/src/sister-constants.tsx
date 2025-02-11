@@ -5,7 +5,7 @@ import { SideNavItem } from './types';
 export const SIDENAV_ITEMS_SISTER: SideNavItem[] = [
   {
     title: 'Dashboard',
-    path: '/dashboard',
+    path: '/sisterConcern/dashboard',
     icon: <Icon icon="material-symbols:dashboard-rounded" width="19" height="19" />,
   },
 

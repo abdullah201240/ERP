@@ -44,7 +44,6 @@ Employee.init(
     employeeId: {
       type: DataTypes.STRING,
       allowNull: false,
-      unique: true,
     },
     name: {
       type: DataTypes.STRING,

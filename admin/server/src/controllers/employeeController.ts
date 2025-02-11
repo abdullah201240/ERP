@@ -15,7 +15,33 @@ const EMPLOYEE_CACHE_KEY = "employees";
 
 // Helper function to remove product-related caches
 const clearEmployeeCache = async () => {
-  await redisClient.del(EMPLOYEE_CACHE_KEY);
+  try {
+    let cursor = 0; // Cursor must be a number, not a string
+    let totalKeysDeleted = 0;
+
+    do {
+      // Use SCAN to find all keys matching the pattern "employees:*"
+      const reply = await redisClient.scan(cursor, {
+        MATCH: 'employees:*',
+        COUNT: 100,
+      });
+
+      // Update the cursor for the next iteration
+      cursor = reply.cursor;
+
+      // Delete all matching keys
+      const keys = reply.keys;
+      if (keys.length > 0) {
+        await redisClient.del(keys);
+        totalKeysDeleted += keys.length;
+        console.log(`Deleted ${keys.length} cache keys:`, keys);
+      }
+    } while (cursor !== 0); // Continue until the cursor returns to 0
+
+    console.log(`Total employee-related cache keys cleared: ${totalKeysDeleted}`);
+  } catch (error) {
+    console.error("Failed to clear employee cache:", error);
+  }
 };
 
 const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET || "LD9cv1kBfgRHVIg9GG_OGzh9TUkcyqgZAaM0o3DmVkx08MCFRSzMocyO3UtNdDNtoCJ0X0-5nLwK7fdO"; // Fallback to a hardcoded secret if not in env
@@ -88,12 +114,25 @@ export const createEmployee = asyncHandler(
 
     // Exclude the password from the response
     const { password: _, ...employeeResponse } = newEmployee.toJSON();
-    // Clear cached product list
-    await clearEmployeeCache();
 
-    return res
-      .status(201)
-      .json({ message: "Employee created successfully", employee: employeeResponse });
+    try {
+      // Attempt to clear the cache
+      await clearEmployeeCache();
+      console.log("Cache cleared successfully"); // Log success
+      return res.status(201).json({ 
+        message: "Employee created successfully", 
+        employee: employeeResponse,
+        cacheMessage: "Cache cleared successfully" // Indicate cache was cleared
+      });
+    } catch (error) {
+      console.error("Failed to clear cache:", error); // Log the error
+      return res.status(201).json({ 
+        message: "Employee created successfully", 
+        employee: employeeResponse,
+        cacheMessage: "Cache not cleared" // Indicate cache was not cleared
+      });
+    }
+    
   }
 );
 

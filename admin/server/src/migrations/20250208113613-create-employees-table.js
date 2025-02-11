@@ -12,7 +12,6 @@ module.exports = {
       employeeId: {
         type: Sequelize.STRING,
         allowNull: false,
-        unique: true,
       },
       name: {
         type: Sequelize.STRING,
