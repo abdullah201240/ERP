@@ -295,7 +295,56 @@ export const createProduct = asyncHandler(
     }
 );
 
+export const getAllProductBySearch = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction) => {
+        const { page = 1, limit = 10, searchProduct = "" } = req.query;
+        const { id } = req.params;
 
+        // Parse page and limit as integers
+        const pageNumber = parseInt(page as string, 10);
+        const pageSize = parseInt(limit as string, 10);
+        const offset = (pageNumber - 1) * pageSize;
+        const cacheKey = `products:${id}:page=${pageNumber}:limit=${pageSize}:searchProduct=${searchProduct || "all"}`;
+
+        // Try to fetch the data from Redis first
+        const cachedData = await redisClient.get(cacheKey);
+        if (cachedData) {
+            console.log("Retrieving data from cache");
+            return res.status(200).json(JSON.parse(cachedData));
+        } else {
+            console.log("MISS data from cache");
+        }
+        // Define where condition
+        const whereCondition: any = { sisterConcernId: id };
+        // Apply search filter if it's not empty
+        if (searchProduct) {
+            whereCondition.product_category = { [Op.like]: `%${searchProduct}%` }; // Case-insensitive search
+        }
+        // Fetch from DB if not cached
+        const { rows: products, count: totalProducts } = await Product.findAndCountAll({
+            where: whereCondition,
+            limit: pageSize,
+            offset,
+            order: [["createdAt", "ASC"]],
+        });
+
+        const response = {
+            success: true,
+            data: {
+                products,
+                totalProducts,
+                totalPages: Math.ceil(totalProducts / pageSize),
+                currentPage: pageNumber,
+            },
+            message: "Products retrieved successfully",
+        };
+
+        // Store response in Redis for 10 minutes
+        await redisClient.setEx(cacheKey, 600, JSON.stringify(response));
+
+        return res.status(200).json(response);
+    }
+);
 
 export const getAllProduct = asyncHandler(
     async (req: Request, res: Response, next: NextFunction) => {

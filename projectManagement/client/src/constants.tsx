@@ -39,9 +39,11 @@ export const SIDENAV_ITEMS: SideNavItem[] = [
       { title: 'Generate Invoice', path: '/generate-invoice' },
       { title: 'Work Category', path: '/work-category' },
       { title: 'Upload Working Drawing', path: '/upload-working-drawing' },
+      { title: 'Add Materials', path: '/addMaterials' },
+
       { title: 'Review Working Drawing BOQ', path: '/review-working-drawing-boq' },
      
-
+      
     ],
   },
 

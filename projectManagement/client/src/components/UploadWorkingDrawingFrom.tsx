@@ -256,6 +256,7 @@ export default function UploadWorkingDrawingFrom() {
             toast.error('Please select a project');
             return;
         }
+        if (!employeeDetails) return;
 
         const form = new FormData();
         form.append('projectId', selectedProject.toString());
@@ -269,6 +270,8 @@ export default function UploadWorkingDrawingFrom() {
         form.append('clientContact', projectDetails.clientContact);
         form.append('projectAddress', projectDetails.projectAddress);
         form.append('projectName', projectDetails.projectName);
+        form.append('sisterConcernId', employeeDetails.sisterConcernId);
+
 
         // Append each file
         uploadDesignWorkingDrawings.forEach((file) => {

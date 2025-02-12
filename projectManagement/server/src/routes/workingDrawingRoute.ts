@@ -1,6 +1,6 @@
 import express from "express";
 import { verifyJWT } from "../middleware/auth"; 
-import { addWorkingDrawingImage, createCategory, createUploadDrawing, deleteCategory, deleteDrawing, deleteWorkingDrawingImage, updateCategory, updateDrawing, viewAllDrawings, viewCategory, viewDrawingById } from "../controllers/workingDrawingController";
+import { addWorkingDrawingImage, createCategory, createUploadDrawing, deleteCategory, deleteDrawing, deleteWorkingDrawingImage, updateCategory, updateDrawing, viewAllDrawings, viewCategory, viewDrawingById, viewDrawingBySisterConcernId } from "../controllers/workingDrawingController";
 import upload from "../middleware/uploadMiddleware";
 const router = express.Router();
 
@@ -16,6 +16,8 @@ router.get('/drawingAll/:projectId', viewAllDrawings);
 
 // View a specific working drawing by ID
 router.get('/drawing/:id', viewDrawingById);
+router.get('/drawingSisterConcernId/:sisterConcernId', viewDrawingBySisterConcernId);
+
 
 // Delete a working drawing by ID
 router.delete('/drawing/:id', deleteDrawing);

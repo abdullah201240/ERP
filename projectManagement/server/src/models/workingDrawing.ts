@@ -15,6 +15,8 @@ interface WorkingDrawingAttributes {
   clientContact: string;
   projectAddress: string;
   projectName: string; 
+  sisterConcernId?: string; // Add this line
+
 }
 
 // Interface for creating new WorkingDrawing (excluding id as it's auto-generated)
@@ -33,6 +35,8 @@ class WorkingDrawing extends Model<WorkingDrawingAttributes, WorkingDrawingCreat
   public clientContact!: string;
   public projectAddress!: string;
   public projectName!: string;
+  public sisterConcernId?: string;
+
 
 }
 
@@ -87,7 +91,11 @@ WorkingDrawing.init(
     projectName: {
       type: DataTypes.STRING,
       allowNull: false,
-    }
+    },
+    sisterConcernId: { // Add this line
+      type: DataTypes.STRING,
+      allowNull: true, // Set it to false if you want this field to be required
+    },
   },
   {
     sequelize: db, // Use the passed `sequelizeInstance`

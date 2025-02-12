@@ -118,7 +118,7 @@ export const createUploadDrawing = asyncHandler(
     async (req: Request, res: Response, next: NextFunction) => {
         const {
             projectId, itemName, brandModel, itemQuantity, itemDescription,
-            unit, category, clientName, clientContact, projectAddress, projectName
+            unit, category, clientName, clientContact, projectAddress, projectName,sisterConcernId
         } = req.body;
 
         // Check if files are uploaded
@@ -128,7 +128,7 @@ export const createUploadDrawing = asyncHandler(
 
         // Check for required fields
         if (!projectId || !itemName || !itemQuantity || !itemDescription ||
-            !unit || !category || !clientName || !clientContact || !projectAddress || !projectName) {
+            !unit || !category || !clientName || !clientContact || !projectAddress || !projectName ||!sisterConcernId) {
             throw new ApiError('All fields are required', 400, 'BAD_REQUEST');
         }
 
@@ -145,6 +145,7 @@ export const createUploadDrawing = asyncHandler(
             clientContact,
             projectAddress,
             projectName,
+            sisterConcernId
         });
 
         // Upload the images and create WorkingDrawingImage records
@@ -215,6 +216,32 @@ export const viewAllDrawings = asyncHandler(
 );
 
 
+
+export const viewDrawingBySisterConcernId = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction) => {
+        const { sisterConcernId } = req.params;
+
+        // Find the working drawings by sisterConcernId
+        const drawings = await WorkingDrawing.findAll({
+            where: { sisterConcernId }, // Filter by sisterConcernId
+            include: [
+                {
+                    model: WorkingDrawingImage,
+                    as: 'images', // Alias defined in the relationship
+                },
+            ],
+        });
+
+        // Check if drawings are found
+        if (!drawings || drawings.length === 0) {
+            throw new ApiError('Drawing not found', 404, 'NOT_FOUND');
+        }
+
+        return res.status(200).json(
+            ApiResponse.success(drawings, 'Working Drawing retrieved successfully')
+        );
+    }
+);
 
 // View a specific working drawing by ID
 export const viewDrawingById = asyncHandler(
