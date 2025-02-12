@@ -188,7 +188,7 @@ const DesignFinalGenerateQutationTable: React.FC<DesignFinalGenerateQutationTabl
         }
     }, [token, router, boqId]);
     // Fetch projects
-    const fetchTask = useCallback(async () => {
+    const fetchTask = useCallback(async () => { 
         if (!token) {
             router.push('/');
         } else if (boq?.projectId) { // Ensure boq and projectId are available

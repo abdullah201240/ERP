@@ -54,7 +54,7 @@ export const SIDENAV_ITEMS: SideNavItem[] = [
   },
   {
     title: 'Manage Client Data',
-    path: '/help',
+    path: '/manage-client-data',
     icon: <Icon icon="lucide:user" width="19" height="19" />,
   },
   
