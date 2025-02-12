@@ -73,7 +73,10 @@ export default function EditProductPage() {
                 router.push('/');
                 return;
             }
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}product/category`, {
+            if(!user.sisterConcernId){
+                return
+            }
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}product/category/${user.sisterConcernId}`, {
                 headers: {
                     Authorization: token,
                 },
@@ -90,16 +93,19 @@ export default function EditProductPage() {
             console.error('Error fetching categories:', error);
             setCategories([]);
         }
-    }, [router]);
+    }, [router,user]);
 
     const fetchUnit = useCallback(async () => {
         try {
+            if(!user.sisterConcernId){
+                return
+            }
             const token = localStorage.getItem('accessTokenpq');
             if (!token) {
                 router.push('/');
                 return;
             }
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}product/unit`, {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}product/unit/${user.sisterConcernId}`, {
                 headers: {
                     Authorization: token,
                 },
@@ -116,7 +122,7 @@ export default function EditProductPage() {
             console.error('Error fetching units:', error);
             setUnits([]);
         }
-    }, [router]);
+    }, [router,user]);
 
     const fetchProduct = useCallback(async () => {
         try {
@@ -125,7 +131,7 @@ export default function EditProductPage() {
                 router.push('/');
                 return;
             }
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}product/product/${id}`, {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}product/productById/${id}`, {
                 headers: {
                     Authorization: token,
                 },

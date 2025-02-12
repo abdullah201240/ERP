@@ -1,6 +1,6 @@
 import express from "express";
 import { verifyJWT } from "../middleware/auth"; 
-import { createAssignedTo, createDegineBOQ, createDesignPlan, createProject, createService, degineBOQPart, degineInvoiceCreate, deleteAssignedTo, deleteDegineBOQById, deleteDegineBOQPartById, deleteDesignPlan, deleteProject, deleteService, getAllBOQ, getDesignPlans, getDesignPlansProject, getProjectById, getProjectsPaginated, updateCompletionPercentage, updateDegineBOQById, updateDesignPlan, updateProject, updateService, viewAllDegineBOQPart, viewAllDegineBOQs, viewAllDegineInvoice, viewAllDegineInvoiceById, viewAllServices, viewDegineBOQById, viewServiceById } from "../controllers/projectController";
+import { createAssignedTo, createDegineBOQ, createDesignPlan, createProject, createService, degineBOQPart, degineInvoiceCreate, deleteAssignedTo, deleteDegineBOQById, deleteDegineBOQPartById, deleteDesignInvoice, deleteDesignPlan, deleteProject, deleteService, getAllBOQ, getDesignPlans, getDesignPlansProject, getProjectById, getProjectsPaginated, updateCompletionPercentage, updateDegineBOQById, updateDesignPlan, updateProject, updateService, viewAllDegineBOQPart, viewAllDegineBOQs, viewAllDegineInvoice, viewAllDegineInvoiceById, viewAllServices, viewDegineBOQById, viewServiceById } from "../controllers/projectController";
 
 const router = express.Router();
 
@@ -84,6 +84,7 @@ router.get('/degineInvoice/:boqId', viewAllDegineInvoice);
 
 router.get('/degineInvoiceById/:id', viewAllDegineInvoiceById);
 
+router.delete('/degineInvoice/:id', deleteDesignInvoice);
 
 
 

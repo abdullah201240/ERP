@@ -11,7 +11,6 @@ import redisClient from "../config/redisClient";
 
 
 
-const EMPLOYEE_CACHE_KEY = "employees";
 
 // Helper function to remove product-related caches
 const clearEmployeeCache = async () => {

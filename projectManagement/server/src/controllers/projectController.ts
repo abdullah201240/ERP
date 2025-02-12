@@ -1323,3 +1323,31 @@ export const viewAllDegineInvoiceById = asyncHandler(
 );
 
 
+export const deleteDesignInvoice = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction) => {
+
+        const { id } = req.params; // Get the design invoice ID from the URL params
+
+        // Find the design invoice first
+        const designInvoice = await DesignInvoice.findOne({
+            where: {
+                id,
+            },
+        });
+
+        if (!designInvoice) {
+            return res.status(404).json({
+                success: false,
+                message: 'DesignInvoice not found',
+            });
+        }
+
+        // Delete the design invoice
+        await designInvoice.destroy();
+
+        return res.status(200).json({
+            success: true,
+            message: 'DesignInvoice deleted successfully',
+        });
+    }
+);

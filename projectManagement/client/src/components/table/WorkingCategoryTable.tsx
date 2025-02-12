@@ -41,19 +41,59 @@ const WorkingCategoryTable: React.FC<WorkingCategoryTableProps> = ({ reload }) =
     const [editCategory, setEditCategory] = useState<Category | null>(null);
     const [editedName, setEditedName] = useState<string>("");
     const router = useRouter();
+    const [user, setUser] = useState({ name: '', email: '', id: '', sisterConcernId: '' });
 
     // Fetch categories from API
-
+    useEffect(() => {
+        const checkTokenAndFetchProfile = async () => {
+          // Check if the access token exists in localStorage
+          const token = localStorage.getItem('accessToken');
+    
+          // If the token does not exist, redirect to the login page
+          if (!token) {
+            router.push('/'); // Adjust the path to your login page
+            return; // Exit the function early
+          }
+    
+          try {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}employee/auth/profile`, {
+              headers: {
+                'Authorization': token
+              }
+            });
+    
+            if (!response.ok) {
+              router.push('/'); // Adjust the path to your login page
+              return; // Exit the function early
+            }
+            const data = await response.json();
+                if (data.success) {
+                    setUser({ name: data.data.name, email: data.data.email, id: data.data.id, sisterConcernId: data.data.sisterConcernId });
+    
+                }
+    
+            // Handle the response data here if needed
+          } catch (error) {
+            console.error(error);
+            // Handle error (e.g., show a notification)
+          }
+        };
+    
+        checkTokenAndFetchProfile();
+      }, [router]);
 
     const fetchCategories = useCallback(async () => {
 
         try {
+            if(!user.sisterConcernId){
+                return
+            }
             const token = localStorage.getItem('accessToken');
             if (!token) {
                 router.push('/'); // Adjust the path to your login page
                 return; // Exit the function early
             }
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}workingDrawing/category`, {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}workingDrawing/category?sisterConcernId=${user.sisterConcernId}`, {
                 headers: {
                     'Authorization': token,
 
@@ -73,7 +113,7 @@ const WorkingCategoryTable: React.FC<WorkingCategoryTableProps> = ({ reload }) =
             console.error("Error fetching categories:", error);
             setCategories([]); // Default to an empty array in case of error
         }
-    }, [router]);
+    }, [router,user]);
     useEffect(() => {
         fetchCategories();
     }, [reload, fetchCategories]);

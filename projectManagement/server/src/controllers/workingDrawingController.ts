@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from "express";
-import { asyncHandler, ApiError, ApiResponse } from "../utils/root";
+import { asyncHandler, ApiError, ApiResponse, ErrorCodes } from "../utils/root";
 import '../models/association';
 import WorkCategory from "../models/workCategory";
 import WorkingDrawing from '../models/workingDrawing'
@@ -12,11 +12,13 @@ export const createCategory = asyncHandler(
 
         const {
             name,
+            sisterConcernId
+
 
         } = req.body;
 
         // Check for required fields
-        if (!name) {
+        if (!name || !sisterConcernId) {
             throw new ApiError('All fields are required', 400, 'BAD_REQUEST');
         }
 
@@ -24,7 +26,8 @@ export const createCategory = asyncHandler(
 
         // Create the WorkCategory record
         const createWork = await WorkCategory.create({
-            name
+            name,
+            sisterConcernId
         });
 
         return res.status(201).json(
@@ -35,10 +38,27 @@ export const createCategory = asyncHandler(
 
 export const viewCategory = asyncHandler(
     async (req: Request, res: Response, next: NextFunction) => {
+        // Get sisterConcernId from query parameters or request body
+        const sisterConcernId = req.query.sisterConcernId;
 
+        if (!sisterConcernId) {
+            throw new ApiError('Sister Concern ID is required', 400, ErrorCodes.BAD_REQUEST.code);
+        }
 
+        // Convert sisterConcernId to a number
+        const numericSisterConcernId = Number(sisterConcernId);
+        if (isNaN(numericSisterConcernId)) {
+            throw new ApiError('Invalid Sister Concern ID', 400, ErrorCodes.BAD_REQUEST.code);
+        }
 
-        const viewWork = await WorkCategory.findAll();
+        // Fetch records where sisterConcernId matches the given value
+        const viewWork = await WorkCategory.findAll({
+            where: {
+                sisterConcernId: numericSisterConcernId,  // Condition to match sisterConcernId
+            },
+        });
+
+       
 
         return res.status(200).json(
             ApiResponse.success(viewWork, 'View Work Category retrieved successfully')

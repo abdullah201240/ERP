@@ -80,7 +80,10 @@ export default function Page() {
                 router.push('/');
                 return;
             }
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}product/category`, {
+            if(!user.sisterConcernId){
+                return
+            }
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}product/category/${user.sisterConcernId}`, {
                 headers: {
                     Authorization: token,
                 },
@@ -97,16 +100,19 @@ export default function Page() {
             console.error('Error fetching categories:', error);
             setCategories([]);
         }
-    }, [router]);
+    }, [router,user]);
 
     const fetchUnit = useCallback(async () => {
         try {
+            if(!user.sisterConcernId){
+                return
+            }
             const token = localStorage.getItem('accessTokenpq');
             if (!token) {
                 router.push('/');
                 return;
             }
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}product/unit`, {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}product/unit/${user.sisterConcernId}`, {
                 headers: {
                     Authorization: token,
                 },
@@ -123,7 +129,7 @@ export default function Page() {
             console.error('Error fetching units:', error);
             setUnits([]);
         }
-    }, [router]);
+    }, [router,user]);
 
     useEffect(() => {
         const token = localStorage.getItem('accessTokenpq');

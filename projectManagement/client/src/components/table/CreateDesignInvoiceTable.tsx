@@ -92,7 +92,7 @@ const CreateDesignInvoiceTable: React.FC<CreateDesignInvoiceTableProps> = ({ rel
             router.push('/');
         } else {
             try {
-                const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}projects/designBoqPart/${deleteId}`, {
+                const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}projects/degineInvoice/${deleteId}`, {
                     method: 'DELETE',
                     headers: {
                         'Authorization': token
@@ -153,8 +153,8 @@ const CreateDesignInvoiceTable: React.FC<CreateDesignInvoiceTableProps> = ({ rel
                             return (
                                 <TableRow key={boq.id} className='text-center'>
                                     <TableCell className="border border-[#e5e7eb] text-3xl flex justify-center items-center">
-                                        <Link  href={`/invoice/designInvoice/${boq.id}`}>
-                                        <FaFileInvoice className="opacity-50 cursor-pointer" />
+                                    <Link href={`/invoice/designInvoice/${boq.id}`} target="_blank">
+                                    <FaFileInvoice className="opacity-50 cursor-pointer" />
                                         </Link>
                                     </TableCell>
 

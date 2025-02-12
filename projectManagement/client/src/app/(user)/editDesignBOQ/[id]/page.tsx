@@ -58,8 +58,11 @@ export default function UpdateProjectPage() {
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isClient, setIsClient] = useState(false);
 
-
+  useEffect(() => {
+    setIsClient(true); // Marks that we are in the client-side
+}, []);
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
@@ -159,7 +162,18 @@ export default function UpdateProjectPage() {
       setError(errorMessage);
     }
   };
+  const handlePaste = (event: React.ClipboardEvent<HTMLDivElement>) => {
+    const clipboardData = event.clipboardData;
+    const pastedData = clipboardData.getData('text');
 
+    setFormData((prevState: FormData) => ({
+        ...prevState,
+        termsCondition: prevState.termsCondition + pastedData,
+    }));
+};
+if (!isClient) {
+    return null; // Or show a loading state
+} 
   if (loading) {
     return <div>Loading...</div>;
   }
@@ -385,18 +399,22 @@ export default function UpdateProjectPage() {
             {/* Terms & Conditions Editor */}
             <div className="col-span-full">
               <label className="text-white mb-2">Terms & Conditions</label>
-              <ReactEditor
-                value={formData.termsCondition || ""}
-                onChange={(value: string) => {
-                  setFormData({
-                    ...formData,
-                    termsCondition: value,
-                  });
-                }}
-                mainProps={{ className: "black" }}
-                placeholder="Terms & Condition"
-                className="w-full"
-              />
+
+              <div onPaste={handlePaste}>
+                                <ReactEditor
+                                    value={formData.termsCondition || ""}
+                                    onChange={(value) => {
+                                      setFormData({
+                                            ...formData,
+                                            termsCondition: value,
+                                        });
+                                    }}
+                                    mainProps={{ className: "black" }}
+                                    placeholder="Terms & Condition"
+                                    className="w-full"
+                                />
+                            </div>
+              
             </div>
           </div>
 

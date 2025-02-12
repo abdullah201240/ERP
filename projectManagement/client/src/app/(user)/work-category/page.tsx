@@ -7,6 +7,8 @@ export default function ProductCategoryPage() {
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [categoryName, setCategoryName] = useState('');
   const [reloadTable, setReloadTable] = useState(false);
+  const [user, setUser] = useState({ name: '', email: '', id: '', sisterConcernId: '' });
+
   const router = useRouter();
 
   useEffect(() => {
@@ -31,6 +33,11 @@ export default function ProductCategoryPage() {
           router.push('/'); // Adjust the path to your login page
           return; // Exit the function early
         }
+        const data = await response.json();
+            if (data.success) {
+                setUser({ name: data.data.name, email: data.data.email, id: data.data.id, sisterConcernId: data.data.sisterConcernId });
+
+            }
 
         // Handle the response data here if needed
       } catch (error) {
@@ -59,6 +66,7 @@ export default function ProductCategoryPage() {
         router.push('/'); // Adjust the path to your login page
         return; // Exit the function early
       }
+     
       // Replace with your API endpoint
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}workingDrawing/category`, {
         method: 'POST',
@@ -66,7 +74,7 @@ export default function ProductCategoryPage() {
           'Authorization': token,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ name: categoryName }),
+        body: JSON.stringify({ name: categoryName ,sisterConcernId: user.sisterConcernId }),
       });
 
       if (response.ok) {

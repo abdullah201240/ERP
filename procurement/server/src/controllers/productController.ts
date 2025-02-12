@@ -1,4 +1,4 @@
-import {  NextFunction, Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import { asyncHandler, ApiError, ApiResponse } from "../utils/root";
 import ProductCategory from "../models/productCategory";
 import ProductUnit from '../models/productUnit';
@@ -6,12 +6,37 @@ import Product from "../models/product";
 import { Op } from "sequelize";
 
 import redisClient from "../config/redisClient";
-const PRODUCT_CACHE_KEY = "all_products";
-
 // Helper function to remove product-related caches
-const clearProductCache = async () => {
-    await redisClient.del(PRODUCT_CACHE_KEY);
+const clearProductsCache = async () => {
+    try {
+        let cursor = 0; // Cursor must be a number, not a string
+        let totalKeysDeleted = 0;
+
+        do {
+            // Use SCAN to find all keys matching the pattern "employees:*"
+            const reply = await redisClient.scan(cursor, {
+                MATCH: 'products:*',
+                COUNT: 100,
+            });
+
+            // Update the cursor for the next iteration
+            cursor = reply.cursor;
+
+            // Delete all matching keys
+            const keys = reply.keys;
+            if (keys.length > 0) {
+                await redisClient.del(keys);
+                totalKeysDeleted += keys.length;
+                console.log(`Deleted ${keys.length} cache keys:`, keys);
+            }
+        } while (cursor !== 0); // Continue until the cursor returns to 0
+
+        console.log(`Total employee-related cache keys cleared: ${totalKeysDeleted}`);
+    } catch (error) {
+        console.error("Failed to clear employee cache:", error);
+    }
 };
+
 
 export const createCategory = asyncHandler(
     async (req: Request, res: Response, next: NextFunction) => {
@@ -52,7 +77,7 @@ export const viewCategory = asyncHandler(
                 sisterConcernId: id
             }
         });
-        
+
 
         return res.status(200).json(
             ApiResponse.success(viewProduct, 'View Product Category retrieved successfully')
@@ -81,7 +106,7 @@ export const deleteCategory = asyncHandler(
 export const updateCategory = asyncHandler(
     async (req: Request, res: Response, next: NextFunction) => {
         const { id } = req.params;
-        const { name , sisterConcernId} = req.body;
+        const { name, sisterConcernId } = req.body;
 
         const updateProduct = await ProductCategory.findByPk(id);
 
@@ -94,7 +119,7 @@ export const updateCategory = asyncHandler(
         updateProduct.sisterConcernId = sisterConcernId || updateProduct.sisterConcernId;
 
 
-        
+
 
 
 
@@ -189,7 +214,7 @@ export const updateUnit = asyncHandler(
         updateUnit.name = name || updateUnit.name;
         updateUnit.sisterConcernId = sisterConcernId || updateUnit.sisterConcernId;
 
-        
+
 
 
 
@@ -226,7 +251,7 @@ export const createProduct = asyncHandler(
         } = req.body;
 
         // Check for required fields
-        if (!name ||!sisterConcernId || !brand || !countryOfOrigin || !sizeAndDimension || !category || !supplierProductCode || !ourProductCode || !mrpPrice || !discountPercentage || !discountAmount || !sourcePrice || !unit || !product_category) {
+        if (!name || !sisterConcernId || !brand || !countryOfOrigin || !sizeAndDimension || !category || !supplierProductCode || !ourProductCode || !mrpPrice || !discountPercentage || !discountAmount || !sourcePrice || !unit || !product_category) {
             throw new ApiError('All fields are required', 400, 'BAD_REQUEST');
         }
 
@@ -248,13 +273,25 @@ export const createProduct = asyncHandler(
             sisterConcernId
         });
 
-        // Clear cached product list
-        await clearProductCache();
 
-        // Return success response
-        return res.status(201).json(
-            ApiResponse.success('Product created successfully')
-        );
+        try {
+            // Attempt to clear the cache
+            await clearProductsCache();
+            console.log("Cache cleared successfully"); // Log success
+            return res.status(201).json({
+                message: "Product created successfully",
+                employee: createdProduct,
+                cacheMessage: "Cache cleared successfully" // Indicate cache was cleared
+            });
+        } catch (error) {
+            console.error("Failed to clear cache:", error); // Log the error
+            return res.status(201).json({
+                message: "Product created successfully",
+                employee: createdProduct,
+                cacheMessage: "Cache not cleared" // Indicate cache was not cleared
+            });
+        }
+
     }
 );
 
@@ -269,20 +306,25 @@ export const getAllProduct = asyncHandler(
         const pageNumber = parseInt(page as string, 10);
         const pageSize = parseInt(limit as string, 10);
         const offset = (pageNumber - 1) * pageSize;
-        const cacheKey = `${PRODUCT_CACHE_KEY}_${id}_${pageNumber}_${pageSize}_${search}`;
+        const cacheKey = `products:${id}:page=${pageNumber}:limit=${pageSize}:search=${search || "all"}`;
 
-        // Check if products exist in Redis cache
+        // Try to fetch the data from Redis first
         const cachedData = await redisClient.get(cacheKey);
         if (cachedData) {
+            console.log("Retrieving data from cache");
             return res.status(200).json(JSON.parse(cachedData));
+        } else {
+            console.log("MISS data from cache");
         }
-
+        // Define where condition
+        const whereCondition: any = { sisterConcernId: id };
+        // Apply search filter if it's not empty
+        if (search) {
+            whereCondition.name = { [Op.like]: `%${search}%` }; // Case-insensitive search
+        }
         // Fetch from DB if not cached
         const { rows: products, count: totalProducts } = await Product.findAndCountAll({
-            where: {
-                sisterConcernId: id,
-                ...(search ? { name: { [Op.like]: `%${search}%` } } : {}),
-            },
+            where: whereCondition,
             limit: pageSize,
             offset,
             order: [["createdAt", "ASC"]],
@@ -319,8 +361,8 @@ export const deleteProduct = asyncHandler(
 
         await deleteProduct.destroy();
         // Clear cache for this product and all products
-        await redisClient.del(`product_${id}`);
-        await clearProductCache();
+        await clearProductsCache();
+
         return res.status(200).json(
             ApiResponse.success(null, 'Product  deleted successfully')
         );
@@ -329,13 +371,6 @@ export const deleteProduct = asyncHandler(
 
 export const viewProductById = asyncHandler(async (req: Request, res: Response) => {
     const { id } = req.params;
-    const cacheKey = `product_${id}`;
-
-    // Check Redis cache first
-    const cachedProduct = await redisClient.get(cacheKey);
-    if (cachedProduct) {
-        return res.status(200).json(JSON.parse(cachedProduct));
-    }
 
     // Fetch from DB if not found in cache
     const product = await Product.findByPk(id);
@@ -343,12 +378,6 @@ export const viewProductById = asyncHandler(async (req: Request, res: Response) 
         throw new ApiError("Product not found", 404, "NOT_FOUND");
     }
 
-    // Store in Redis for 30 minutes
-    await redisClient.setEx(cacheKey, 1800, JSON.stringify({
-        success: true,
-        data: product,
-        message: "Product retrieved successfully",
-    }));
 
     return res.status(200).json({
         success: true,
@@ -401,12 +430,10 @@ export const updateProduct = asyncHandler(
         product.product_category = product_category || product.product_category;
         product.sisterConcernId = sisterConcernId || product.sisterConcernId;
 
-        
+
         // Save the updated product to the database
         await product.save();
-        // Clear cache for this product and all products
-        await redisClient.del(`product_${id}`);
-        await clearProductCache();
+        await clearProductsCache();
 
         return res.status(200).json(
             ApiResponse.success(product, 'Product updated successfully')

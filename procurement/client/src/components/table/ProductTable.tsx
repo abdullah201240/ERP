@@ -56,43 +56,46 @@ export default function ProductTable() {
     // Pagination state
     const [currentPage, setCurrentPage] = useState<number>(1);
     const itemsPerPage = 10;
-    const [user, setUser] = useState({ name: '', email: '', id: '',sisterConcernId: '' });
+    const [user, setUser] = useState({ name: '', email: '', id: '', sisterConcernId: '' });
 
 
     useEffect(() => {
-      // Retrieve the access token from localStorage
-      const token = localStorage.getItem('accessTokenpq');
-      // Check if the token exists
-      if (!token) {
-        router.push('/'); // Redirect to login page if token doesn't exist
-      } else {
-        // Fetch user profile data from the API
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}employee/auth/profile`, {
-          headers: {
-            'Authorization': token
-          }
-        })
-     
-          .then(res => res.json())
-          .then(data => {
-            if (data) {
-  
-              setUser({ name: data.data.name, email: data.data.email, id: data.data.id , sisterConcernId: data.data.sisterConcernId });
-  
-  
-            }
-          })
-          .catch(err => {
-            console.error('Error fetching user data:', err);
-            router.push('/'); // Redirect to login page in case of any error
-          });
-      }
+        // Retrieve the access token from localStorage
+        const token = localStorage.getItem('accessTokenpq');
+        // Check if the token exists
+        if (!token) {
+            router.push('/'); // Redirect to login page if token doesn't exist
+        } else {
+            // Fetch user profile data from the API
+            fetch(`${process.env.NEXT_PUBLIC_API_URL}employee/auth/profile`, {
+                headers: {
+                    'Authorization': token
+                }
+            })
+
+                .then(res => res.json())
+                .then(data => {
+                    if (data) {
+
+                        setUser({ name: data.data.name, email: data.data.email, id: data.data.id, sisterConcernId: data.data.sisterConcernId });
+
+
+                    }
+                })
+                .catch(err => {
+                    console.error('Error fetching user data:', err);
+                    router.push('/'); // Redirect to login page in case of any error
+                });
+        }
     }, [router]);
     useEffect(() => {
         if (!token) {
             router.push('/'); // Redirect to login page if token doesn't exist
         } else {
             const fetchProducts = async () => {
+                if (!user.sisterConcernId) {
+                    return
+                }
                 try {
                     const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}product/product/${user.sisterConcernId}?page=${currentPage}&limit=${itemsPerPage}&search=${searchQuery}`, {
                         headers: {
@@ -121,7 +124,7 @@ export default function ProductTable() {
 
             fetchProducts();
         }
-    }, [router, token, currentPage, searchQuery,user]); // Add searchQuery to dependencies
+    }, [router, token, currentPage, searchQuery, user]); // Add searchQuery to dependencies
 
     const totalPages = Math.ceil(totalProducts / itemsPerPage);
 
@@ -174,9 +177,7 @@ export default function ProductTable() {
         return <div>Error: {error}</div>;
     }
 
-    if (products.length === 0) {
-        return <div>No products found</div>;
-    }
+
 
     return (
         <div>
@@ -214,7 +215,17 @@ export default function ProductTable() {
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                    {products.map((product, index) => (
+
+                    {products.length === 0 ? (
+                        <TableRow>
+                            <TableCell colSpan={14} className="text-center p-4 text-gray-500">
+                                No products found
+                            </TableCell>
+                        </TableRow>
+                    ) : (
+
+
+                    products.map((product, index) => (
                         <TableRow key={product.id} className='text-center'>
                             <TableCell className='text-center border border-[#e5e7eb]'>{index + 1 + (currentPage - 1) * itemsPerPage}</TableCell>
                             <TableCell className='border border-[#e5e7eb]'>{product.name}</TableCell>
@@ -265,7 +276,8 @@ export default function ProductTable() {
                                 </AlertDialog>
                             </TableCell>
                         </TableRow>
-                    ))}
+                    ))
+                )}
                 </TableBody>
             </Table>
 

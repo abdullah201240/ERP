@@ -391,7 +391,7 @@ const DesignFinalGenerateQutationTable: React.FC<DesignFinalGenerateQutationTabl
 
 
             <div className="bg-[#0A53A817] mt-8 mx-auto max-w-6xl flex justify-center items-center py-6 rounded-lg shadow-md">
-                <Link href={`/boq/designboq/${boqId}`} passHref>
+                <Link href={`/boq/designboq/${boqId}`} passHref target="_blank">
                     <button className="flex flex-col items-center text-[#0A53A8] hover:text-[#083a7a] transition-all duration-300">
                         <RiFileDownloadFill className="text-4xl mb-2" />
                         <span className="text-lg font-medium">Download BOQ</span>

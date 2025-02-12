@@ -88,7 +88,9 @@ export default function DesignFinalGenerateQutationFrom() {
                 headers: { Authorization: `Bearer ${token}` },
             });
             const data = await response.json();
+            console.log(data)
             if (data.success) {
+                
                 setUser({ name: data.data.name, email: data.data.email, id: data.data.id, sisterConcernId: data.data.sisterConcernId });
 
             }
@@ -144,9 +146,12 @@ export default function DesignFinalGenerateQutationFrom() {
     // Fetch Services
     const fetchServices = useCallback(async () => {
         try {
+            if(!user.sisterConcernId){
+                return
+            }
             const token = localStorage.getItem('accessToken');
 
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}projects/services`,
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}projects/services?sisterConcernId=${user.sisterConcernId}`,
                 { headers: { Authorization: `Bearer ${token}` } }
             );
             if (!response.ok) {
@@ -158,7 +163,7 @@ export default function DesignFinalGenerateQutationFrom() {
         } catch (error) {
             console.error('Error fetching services:', error);
         }
-    }, []);
+    }, [user]);
     useEffect(() => {
         const token = localStorage.getItem('accessToken');
 

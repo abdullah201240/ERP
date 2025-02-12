@@ -98,7 +98,7 @@ export default function CreateDesignInvoiceForm() {
             setLoading(true);
             try {
                 const token = localStorage.getItem('accessToken');
-                if(user.sisterConcernId){
+                if(!user.sisterConcernId){
                     return
                 }
 

@@ -19,7 +19,7 @@ router.put("/unit/:id", verifyJWT, updateUnit);
 router.post("/product",verifyJWT, createProduct);
 router.get("/product/:id", getAllProduct);
 router.delete("/product/:id", verifyJWT, deleteProduct);
-router.get("/product/:id",verifyJWT, viewProductById);
+router.get("/productById/:id",verifyJWT, viewProductById);
 router.put("/product/:id",verifyJWT, updateProduct);
 
 
