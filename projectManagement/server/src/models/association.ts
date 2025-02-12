@@ -111,7 +111,12 @@ WorkingDrawingImage.belongsTo(WorkingDrawing, {
   foreignKey: 'workingDrawingId', // Foreign key in WorkingDrawingImage
   as: 'workingDrawing', // Alias for accessing the related WorkingDrawing
 });
-
+// A Project can have many Employees
+Project.hasMany(DesignPlan, {
+  foreignKey: 'projectId', // Foreign key in Employee table pointing to Project
+  as: 'design', // Alias for the relation
+  
+});
 
 
 export { Project,DegineBOQ,AssignedDegineBoq,DesignPlan, Assigned, PreSiteVisitPlan, AssignedPreSiteVisitPlan, SupervisionSiteVisitPlan, AssignedSupervisionSiteVisitPlan,WorkingDrawing,

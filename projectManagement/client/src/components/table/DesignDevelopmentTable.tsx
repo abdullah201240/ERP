@@ -31,8 +31,7 @@ interface Project {
     projectDeadline: string;
     estimatedBudget: string;
     assigned: { eName: string; eid: string; id: string }[];
-    createdAt: string;
-    updatedAt: string;
+    design?: { stepName: string; stepType: string; startDate: string; endDate: string; completed: string; id: string; }[];
     daysRemaining?: number;
     daysPassed?: number;
 }
@@ -95,14 +94,14 @@ export default function DesignDevelopmentTable() {
             const controller = new AbortController();
 
             const response = await fetch(
-                `${process.env.NEXT_PUBLIC_API_URL}projects/view-all-projects/${employeeDetails.sisterConcernId}?page=${currentPage}&limit=${itemsPerPage}&search=${searchQuery}`, 
+                `${process.env.NEXT_PUBLIC_API_URL}projects/view-all-projects/${employeeDetails.sisterConcernId}?page=${currentPage}&limit=${itemsPerPage}&search=${searchQuery}`,
                 {
-                  method: 'GET',
-                  headers: { Authorization: `Bearer ${token}` },
-                  signal: controller.signal, // Move this inside the options object
+                    method: 'GET',
+                    headers: { Authorization: `Bearer ${token}` },
+                    signal: controller.signal, // Move this inside the options object
                 }
-              );
-              
+            );
+
 
             if (!response.ok) {
                 throw new Error('Failed to fetch projects');
@@ -174,6 +173,82 @@ export default function DesignDevelopmentTable() {
         setCurrentPage(1); // Reset to first page on new search
     };
 
+
+    const okay = (design: { stepName: string; stepType: string; completed: string }[]): [string, string] => {
+        if (!design || design.length === 0) return ['N/A', 'N/A'];
+    
+        // Get unique step types that are not fully completed
+        const remainingTasks = [...new Set(
+            design.filter(step => step.completed !== '100').map(step => step.stepType)
+        )].join(', ');
+    
+        // If all tasks are complete, return appropriate message
+        return remainingTasks ? ['', remainingTasks] : ['All Stages Complete', ''];
+    };
+    
+
+
+
+    const getCurrentStage = (design: { stepName: string; stepType: string; completed: string }[]): string => {
+        if (!design || design.length === 0) return 'N/A';
+
+        // Check if all 2D tasks are 100% complete
+        const all2DComplete = design
+            .filter(step => step.stepType === '2D')
+            .every(step => step.completed === '100');
+
+        if (!all2DComplete) {
+            return '2D Layout in Progress';
+        }
+
+        // Check if all 3D tasks are 100% complete
+        const all3DComplete = design
+            .filter(step => step.stepType === '3D')
+            .every(step => step.completed === '100');
+
+        if (!all3DComplete) {
+            return '3D Design  in Progress';
+        }
+        // Check if all 3D tasks are 100% complete
+        const allRenderingComplete = design
+            .filter(step => step.stepType === 'Rendering')
+            .every(step => step.completed === '100');
+
+        if (!allRenderingComplete) {
+            return 'Rendering  in Progress';
+        }
+        // Check if all 3D tasks are 100% complete
+        const allAnimationComplete = design
+            .filter(step => step.stepType === 'Animation')
+            .every(step => step.completed === '100');
+
+        if (!allAnimationComplete) {
+            return 'Animation  in Progress';
+        }
+
+        
+        // Check if all Working tasks are 100% complete
+        const allWorkinggComplete = design
+            .filter(step => step.stepType === 'Working')
+            .every(step => step.completed === '100');
+
+        if (!allWorkinggComplete) {
+            return 'Working Drawing   in Progress';
+        }
+
+
+
+        // If both 2D and 3D are complete, check for other tasks
+        const otherTasks = design.filter(step => step.stepType !== '2D' && step.stepType !== '3D'  && step.stepType !== 'Animation'  && step.stepType !== 'Rendering'  && step.stepType !== 'Working' );
+        if (otherTasks.length > 0) {
+            const allOtherComplete = otherTasks.every(step => step.completed === '100');
+            if (!allOtherComplete) {
+                return 'Other Work in Progress';
+            }
+        }
+
+        return 'All Stages Complete';
+    };
     if (loading) {
         return <div>Loading...</div>;
     }
@@ -182,7 +257,7 @@ export default function DesignDevelopmentTable() {
         return <div>Error: {error}</div>;
     }
 
-    
+
 
     return (
         <div>
@@ -218,17 +293,20 @@ export default function DesignDevelopmentTable() {
                         </TableRow>
                     ) : (
                         projects.map((project, index) => (
+                        
+
                             <TableRow key={project.id} className='text-center'>
                                 <TableCell className='text-center border border-[#e5e7eb]'>{index + 1 + (currentPage - 1) * itemsPerPage}</TableCell>
                                 <TableCell className='border border-[#e5e7eb]'>{project.projectName}</TableCell>
                                 <TableCell className='border border-[#e5e7eb]'>{project.assigned && project.assigned.length > 0 ? project.assigned.map(a => a.eName).join(', ') : 'N/A'}</TableCell>
                                 <TableCell className='border border-[#e5e7eb]'>{project.supervisorName}</TableCell>
-                                <TableCell className='border border-[#e5e7eb]'>{project.supervisorName}</TableCell>
+                                <TableCell className='border border-[#e5e7eb]'>    {project.design ? getCurrentStage(project.design) : 'N/A'}
+                                </TableCell>
                                 <TableCell className='border border-[#e5e7eb]'>{project.startDate}</TableCell>
                                 <TableCell className='border border-[#e5e7eb]'>{project.projectDeadline}</TableCell>
                                 <TableCell className='border border-[#e5e7eb]'>{project.daysPassed || 'N/A'}</TableCell>
                                 <TableCell className='border border-[#e5e7eb]'>{project.daysRemaining}</TableCell>
-                                <TableCell className='border border-[#e5e7eb]'>{project.supervisorName}</TableCell>
+                                <TableCell className='border border-[#e5e7eb]'>{project.design ? okay(project.design) : 'N/A'}</TableCell>
                                 <TableCell className='border border-[#e5e7eb]'>{project.supervisorName}</TableCell>
                                 <TableCell className='border border-[#e5e7eb]'>{project.supervisorName}%</TableCell>
                                 <TableCell className='border border-[#e5e7eb]'>

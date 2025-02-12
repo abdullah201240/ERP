@@ -7,7 +7,7 @@ import Project from "../models/project";
 
 import '../models/association';
 import Assigned from "../models/assigned";
-import { Op } from "sequelize";
+import { Op, Sequelize } from "sequelize";
 import DesignPlan from "../models/designPlan";
 import Service from "../models/service";
 import DegineBOQ from "../models/degineBOQ";
@@ -103,6 +103,25 @@ export const getProjectById = asyncHandler(
                 {
                     model: Assigned,
                     as: "assigned", // Alias defined in the relationship
+                },
+                {
+                    model: DesignPlan,
+                    as: "design",
+                    order: [
+                        [
+                            Sequelize.literal(
+                                "CASE " +
+                                "WHEN stepType = '2D' THEN 1 " +
+                                "WHEN stepType = '3D' THEN 2 " +
+                                "WHEN stepType = 'Rendering' THEN 3 " +
+                                "WHEN stepType = 'Animation' THEN 4 " +
+                                
+                                "WHEN stepType = 'Working' THEN 5 " +
+                                "ELSE 6 END"
+                            ),
+                            "ASC"
+                        ]
+                    ]
                 },
             ],
         });
@@ -369,6 +388,25 @@ export const getProjectsPaginated = asyncHandler(
                         model: Assigned,
                         as: "assigned", // Alias defined in the relationship
                     },
+                    {
+                        model: DesignPlan,
+                        as: "design",
+                        order: [
+                            [
+                                Sequelize.literal(
+                                    "CASE " +
+                                    "WHEN stepType = '2D' THEN 1 " +
+                                    "WHEN stepType = '3D' THEN 2 " +
+                                    "WHEN stepType = 'Rendering' THEN 3 " +
+                                    "WHEN stepType = 'Animation' THEN 4 " +
+                                    
+                                    "WHEN stepType = 'Working' THEN 5 " +
+                                    "ELSE 6 END"
+                                ),
+                                "ASC"
+                            ]
+                        ]
+                    },
                 ],
                 limit: pageSize,
                 offset: offset,
@@ -431,7 +469,7 @@ export const createDesignPlan = asyncHandler(
         const response = await axios.get(
             `${process.env.EXTERNAL_API_URL}sisterConcern/employeeById/${assignee}`
         );
-      
+
 
 
 
@@ -476,6 +514,14 @@ export const createDesignPlan = asyncHandler(
                 ErrorCodes.INTERNAL_SERVER_ERROR.code
             );
         }
+        // Invalidate the cache related to projects
+        const cacheKeys = await redisClient.keys('projects:*');
+        if (cacheKeys.length > 0) {
+            await redisClient.del(cacheKeys);  // Invalidate cache on delete
+            console.log(`Cache cleared for data related`);
+
+        }
+
         return res.status(201).json(
             ApiResponse.success(newDesignPlan, "DesignPlan created successfully")
         );
@@ -609,8 +655,8 @@ export const getDesignPlans = asyncHandler(
             try {
                 const response = await axios.post(`${process.env.EXTERNAL_API_URL}sisterConcern/employees`,
                     {
-                    employeeIds,
-                });
+                        employeeIds,
+                    });
 
                 // Convert array to object for quick lookup
                 employeeData = response.data.employees.reduce(
@@ -680,7 +726,7 @@ export const getDesignPlansProject = asyncHandler(
                     `${process.env.EXTERNAL_API_URL}sisterConcern/employees`,
                     { employeeIds }
                 );
-                
+
                 employeeDataMap = employeeResponse.data.reduce((acc: any, emp: any) => {
                     acc[emp.id] = emp;
                     return acc;
@@ -722,6 +768,13 @@ export const deleteDesignPlan = asyncHandler(
 
         // Delete the design plan
         await existingDesignPlan.destroy();
+        // Invalidate the cache related to projects
+        const cacheKeys = await redisClient.keys('projects:*');
+        if (cacheKeys.length > 0) {
+            await redisClient.del(cacheKeys);  // Invalidate cache on delete
+            console.log(`Cache cleared for data related`);
+
+        }
 
         return res
             .status(200)
@@ -766,6 +819,13 @@ export const updateDesignPlan = asyncHandler(
         // Update the design plan
         const updatedData = req.body;
         await existingDesignPlan.update(updatedData);
+        // Invalidate the cache related to projects
+        const cacheKeys = await redisClient.keys('projects:*');
+        if (cacheKeys.length > 0) {
+            await redisClient.del(cacheKeys);  // Invalidate cache on delete
+            console.log(`Cache cleared for data related`);
+
+        }
 
         return res
             .status(200)
@@ -809,6 +869,13 @@ export const updateCompletionPercentage = asyncHandler(
 
         // Update the completion percentage
         await existingDesignPlan.update({ completed });
+        // Invalidate the cache related to projects
+        const cacheKeys = await redisClient.keys('projects:*');
+        if (cacheKeys.length > 0) {
+            await redisClient.del(cacheKeys);  // Invalidate cache on delete
+            console.log(`Cache cleared for data related`);
+
+        }
 
         return res
             .status(200)
@@ -825,13 +892,13 @@ export const updateCompletionPercentage = asyncHandler(
 // Create a new service
 export const createService = asyncHandler(
     async (req: Request, res: Response, next: NextFunction) => {
-        const { name, description ,sisterConcernId } = req.body;
+        const { name, description, sisterConcernId } = req.body;
 
         if (!name || !description) {
             throw new ApiError('Name and description are required', 400, ErrorCodes.BAD_REQUEST.code);
         }
 
-        const service = await Service.create({ name, description,sisterConcernId });
+        const service = await Service.create({ name, description, sisterConcernId });
 
         return res.status(201).json(
             ApiResponse.success(service, 'Service created successfully')
@@ -953,7 +1020,7 @@ export const createDegineBOQ = asyncHandler(
 
         } = req.body;
 
-        if (!projectId || !projectName || !clientName || !clientContact || !projectAddress || !totalArea || !inputPerSftFees || !totalFees || !termsCondition || !designation || !signName ||!sisterConcernId) {
+        if (!projectId || !projectName || !clientName || !clientContact || !projectAddress || !totalArea || !inputPerSftFees || !totalFees || !termsCondition || !designation || !signName || !sisterConcernId) {
             throw new ApiError('All fields are required', 400, 'BAD_REQUEST');
         }
 

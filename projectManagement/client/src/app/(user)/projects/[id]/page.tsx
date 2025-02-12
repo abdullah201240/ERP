@@ -23,6 +23,7 @@ interface Project {
   projectDeadline: string;
   estimatedBudget: string;
   assigned: { eName: string; eid: string; id: string }[]; // Stores selected employees
+  design?: { stepName: string; stepType: string; startDate: string; endDate: string; completed: string; id: string; }[];
   createdAt: string;
   updatedAt: string;
 }
@@ -87,6 +88,21 @@ export default function Page() {
     }
   }, [project]);
 
+  const okay = (design: { stepName: string; stepType: string; completed: string }[]): [string, string] => {
+    if (!design || design.length === 0) return ['N/A', 'N/A'];
+
+    // Get unique step types that are not fully completed
+    const remainingTasks = [...new Set(
+      design.filter(step => step.completed !== '100').map(step => step.stepType)
+    )].join(', ');
+
+    // If all tasks are complete, return appropriate message
+    return remainingTasks ? ['', remainingTasks] : ['All Stages Complete', ''];
+  };
+
+
+
+
   if (loading) {
     return <div>Loading...</div>;
   }
@@ -145,11 +161,17 @@ export default function Page() {
               <p><strong className='text-[#4472C4] pr-2'>Assigned to:</strong> {project.assigned && project.assigned.length > 0 ? project.assigned.map(a => a.eName).join(', ') : 'N/A'} </p>
               <div>
                 <p><strong className='text-[#4472C4]'>Remaining Tasks:</strong></p>
+
                 <ul className="list-disc pl-6 mt-2">
-                  <li>3D Design Development</li>
-                  <li>Rendering</li>
-                  <li>Working Drawing</li>
+                  {project.design
+                    ? okay(project.design)[1].split(', ').map((item, index) => (
+                      <li key={index}>{item}</li>
+                    ))
+                    : <li>N/A</li>
+                  }
+
                 </ul>
+
               </div>
             </div>
           </div>
