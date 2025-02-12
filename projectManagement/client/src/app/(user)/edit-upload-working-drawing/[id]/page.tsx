@@ -206,7 +206,7 @@ export default function UpdateProjectPage() {
         throw new Error('Failed to update project');
       }
       toast.success('Project updated successfully!');
-      router.push('/design-boq'); // Redirect to the projects page after successful update
+      router.push('/upload-working-drawing'); // Redirect to the projects page after successful update
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
       toast.error(errorMessage);
