@@ -73,7 +73,6 @@ export default function UploadWorkingDrawingFrom() {
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [reloadTable, setReloadTable] = useState(false);
-    const [token, setToken] = useState<string | null>(null);
     const [categories, setCategories] = useState<{ id: string; name: string }[]>([]);
     const [units, setUnits] = useState<{ id: string; name: string }[]>([]);
     const [uploadDesignWorkingDrawings, setUploadDesignWorkingDrawings] = useState<File[]>([]);
@@ -81,17 +80,17 @@ export default function UploadWorkingDrawingFrom() {
     const [employeeDetails, setEmployeeDetails] = useState<EmployeeDetails | null>(null);
 
     useEffect(() => {
-        if (typeof window !== 'undefined') {
+       
             const storedToken = localStorage.getItem('accessToken');
             if (!storedToken) {
                 router.push('/');
-            } else {
-                setToken(storedToken);
-            }
-        }
+            } 
+        
     }, [router]);
     const fetchCompanyProfile = useCallback(async () => {
         try {
+            const token = localStorage.getItem('accessToken');
+
             const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}employee/auth/profile`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
@@ -103,7 +102,7 @@ export default function UploadWorkingDrawingFrom() {
         } catch (error) {
             console.error('Error fetching profile:', error);
         }
-    }, [token]);
+    }, []);
     useEffect(() => {
         const token = localStorage.getItem('accessToken');
 
@@ -118,6 +117,8 @@ export default function UploadWorkingDrawingFrom() {
         async (pageNumber = 1, query = '') => {
             setLoading(true);
             try {
+                const token = localStorage.getItem('accessToken');
+
                 if (!employeeDetails) return;
 
                 const response = await fetch(
@@ -148,18 +149,24 @@ export default function UploadWorkingDrawingFrom() {
                 setLoading(false);
             }
         },
-        [token,employeeDetails]
+        [employeeDetails]
     );
 
     useEffect(() => {
+        const token = localStorage.getItem('accessToken');
+
         if (token) {
             fetchProjects(1, searchQuery);
         }
-    }, [token, searchQuery, fetchProjects]);
+    }, [ searchQuery, fetchProjects]);
 
     const fetchCategories = useCallback(async () => {
         try {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}workingDrawing/category`, {
+            const token = localStorage.getItem('accessToken');
+
+            if (!employeeDetails) return;
+
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}workingDrawing/category?sisterConcernId=${employeeDetails.sisterConcernId}`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
@@ -171,11 +178,14 @@ export default function UploadWorkingDrawingFrom() {
             console.error('Error fetching categories:', error);
             setCategories([]);
         }
-    }, [token]);
+    }, [employeeDetails]);
 
     const fetchUnit = useCallback(async () => {
         try {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL_PROCUREMENT}product/unit`, {
+            const token = localStorage.getItem('accessToken');
+            if (!employeeDetails) return;
+
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL_PROCUREMENT}product/unit/${employeeDetails.sisterConcernId}`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
@@ -187,14 +197,16 @@ export default function UploadWorkingDrawingFrom() {
             console.error('Error fetching units:', error);
             setUnits([]);
         }
-    }, [token]);
+    }, [employeeDetails]);
 
     useEffect(() => {
+        const token = localStorage.getItem('accessToken');
+
         if (token) {
             fetchCategories();
             fetchUnit();
         }
-    }, [token, fetchCategories, fetchUnit]);
+    }, [ fetchCategories, fetchUnit]);
 
     const handleInputChange = (inputValue: string) => {
         setSearchQuery(inputValue);
@@ -269,6 +281,7 @@ export default function UploadWorkingDrawingFrom() {
             for (const pair of form.entries()) {
                 console.log(pair[0], pair[1]);
             }
+            const token = localStorage.getItem('accessToken');
 
             const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}workingDrawing/drawing`, {
                 method: 'POST',

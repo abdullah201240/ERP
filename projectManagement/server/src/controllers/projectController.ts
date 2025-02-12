@@ -411,6 +411,8 @@ export const getProjectsPaginated = asyncHandler(
                 limit: pageSize,
                 offset: offset,
                 order: [["createdAt", "DESC"]], // Sort by most recent
+                distinct: true, // Ensures count is accurate when using joins
+
             });
 
             const responseData = {

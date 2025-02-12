@@ -24,12 +24,33 @@ interface Category {
   id: number;
   name: string;
 }
+interface EmployeeDetails {
+  id: number;
+  name: string;
+  email: string;
+
+  phone: string;
+
+  dob: string;
+
+  gender: string;
+
+  companyId: string;
+
+  sisterConcernId: string;
+
+  photo: string;
+
+  employeeId: string;
+
+}
 
 export default function UpdateProjectPage() {
   const router = useRouter();
   const params = useParams();
   const pageId = params?.id;
   const [categories, setCategories] = useState<Category[]>([]);
+  const [units, setUnits] = useState<{ id: string; name: string }[]>([]);
 
   const [formData, setFormData] = useState<FormData>({
     id: 0,
@@ -49,7 +70,52 @@ export default function UpdateProjectPage() {
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [employeeDetails, setEmployeeDetails] = useState<EmployeeDetails | null>(null);
 
+  const fetchCompanyProfile = useCallback(async () => {
+    try {
+      const token = localStorage.getItem('accessToken');
+
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}employee/auth/profile`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await response.json();
+      console.table(data.data)
+      if (data.success) {
+        setEmployeeDetails(data.data);
+      }
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+    }
+  }, []);
+  const fetchUnit = useCallback(async () => {
+    try {
+        const token = localStorage.getItem('accessToken');
+        if (!employeeDetails) return;
+
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL_PROCUREMENT}product/unit/${employeeDetails.sisterConcernId}`, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        });
+        if (!response.ok) throw new Error('Failed to fetch units');
+        const result = await response.json();
+        setUnits(result.data || []);
+    } catch (error) {
+        console.error('Error fetching units:', error);
+        setUnits([]);
+    }
+}, [employeeDetails]);
+  useEffect(() => {
+    const token = localStorage.getItem('accessToken');
+
+    if (!token) {
+      router.push('/'); // Redirect to login page if token doesn't exist
+    } else {
+      fetchCompanyProfile();
+      fetchUnit();
+    }
+  }, [router, fetchCompanyProfile,fetchUnit]);
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
@@ -98,8 +164,8 @@ export default function UpdateProjectPage() {
   const fetchCategories = useCallback(async () => {
     try {
       const token = localStorage.getItem('accessToken');
-
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}workingDrawing/category`, {
+      if (!employeeDetails) return;
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}workingDrawing/category?sisterConcernId=${employeeDetails.sisterConcernId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -111,7 +177,7 @@ export default function UpdateProjectPage() {
       console.error('Error fetching categories:', error);
       setCategories([]);
     }
-  }, []);
+  }, [employeeDetails]);
 
   useEffect(() => {
     fetchCategories();
@@ -350,17 +416,24 @@ export default function UpdateProjectPage() {
               />
             </div>
 
+           
+
             <div>
-              <label className="text-white mb-2">Unit</label>
-              <input
-                type="text"
+              <label htmlFor="Unit" className="text-white mb-2">Unit</label>
+              <select
                 id="unit"
                 name="unit"
                 value={formData.unit}
                 onChange={handleInputChange}
-                placeholder="Unit"
                 className="block w-full rounded-md border-gray-300 shadow-sm focus:border-[#8c0327] focus:ring-[#8c0327] focus:ring-opacity-50 p-2 bg-gray-100 mt-2"
-              />
+              >
+                <option value="">Select a unit</option>
+                {units.map((unit) => (
+                  <option key={unit.id} value={unit.name}>
+                    {unit.name}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div>
