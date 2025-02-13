@@ -16,6 +16,7 @@ interface WorkingDrawingAttributes {
   projectAddress: string;
   projectName: string; 
   sisterConcernId?: string; // Add this line
+  status?: string;
 
 }
 
@@ -36,6 +37,7 @@ class WorkingDrawing extends Model<WorkingDrawingAttributes, WorkingDrawingCreat
   public projectAddress!: string;
   public projectName!: string;
   public sisterConcernId?: string;
+  public status?: string;
 
 
 }
@@ -95,6 +97,11 @@ WorkingDrawing.init(
     sisterConcernId: { // Add this line
       type: DataTypes.STRING,
       allowNull: true, // Set it to false if you want this field to be required
+    },
+    status: {
+      type: DataTypes.STRING,
+      allowNull: true, // Set it to false if you want this field to be required
+      defaultValue: 'pending', // Default value for the status field
     },
   },
   {
