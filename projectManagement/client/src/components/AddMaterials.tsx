@@ -318,7 +318,6 @@ export default function AddMaterials() {
             projectId: projectDetails.id,
             
         };
-        console.log(payload)
 
         try {
             const token = localStorage.getItem('accessToken');
