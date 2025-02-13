@@ -334,7 +334,6 @@ export const updateDrawing = asyncHandler(
             projectId, itemName, brandModel, itemQuantity, itemDescription,
             unit, category, clientName, clientContact, projectAddress, projectName
         } = req.body;
-        console.log(req.body)
         const drawing = await WorkingDrawing.findByPk(id);
 
         if (!drawing) {

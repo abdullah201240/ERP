@@ -52,10 +52,6 @@ const UploadWorkingDrawingTable: React.FC<UploadWorkingDrawingTableProps> = ({ r
     const [drawings, setDrawings] = useState<Drawing[]>([]);
     const [deleteId, setDeleteId] = useState<number | null>(null);
     const router = useRouter();
-
-    // Fetch categories from API
-
-
     // Fetch drawings from API
     const fetchDrawings = useCallback(async () => {
         try {
