@@ -6,6 +6,7 @@ import WorkingDrawing from '../models/workingDrawing'
 import WorkingDrawingImage from "../models/workingDrawingImage";
 import fs from 'fs';
 import path from 'path';
+import DesignMaterialList from "../models/designMaterialList";
 
 export const createCategory = asyncHandler(
     async (req: Request, res: Response, next: NextFunction) => {
@@ -406,6 +407,92 @@ export const addWorkingDrawingImage = asyncHandler(
 
         return res.status(201).json(
             ApiResponse.success(newImage, 'Working Drawing Image added successfully')
+        );
+    }
+);
+
+// Create DesignMaterialList entry
+export const createDesignMaterial = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction) => {
+        const {
+            projectId, brand, brandModel, category, clientContact, clientName,
+            countryOfOrigin, productId, itemDescription, itemName, itemNeed,
+            itemQuantity, mrpPrice, productName, ourProductCode, product_category,
+            projectAddress, projectName, sourcePrice,
+            supplierProductCode, unit, discountAmount, discountPercentage, sisterConcernId
+        } = req.body;
+
+        // Validate required fields
+        if (!projectId || !brand || !category || !clientContact || !clientName || !countryOfOrigin || !productId || !sisterConcernId) {
+            throw new ApiError('Required fields missing', 400, 'BAD_REQUEST');
+        }
+
+        // Create new record
+        const material = await DesignMaterialList.create({
+            projectId,
+            brand,
+            brandModel,
+            category,
+            clientContact,
+            clientName,
+            countryOfOrigin,
+            productId,
+            itemDescription,
+            itemName,
+            itemNeed,
+            itemQuantity,
+            mrpPrice,
+            productName,
+            ourProductCode,
+            product_category,
+            projectAddress,
+            projectName,
+            sourcePrice,
+            supplierProductCode,
+            unit,
+            discountAmount,
+            discountPercentage,
+            sisterConcernId
+        });
+
+        return res.status(201).json(
+            ApiResponse.success(material, 'Material created successfully')
+        );
+    }
+);
+
+// Get all materials by projectId
+export const getMaterialsByProject = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction) => {
+        const { projectId } = req.params;
+
+        if (!projectId) {
+            throw new ApiError('Project ID is required', 400, 'BAD_REQUEST');
+        }
+
+        const materials = await DesignMaterialList.findAll({ where: { projectId } });
+
+        return res.status(200).json(
+            ApiResponse.success(materials, 'Materials fetched successfully')
+        );
+    }
+);
+// Delete material by ID
+export const deleteMaterial = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction) => {
+        const { id } = req.params;
+
+        // Check if the record exists
+        const material = await DesignMaterialList.findByPk(id);
+        if (!material) {
+            throw new ApiError('Material not found', 404, 'NOT_FOUND');
+        }
+
+        // Delete the record
+        await material.destroy();
+
+        return res.status(200).json(
+            ApiResponse.success(null, 'Material deleted successfully')
         );
     }
 );

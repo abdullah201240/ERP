@@ -4,7 +4,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Select from 'react-select';
 import toast from 'react-hot-toast';
-import ProjectPlanTable from './table/ProjectPlanTable';
+import MaterialsTable from './table/MaterialsTable';
 
 interface Project {
     id: number;
@@ -66,7 +66,6 @@ interface Products {
 }
 
 export default function AddMaterials() {
-    const [token, setToken] = useState<string | null>(null);
     const router = useRouter();
 
     const [projects, setProjects] = useState<Project[]>([]);
@@ -74,8 +73,9 @@ export default function AddMaterials() {
     const [filteredProducts, setFilteredProducts] = useState<Products[]>([]);
 
     const [selectedProject, setSelectedProject] = useState<number | null>(null);
-    const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
+    const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+    
     const [projectDetails, setProjectDetails] = useState<ProjectDetails>({
         id: null || 0,
         projectId: '',
@@ -117,17 +117,17 @@ export default function AddMaterials() {
     const [itemQuantity, setItemQuantity] = useState<string>('');
 
     useEffect(() => {
-        const storedToken = localStorage.getItem('accessToken');
-        if (!storedToken) {
+        const token = localStorage.getItem('accessToken');
+        if (!token) {
             console.log("no token");
             router.push('/');
-        } else {
-            setToken(storedToken);
-        }
+        } 
     }, [router]);
 
     const fetchCompanyProfile = useCallback(async () => {
         try {
+            const token = localStorage.getItem('accessToken');
+
             const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}employee/auth/profile`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
@@ -139,7 +139,7 @@ export default function AddMaterials() {
         } catch (error) {
             console.error('Error fetching profile:', error);
         }
-    }, [token]);
+    }, []);
 
     useEffect(() => {
         const token = localStorage.getItem('accessToken');
@@ -153,7 +153,10 @@ export default function AddMaterials() {
     const fetchProjects = useCallback(async () => {
         setLoading(true);
         try {
+
             if (!employeeDetails) return;
+            const token = localStorage.getItem('accessToken');
+
 
             const response = await fetch(
                 `${process.env.NEXT_PUBLIC_API_URL}workingDrawing/drawingSisterConcernId/${employeeDetails.sisterConcernId}`,
@@ -175,7 +178,7 @@ export default function AddMaterials() {
         } finally {
             setLoading(false);
         }
-    }, [token, employeeDetails]);
+    }, [ employeeDetails]);
 
     useEffect(() => {
         const token = localStorage.getItem('accessToken');
@@ -185,13 +188,14 @@ export default function AddMaterials() {
         } else {
             fetchProjects();
         }
-    }, [token, router, fetchProjects]);
+    },  [router, fetchProjects]);
 
     const fetchProducts = useCallback(
         async (pageNumber = 1, query = '') => {
             setLoading1(true);
             try {
                 if (!employeeDetails) return;
+                const token = localStorage.getItem('accessToken');
 
                 const response = await fetch(
                     `${process.env.NEXT_PUBLIC_API_URL_PROCUREMENT}product/productBySearch/${employeeDetails.sisterConcernId}?page=${pageNumber}&limit=10&searchProduct=${query}`,
@@ -222,7 +226,7 @@ export default function AddMaterials() {
                 setLoading1(false);
             }
         },
-        [token, employeeDetails]
+        [employeeDetails]
     );
 
     useEffect(() => {
@@ -233,7 +237,7 @@ export default function AddMaterials() {
         } else {
             fetchProducts(1, selectedCategory || '');
         }
-    }, [token,  selectedCategory, router, fetchProducts]);
+    }, [ selectedCategory, router, fetchProducts]);
 
     const handleInputChange1 = () => {
         setPage1(1);
@@ -274,11 +278,10 @@ export default function AddMaterials() {
     const handleCategoryChange = (newValue: { value: string; label: string } | null) => {
         const category = newValue ? newValue.value : null;
         setSelectedCategory(category);
-        fetchProducts(1,  category || '');
+        fetchProducts(1, category || '');
     };
 
     const handleProductChange = (newValue: { value: number; label: string } | null) => {
-        setSelectedProject(newValue ? newValue.value : null);
         if (newValue) {
             const selected = products.find((product) => product.id === newValue.value);
             if (selected) {
@@ -299,19 +302,27 @@ export default function AddMaterials() {
                 });
             }
         }
-        setProjectSelected(!!newValue);
     };
 
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
-
+        if (!itemQuantity) return;
         const payload = {
+
             ...projectDetails,
             ...productDetails,
+            itemNeed: itemQuantity,
+            sisterConcernId: employeeDetails?.sisterConcernId,
+            productId:productDetails.id,
+            productName: productDetails.name,
+            projectId: projectDetails.id,
+            
         };
+        console.log(payload)
 
         try {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}siteVisit/create-project-site-visit-plan`, {
+            const token = localStorage.getItem('accessToken');
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}workingDrawing/material`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -321,14 +332,14 @@ export default function AddMaterials() {
             });
 
             if (!response.ok) {
-                toast.error('Failed to add Project Site Visit Plan');
+                toast.error('Failed to add Materials');
             } else {
-                toast.success('Project Site Visit Plan added successfully!');
+                toast.success('Materials added successfully!');
                 setReloadTable((prev) => !prev);
             }
         } catch (error) {
             console.error('Error submitting form:', error);
-            toast.error('Failed to add Project Site Visit Plan');
+            toast.error('Failed to add Materials');
         }
     };
 
@@ -383,7 +394,7 @@ export default function AddMaterials() {
                                     isLoading={loading1}
                                 />
                             </div>
-                            
+
                             <div>
                                 <label className="text-white mb-2">Quantity</label>
                                 <input
@@ -411,10 +422,12 @@ export default function AddMaterials() {
                 <h1 className="text-center text-xl mb-4">All Materials</h1>
                 <div className="w-[98vw] md:w-full">
                     {projectSelected && selectedProject !== null && (
-                        <ProjectPlanTable reload={reloadTable} projectId={selectedProject} />
+                        <MaterialsTable reload={reloadTable} projectId={selectedProject} />
                     )}
                 </div>
             </div>
         </div>
     );
 }
+
+
