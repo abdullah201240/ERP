@@ -221,15 +221,11 @@ export const viewDrawingBySisterConcernId = asyncHandler(
     async (req: Request, res: Response, next: NextFunction) => {
         const { sisterConcernId } = req.params;
 
-        // Find the working drawings by sisterConcernId
+        // Find the working drawings by sisterConcernId and sort by projectName
         const drawings = await WorkingDrawing.findAll({
             where: { sisterConcernId }, // Filter by sisterConcernId
-            include: [
-                {
-                    model: WorkingDrawingImage,
-                    as: 'images', // Alias defined in the relationship
-                },
-            ],
+            
+            order: [['projectName', 'ASC']], // Sort by projectName in ascending order
         });
 
         // Check if drawings are found
@@ -242,6 +238,7 @@ export const viewDrawingBySisterConcernId = asyncHandler(
         );
     }
 );
+
 
 // View a specific working drawing by ID
 export const viewDrawingById = asyncHandler(
