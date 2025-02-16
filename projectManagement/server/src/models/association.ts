@@ -11,6 +11,7 @@ import DegineBOQ from './degineBOQ';
 import AssignedDegineBoq from './assignedDegineBoq';
 import WorkingDrawing from './workingDrawing'; // Import WorkingDrawing model
 import WorkingDrawingImage from './workingDrawingImage'; // Import WorkingDrawingImage model
+import DesignMaterialList from './designMaterialList'
 // A Project can have many Employees
 Project.hasMany(Assigned, {
   foreignKey: 'pid', // Foreign key in Employee table pointing to Project
@@ -117,6 +118,13 @@ Project.hasMany(DesignPlan, {
   as: 'design', // Alias for the relation
   
 });
+WorkingDrawing.hasMany(DesignMaterialList, {
+  foreignKey: 'projectId', // Foreign key in WorkingDrawingImage pointing to WorkingDrawing
+  as: 'materialList', // Alias for the relation
+  onDelete: 'CASCADE', // Cleanup when a WorkingDrawing is deleted
+});
+
+
 
 
 export { Project,DegineBOQ,AssignedDegineBoq,DesignPlan, Assigned, PreSiteVisitPlan, AssignedPreSiteVisitPlan, SupervisionSiteVisitPlan, AssignedSupervisionSiteVisitPlan,WorkingDrawing,

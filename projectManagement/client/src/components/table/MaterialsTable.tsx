@@ -133,9 +133,9 @@ const MaterialsTable: React.FC<MaterialsTableProps> = ({ reload ,projectId }) =>
                     <TableRow className='text-center'>
                         <TableHead className='text-white text-center'>SI. No.</TableHead>
 
-                        <TableHead className='text-white text-center'>Project Code</TableHead>
-                        <TableHead className='text-white text-center'>Project Name</TableHead>
-                        <TableHead className='text-white text-center'>Project Category</TableHead>
+                        <TableHead className='text-white text-center'>Product Code</TableHead>
+                        <TableHead className='text-white text-center'>Product Name</TableHead>
+                        <TableHead className='text-white text-center'>Product Category</TableHead>
                         <TableHead className='text-white text-center'>Quantity</TableHead>
                         <TableHead className='text-white text-center'>Total Quantity</TableHead>
                         <TableHead className='text-white text-center'>Unit</TableHead>
