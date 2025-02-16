@@ -11,19 +11,19 @@ import {
 } from "@/components/ui/table";
 
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 interface Drawing {
     id: number;
     projectId: string;
     itemName: string;
     brandModel: string;
-    itemQuantity: string;
-    itemDescription: string;
-    unit: string;
     category: string;
     clientName: string;
     clientContact: string;
     projectAddress: string;
     projectName: string;
+    createdAt: string;
+    status: string;
 }
 interface EmployeeDetails {
     id: number;
@@ -105,28 +105,21 @@ export default function ReviewWorkingDrawingBoqTable() {
         <TableHeader className='bg-[#2A515B] text-white '>
             <TableRow className='text-center'>
                 <TableHead className='text-white text-center'>SI. No.</TableHead>
+                <TableHead className='text-white text-center'>Date</TableHead>
                 <TableHead className='text-white text-center'>Project Name</TableHead>
-                <TableHead className='text-white text-center'>Project Address</TableHead>
-                <TableHead className='text-white text-center'>Unit</TableHead>
-
-                <TableHead className='text-white text-center'>Category</TableHead>
-
+                <TableHead className='text-white text-center'>Client Name</TableHead>
+                <TableHead className='text-white text-center'>Client Contact</TableHead>
                 <TableHead className='text-white text-center'>Item Name</TableHead>
-
-                <TableHead className='text-white text-center'>Item Description</TableHead>
-
-                <TableHead className='text-white text-center'>Brand Model</TableHead>
-
-                <TableHead className='text-white text-center'>Item Quantity</TableHead>
-
+                <TableHead className='text-white text-center'>Status</TableHead>
                 <TableHead className='text-white text-center'>Action</TableHead>
+
 
             </TableRow>
         </TableHeader>
         <TableBody>
             {drawings.length === 0 ? (
                 <TableRow>
-                    <TableCell colSpan={11} className='text-center border border-[#e5e7eb]'>
+                    <TableCell colSpan={7} className='text-center border border-[#e5e7eb]'>
                         No Drawings Found
                     </TableCell>
                 </TableRow>
@@ -134,20 +127,22 @@ export default function ReviewWorkingDrawingBoqTable() {
                 drawings.map((drawing, index) => (
                     <TableRow key={drawing.id} className='text-center'>
                         <TableCell className='text-center border border-[#e5e7eb]'>{index + 1}</TableCell>
+                        <TableCell className='border border-[#e5e7eb]'>{drawing.createdAt}</TableCell>
                         <TableCell className='border border-[#e5e7eb]'>{drawing.projectName}</TableCell>
-                        <TableCell className='border border-[#e5e7eb]'>{drawing.projectAddress}</TableCell>
 
-                        <TableCell className='border border-[#e5e7eb]'>{drawing.unit}</TableCell>
+                        <TableCell className='border border-[#e5e7eb]'>{drawing.clientName}</TableCell>
 
-                        <TableCell className='border border-[#e5e7eb]'>{drawing.category}</TableCell>
+                        <TableCell className='border border-[#e5e7eb]'>{drawing.clientContact}</TableCell>
 
                         <TableCell className='border border-[#e5e7eb]'>{drawing.itemName}</TableCell>
 
-                        <TableCell className='border border-[#e5e7eb]'>{drawing.itemDescription}</TableCell>
+                        <TableCell className='border border-[#e5e7eb]'>{drawing.status}</TableCell>
 
-                        <TableCell className='border border-[#e5e7eb]'>{drawing.brandModel}</TableCell>
-
-                        <TableCell className='border border-[#e5e7eb]'>{drawing.itemQuantity}</TableCell>
+                        <TableCell className='border border-[#e5e7eb]'>
+                                    <Link href={`/projects/${drawing.id}`} >
+                                        <p className="bg-gradient-to-r from-blue-500 to-indigo-600 px-4 py-2 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 ease-in-out transform hover:scale-105 hover:bg-gradient-to-r hover:from-indigo-600 hover:to-blue-500 focus:outline-none focus:ring-2 focus:ring-indigo-300">Review</p>
+                                    </Link>
+                                </TableCell>
                         
 
 
