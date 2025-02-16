@@ -7,6 +7,8 @@ import WorkingDrawingImage from "../models/workingDrawingImage";
 import fs from 'fs';
 import path from 'path';
 import DesignMaterialList from "../models/designMaterialList";
+import Boqfeedback from "../models/boqfeedback";
+import workingDrawing from "../models/workingDrawing";
 
 export const createCategory = asyncHandler(
     async (req: Request, res: Response, next: NextFunction) => {
@@ -521,6 +523,60 @@ export const deleteMaterial = asyncHandler(
 
         return res.status(200).json(
             ApiResponse.success(null, 'Material deleted successfully')
+        );
+    }
+);
+
+
+
+export const createDesignMaterialFeedback = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction) => {
+        const {
+            feedback, drawingId,sisterConcernId
+        } = req.body;
+
+        // Validate required fields
+        if (!feedback || !drawingId || !sisterConcernId) {
+            throw new ApiError('Required fields missing', 400, 'BAD_REQUEST');
+        }
+
+        // Create new record
+        const material = await Boqfeedback.create({
+            feedback,
+            drawingId,
+            sisterConcernId
+            
+        });
+
+        return res.status(201).json(
+            ApiResponse.success(material, 'Feedback created successfully')
+        );
+    }
+);
+
+// View a specific working drawing by ID
+export const viewDesignMaterialFeedback = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction) => {
+        const { id } = req.params;
+
+        const drawings = await Boqfeedback.findAll({
+            where: {
+                sisterConcernId: id
+            },
+            include: [
+                {
+                    model: WorkingDrawing,
+                    as: "workingDrawing", // Alias defined in the relationship
+                },
+            ],
+        });
+
+        if (!drawings || drawings.length === 0) {
+            throw new ApiError('Drawing not found', 404, 'NOT_FOUND');
+        }
+
+        return res.status(200).json(
+            ApiResponse.success(drawings, 'Working Drawing retrieved successfully')
         );
     }
 );

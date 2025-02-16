@@ -39,7 +39,7 @@ export const SIDENAV_ITEMS: SideNavItem[] = [
       { title: 'Generate Invoice', path: '/generate-invoice' },
       { title: 'Work Category', path: '/work-category' },
       { title: 'Upload Working Drawing', path: '/upload-working-drawing' },
-      { title: 'Add Materials', path: '/addMaterials' },
+      { title: 'Materials', path: '/addMaterials' },
 
       { title: 'Review Working Drawing BOQ', path: '/review-working-drawing-boq' },
      
@@ -47,13 +47,26 @@ export const SIDENAV_ITEMS: SideNavItem[] = [
     ],
   },
 
-  
-  
   {
     title: 'Production',
-    path: '/help',
+    path: '/settings',
     icon: <Icon icon="lucide:trending-up" width="19" height="19" />,
+    submenu: true,
+    subMenuItems: [
+      { title: 'BOQ Review', path: '/production/boq-review' },
+      { title: 'Create Production Work Plan', path: '/production/create-production-work-plan' },
+      { title: 'Production Work Update', path: '/production/production-work-update' },
+      { title: 'Received Materials', path: '/production/received-materials' },
+      { title: 'Bill Generation', path: '/production/bill-generation' },
+      { title: 'Project Handover', path: '/production/project-handover' },
+    
+     
+      
+    ],
   },
+
+  
+
   {
     title: 'Manage Client Data',
     path: '/manage-client-data',
