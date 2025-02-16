@@ -119,7 +119,7 @@ export default function Page() {
     useEffect(() => {
         fetchDrawings();
     }, [fetchDrawings]);
-  
+
 
 
     return (
@@ -163,53 +163,60 @@ export default function Page() {
 
 
                         <Table>
-                <TableHeader className='bg-[#2A515B] text-white'>
-                    <TableRow className='text-center'>
-                        <TableHead className='text-white text-center'>SI. No.</TableHead>
+                            <TableHeader className='bg-[#2A515B] text-white'>
+                                <TableRow className='text-center'>
+                                    <TableHead className='text-white text-center'>SI. No.</TableHead>
 
-                        <TableHead className='text-white text-center'>Product Code</TableHead>
-                        <TableHead className='text-white text-center'>Product Name</TableHead>
-                        <TableHead className='text-white text-center'>Product Category</TableHead>
-                        <TableHead className='text-white text-center'>Quantity</TableHead>
-                        <TableHead className='text-white text-center'>Total Quantity</TableHead>
-                        <TableHead className='text-white text-center'>Unit</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {materialList.length === 0 ? (
-                        <TableRow>
-                            <TableCell colSpan={8} className='text-center border border-[#e5e7eb]'>
-                                No  Product found
-                            </TableCell>
-                        </TableRow>
-                    ) : (
-                        materialList.map((material, index) => (
-                            <TableRow key={material.id} className='text-center'>
-                                <TableCell className='text-center border border-[#e5e7eb]'>{index+1}</TableCell>
-                                <TableCell className='border border-[#e5e7eb]'>{material.ourProductCode}</TableCell>
-                                <TableCell className='border border-[#e5e7eb]'>{material.productName}</TableCell>
-                               
-                                <TableCell className='border border-[#e5e7eb]'>{material.product_category}</TableCell>
-                                <TableCell className='border border-[#e5e7eb]'>{material.itemNeed}</TableCell>
-                                <TableCell className='border border-[#e5e7eb]'>{Number(material.itemNeed) * Number(material.itemQuantity)}</TableCell>
-                                <TableCell className='border border-[#e5e7eb]'>{material.unit}</TableCell>
+                                    <TableHead className='text-white text-center'>Product Code</TableHead>
+                                    <TableHead className='text-white text-center'>Product Name</TableHead>
+                                    <TableHead className='text-white text-center'>Product Category</TableHead>
+                                    <TableHead className='text-white text-center'>Quantity</TableHead>
+                                    <TableHead className='text-white text-center'>Total Quantity</TableHead>
+                                    <TableHead className='text-white text-center'>Unit</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {materialList.length === 0 ? (
+                                    <TableRow>
+                                        <TableCell colSpan={8} className='text-center border border-[#e5e7eb]'>
+                                            No  Product found
+                                        </TableCell>
+                                    </TableRow>
+                                ) : (
+                                    materialList.map((material, index) => (
+                                        <TableRow key={material.id} className='text-center'>
+                                            <TableCell className='text-center border border-[#e5e7eb]'>{index + 1}</TableCell>
+                                            <TableCell className='border border-[#e5e7eb]'>{material.ourProductCode}</TableCell>
+                                            <TableCell className='border border-[#e5e7eb]'>{material.productName}</TableCell>
 
-                               
-                            </TableRow>
-                        ))
-                    )}
-                </TableBody>
-            </Table>
-                  
-                  
-                  
+                                            <TableCell className='border border-[#e5e7eb]'>{material.product_category}</TableCell>
+                                            <TableCell className='border border-[#e5e7eb]'>{material.itemNeed}</TableCell>
+                                            <TableCell className='border border-[#e5e7eb]'>{Number(material.itemNeed) * Number(material.itemQuantity)}</TableCell>
+                                            <TableCell className='border border-[#e5e7eb]'>{material.unit}</TableCell>
+
+
+                                        </TableRow>
+                                    ))
+                                )}
+                            </TableBody>
+                        </Table>
+
+
+
                     </div>
 
-                    
+
                 </div>
             ) : (
                 <p>Loading...</p>
             )}
+            <div className='mt-12 text-center'>
+                <button className="bg-gradient-to-r from-blue-500 to-indigo-600 px-4 py-2 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 ease-in-out transform hover:scale-105 hover:bg-gradient-to-r hover:from-indigo-600 hover:to-blue-500 focus:outline-none focus:ring-2 focus:ring-indigo-300">Purchase Req for Review</button>
+
+            </div>
+
+
+
         </div>
     );
 }
