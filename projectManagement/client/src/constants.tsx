@@ -59,8 +59,9 @@ export const SIDENAV_ITEMS: SideNavItem[] = [
       { title: 'Received Materials', path: '/production/received-materials' },
       { title: 'Bill Generation', path: '/production/bill-generation' },
       { title: 'Project Handover', path: '/production/project-handover' },
+      { title: 'Send Material List', path: '/production/send-material-list' },
+
     
-     
       
     ],
   },

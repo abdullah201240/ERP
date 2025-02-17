@@ -605,3 +605,119 @@ export const updateFeedbackStatus = asyncHandler(
         );
     }
 );
+
+
+// View all working drawings by Project ID
+// export const viewDrawingsByProjectId = asyncHandler(
+//     async (req: Request, res: Response, next: NextFunction) => {
+//         const { projectId } = req.params;
+
+//         const drawings = await WorkingDrawing.findAll({
+//             where: { projectId: projectId },
+//             include: [
+//                 {
+//                     model: WorkingDrawingImage,
+//                     as: "images", // Alias defined in the relationship
+//                 },
+//                 {
+//                     model: DesignMaterialList,
+//                     as: "materialList", // Alias defined in the relationship
+//                 },
+//             ],
+//         });
+
+//         if (!drawings || drawings.length === 0) {
+//             throw new ApiError('No drawings found for the specified project', 404, 'NOT_FOUND');
+//         }
+
+//         return res.status(200).json(
+//             ApiResponse.success(drawings, 'Working Drawings retrieved successfully')
+//         );
+//     }
+// );
+
+
+export const viewDrawingsByProjectId = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction) => {
+     
+        const { projectId } = req.params;
+
+        const drawings = await WorkingDrawing.findAll({
+            where: { projectId: projectId },
+            include: [
+                {
+                    model: WorkingDrawingImage,
+                    as: "images",
+                },
+                {
+                    model: DesignMaterialList,
+                    as: "materialList",
+                },
+            ],
+        });
+
+        if (!drawings || drawings.length === 0) {
+            throw new ApiError('No drawings found for the specified project', 404, 'NOT_FOUND');
+        }
+
+        // Object to store product-wise total calculations
+        const productSummary: Record<string, { totalNeed: number; perPiecePrice: number; totalPrice: number }> = {};
+
+        // Iterate through drawings and accumulate product-wise totals
+        drawings.forEach(drawing => {
+            if (drawing.materialList) {
+                drawing.materialList.forEach(material => {
+                    const productCode = material.ourProductCode?.trim(); // Ensure it's a valid string
+
+                    if (!productCode) return; // Skip if productCode is undefined or empty
+
+                    const itemNeed = parseInt(material.itemNeed || '0'); // Default to 0 if undefined
+                    const mrpPrice = parseFloat(material.mrpPrice || '0'); // Default to 0 if undefined
+
+                    if (!productSummary[productCode]) {
+                        productSummary[productCode] = {
+                            totalNeed: 0,
+                            perPiecePrice: mrpPrice,
+                            totalPrice: 0
+                        };
+                    }
+
+                    productSummary[productCode].totalNeed += itemNeed;
+                    productSummary[productCode].totalPrice += mrpPrice * itemNeed;
+                });
+            }
+        });
+
+        // Convert productSummary object to an array
+        const productSummaryArray = Object.keys(productSummary).map(productCode => ({
+            productCode,
+            totalNeed: productSummary[productCode].totalNeed,
+            perPiecePrice: productSummary[productCode].perPiecePrice,
+            totalPrice: productSummary[productCode].totalPrice
+        }));
+
+        return res.status(200).json(
+            ApiResponse.success({ drawings, productSummary: productSummaryArray }, 'Working Drawings and material summary retrieved successfully')
+        );
+    }
+);
+
+export const getWorkingDrawingByProject = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction) => {
+        const { id } = req.params;
+
+        const projects = await WorkingDrawing.findAll({
+            where: { sisterConcernId: id },
+            group: ['projectId'], // Group by project ID
+        });
+
+        if (!projects.length) {
+            throw new ApiError('No projects found', 404, 'NOT_FOUND');
+        }
+
+        return res.status(200).json(
+            ApiResponse.success(projects, 'Projects fetched successfully')
+        );
+    }
+);
+

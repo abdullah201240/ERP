@@ -134,4 +134,4 @@ Boqfeedback.belongsTo(WorkingDrawing, {
 
 
 export { Project,DegineBOQ,AssignedDegineBoq,DesignPlan, Assigned, PreSiteVisitPlan, AssignedPreSiteVisitPlan, SupervisionSiteVisitPlan, AssignedSupervisionSiteVisitPlan,WorkingDrawing,
-  WorkingDrawingImage,Boqfeedback };
+  WorkingDrawingImage,Boqfeedback,DesignMaterialList };

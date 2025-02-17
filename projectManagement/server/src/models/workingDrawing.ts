@@ -1,5 +1,6 @@
 import { Sequelize, DataTypes, Model, Optional } from 'sequelize';
 import db from '../config/sequelize'; // Adjust path as needed
+import DesignMaterialList from './designMaterialList';
 
 // Interface for attributes
 interface WorkingDrawingAttributes {
@@ -38,6 +39,8 @@ class WorkingDrawing extends Model<WorkingDrawingAttributes, WorkingDrawingCreat
   public projectName!: string;
   public sisterConcernId?: string;
   public status?: string;
+  public materialList?: DesignMaterialList[];
+
 
 
 }
