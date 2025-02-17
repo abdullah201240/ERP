@@ -42,6 +42,7 @@ interface EmployeeDetails {
 interface Feedback {
     id: number;
     feedback: string;
+    status: string;
     drawingId: string;
     createdAt: string;
     workingDrawing: {
@@ -174,6 +175,28 @@ export default function ReviewWorkingDrawingBoqTable() {
             console.error('Error updating status:', error);
         }
     };
+    const updateFeedbackStatus = async (id: number, newStatus: string) => {
+        try {
+            const token = localStorage.getItem('accessToken');
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}workingDrawing/feedback/${id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({ status: newStatus }),
+            });
+
+            if (!response.ok) throw new Error('Failed to update feedback status');
+            setFeedbacks(prevFeedbacks =>
+                prevFeedbacks.map(feedback =>
+                    feedback.id === id ? { ...feedback, status: newStatus } : feedback
+                )
+            );
+        } catch (error) {
+            console.error('Error updating feedback status:', error);
+        }
+    };
 
     return (
         <div>
@@ -263,8 +286,16 @@ export default function ReviewWorkingDrawingBoqTable() {
                                     <TableCell className='border border-[#e5e7eb]'>{feedback.workingDrawing.clientContact}</TableCell>
                                     <TableCell className='border border-[#e5e7eb]'>{feedback.feedback}</TableCell>
                                     <TableCell className='border border-[#e5e7eb]'>{feedback.workingDrawing.itemName}</TableCell>
-
-                                    <TableCell className='border border-[#e5e7eb]'>{feedback.workingDrawing.status}</TableCell>
+                                    <TableCell className='border border-[#e5e7eb]'>
+                                        <select
+                                            className='p-2 border rounded'
+                                            value={feedback.status}
+                                            onChange={(e) => updateFeedbackStatus(feedback.id, e.target.value)}
+                                        >
+                                            <option value="Pending">Pending</option>
+                                            <option value="Done">Done</option>
+                                        </select>
+                                    </TableCell>
 
                                 </TableRow>
                             ))

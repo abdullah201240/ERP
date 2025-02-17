@@ -569,6 +569,7 @@ export const viewDesignMaterialFeedback = asyncHandler(
                     as: "workingDrawing", // Alias defined in the relationship
                 },
             ],
+            order: [['createdAt', 'DESC']], 
         });
 
         if (!drawings || drawings.length === 0) {
@@ -577,6 +578,30 @@ export const viewDesignMaterialFeedback = asyncHandler(
 
         return res.status(200).json(
             ApiResponse.success(drawings, 'Working Drawing retrieved successfully')
+        );
+    }
+);
+
+export const updateFeedbackStatus = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction) => {
+        const { id } = req.params;
+        const { status } = req.body;
+
+        // Validate status field
+        if (!status) {
+            throw new ApiError('Status is required', 400, 'BAD_REQUEST');
+        }
+
+        const drawing = await Boqfeedback.findByPk(id);
+        if (!drawing) {
+            throw new ApiError('Drawing not found', 404, 'NOT_FOUND');
+        }
+
+        drawing.status = status;
+        await drawing.save();
+
+        return res.status(200).json(
+            ApiResponse.success(drawing, 'Boq feed back status updated successfully')
         );
     }
 );
