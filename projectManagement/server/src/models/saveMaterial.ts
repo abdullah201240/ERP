@@ -11,10 +11,12 @@ interface SaveMaterialAttributes {
     date: string;
     sisterConcernId: string;
     status?: string; // New column (optional)
-    image?: string; // New optional field
+    image?: string; // New optional field for a single image
+    feedbackFile?: string; // New optional field to store multiple image filenames (comma separated)
+    feedbackText?: string;
 }
 
-interface SaveMaterialCreationAttributes extends Optional<SaveMaterialAttributes, 'id' | 'status' | 'image'> { }
+interface SaveMaterialCreationAttributes extends Optional<SaveMaterialAttributes, 'id' | 'status' | 'image' | 'feedbackFile'> { }
 
 // Define the SaveMaterial model class
 class SaveMaterial extends Model<SaveMaterialAttributes, SaveMaterialCreationAttributes> implements SaveMaterialAttributes {
@@ -27,6 +29,9 @@ class SaveMaterial extends Model<SaveMaterialAttributes, SaveMaterialCreationAtt
     public sisterConcernId!: string;
     public status?: string;
     public image?: string;
+    public feedbackFile?: string; // New field for multiple images
+    public feedbackText?: string; // New field for multiple images
+
 }
 
 SaveMaterial.init(
@@ -67,8 +72,16 @@ SaveMaterial.init(
             defaultValue: 'pending', // Set default value to 'pending'
         },
         image: {
-            type: DataTypes.STRING, // Storing image URL or file path
+            type: DataTypes.STRING, // Storing a single image URL or file path
             allowNull: true, // Optional field
+        },
+        feedbackFile: {
+            type: DataTypes.STRING, // Store multiple image filenames as comma-separated string
+            allowNull: true, // Optional field for multiple feedback images
+        },
+        feedbackText: {
+            type: DataTypes.TEXT, // Store multiple image filenames as comma-separated string
+            allowNull: true, // Optional field for multiple feedback images
         },
     },
     {

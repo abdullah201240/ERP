@@ -874,3 +874,40 @@ export const updateSaveMaterialStatus = [
         );
     }),
 ];
+
+export const updateSaveMaterialFeedback = [
+    upload.array('feedbackFile', 10),  // Allow up to 10 files to be uploaded
+
+    asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+        const { id } = req.params;
+        const { status ,feedbackText} = req.body;
+        const feedbackFile = req.files as Express.Multer.File[];
+
+        // Find the material by ID
+        const material = await SaveMaterial.findByPk(id);
+
+        if (!material) {
+            throw new ApiError("Save Material not found", 404, "NOT_FOUND");
+        }
+
+        // Update status if provided
+        if (status) {
+            material.status = status;
+        }
+        if(feedbackText){
+            material.feedbackText = feedbackText;
+            
+        }
+
+        // Collect image filenames and update image field (if any files were uploaded)
+        if (feedbackFile && feedbackFile.length > 0) {
+            material.feedbackFile = feedbackFile.map(file => file.filename).join(', ');  // Join filenames with commas
+        }
+
+        await material.save();
+
+        return res.status(200).json(
+            ApiResponse.success(material, "Save Material updated successfully")
+        );
+    }),
+];
