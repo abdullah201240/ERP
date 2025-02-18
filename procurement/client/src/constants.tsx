@@ -10,9 +10,17 @@ export const SIDENAV_ITEMS: SideNavItem[] = [
   },
 
   {
-    title: 'Add a Project',
-    path: '/addProject',
-    icon: <Icon icon="gridicons:add" width="19" height="19" />,
+    title: 'Purchase Management',
+    path: '/',
+    icon: <Icon icon="arcticons:purchased-apps" width="19" height="19" />,
+    submenu: true,
+    subMenuItems: [
+      
+      { title: 'Create a Purchase Order', path: '/create-purchase-order' },
+
+      { title: 'Purchase Req For Review', path: '/product-unit' },
+      { title: 'Send Material', path: '/send-material' },
+    ],
   },
   {
     title: 'Products',
