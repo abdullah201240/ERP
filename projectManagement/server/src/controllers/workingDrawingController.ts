@@ -9,6 +9,7 @@ import path from 'path';
 import DesignMaterialList from "../models/designMaterialList";
 import Boqfeedback from "../models/boqfeedback";
 import workingDrawing from "../models/workingDrawing";
+import SaveMaterial from "../models/saveMaterial";
 
 export const createCategory = asyncHandler(
     async (req: Request, res: Response, next: NextFunction) => {
@@ -733,3 +734,95 @@ export const getWorkingDrawingByProject = asyncHandler(
     }
 );
 
+
+export const createSaveMaterials = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction) => {
+        const {
+            projectId, productCode, productName,quantity,date,sisterConcernId
+        } = req.body;
+
+        // Validate required fields
+        if (!projectId || !productCode ||!productName ||!quantity ||!date || !sisterConcernId) {
+            throw new ApiError('Required fields missing', 400, 'BAD_REQUEST');
+        }
+
+        // Create new record
+        const material = await SaveMaterial.create({
+            projectId,
+            productCode,
+            productName,
+            quantity,
+            date,
+            sisterConcernId
+
+        });
+
+        return res.status(201).json(
+            ApiResponse.success(material, 'Save Materials created successfully')
+        );
+    }
+);
+export const getSaveMaterialsByProject = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction) => {
+        const { id } = req.params;
+
+        const saveMaterials = await SaveMaterial.findAll({
+            where: { projectId: id },
+            
+        });
+
+        if (!saveMaterials.length) {
+            throw new ApiError('No Save Materials found', 404, 'NOT_FOUND');
+        }
+
+        return res.status(200).json(
+            ApiResponse.success(saveMaterials, 'Save Materials fetched successfully')
+        );
+    }
+);
+// Update Save Materials by ID
+export const updateSaveMaterial = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction) => {
+        const { id } = req.params;
+        const {
+              quantity, date
+        } = req.body;
+
+        // Find the material by ID
+        const material = await SaveMaterial.findByPk(id);
+
+        if (!material) {
+            throw new ApiError('Save Material not found', 404, 'NOT_FOUND');
+        }
+
+        // Update the material with the new data
+        material.quantity = quantity || material.quantity;
+        material.date = date || material.date;
+
+        await material.save();
+
+        return res.status(200).json(
+            ApiResponse.success(material, 'Save Material updated successfully')
+        );
+    }
+);
+// Delete Save Material by ID
+export const deleteSaveMaterial = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction) => {
+        const { id } = req.params;
+
+        // Find the material by ID
+        const material = await SaveMaterial.findByPk(id);
+
+        if (!material) {
+            throw new ApiError('Save Material not found', 404, 'NOT_FOUND');
+        }
+
+        // Delete the material
+        await material.destroy();
+
+        return res.status(200).json(
+            ApiResponse.success(null, 'Save Material deleted successfully')
+        );
+    }
+);

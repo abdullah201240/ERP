@@ -1,6 +1,6 @@
 import express from "express";
 import { verifyJWT } from "../middleware/auth"; 
-import { addWorkingDrawingImage, createCategory, createDesignMaterial, createDesignMaterialFeedback, createUploadDrawing, deleteCategory, deleteDrawing, deleteMaterial, deleteWorkingDrawingImage, getMaterialsByProject, getWorkingDrawingByProject, updateCategory, updateDrawing, updateDrawingStatus, updateFeedbackStatus, viewAllDrawings, viewCategory, viewDesignMaterialFeedback, viewDrawingById, viewDrawingBySisterConcernId, viewDrawingsByProjectId } from "../controllers/workingDrawingController";
+import { addWorkingDrawingImage, createCategory, createDesignMaterial, createDesignMaterialFeedback, createSaveMaterials, createUploadDrawing, deleteCategory, deleteDrawing, deleteMaterial, deleteSaveMaterial, deleteWorkingDrawingImage, getMaterialsByProject, getSaveMaterialsByProject, getWorkingDrawingByProject, updateCategory, updateDrawing, updateDrawingStatus, updateFeedbackStatus, updateSaveMaterial, viewAllDrawings, viewCategory, viewDesignMaterialFeedback, viewDrawingById, viewDrawingBySisterConcernId, viewDrawingsByProjectId } from "../controllers/workingDrawingController";
 import upload from "../middleware/uploadMiddleware";
 const router = express.Router();
 
@@ -42,7 +42,10 @@ router.put('/feedback/:id', updateFeedbackStatus);
 
 router.get('/viewDrawingsByProjectId/:projectId', viewDrawingsByProjectId);
 router.get('/getWorkingDrawingByProject/:id', getWorkingDrawingByProject);
+router.post('/saveMaterials', createSaveMaterials);
+router.get('/saveMaterials/:id', getSaveMaterialsByProject);
 
-
+router.put('/saveMaterials/:id', updateSaveMaterial);
+router.delete('/saveMaterials/:id', deleteSaveMaterial);
 
 export default router;
