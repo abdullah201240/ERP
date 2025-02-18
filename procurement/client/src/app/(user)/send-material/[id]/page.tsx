@@ -31,6 +31,8 @@ interface MaterialEntry {
     date: string;
     status: string;
     image?: string;
+    feedbackText?: string;
+    feedbackFile?: string;
 }
 
 
@@ -281,6 +283,8 @@ export default function Page() {
                         <TableHead className="text-white text-center">Image</TableHead>
 
                         <TableHead className="text-white text-center">Status</TableHead>
+                        <TableHead className="text-white text-center">Feedback Text</TableHead>
+                        <TableHead className="text-white text-center">Feedback File</TableHead>
 
                         <TableHead className="text-white text-center">Actions</TableHead>
                     </TableRow>
@@ -322,6 +326,27 @@ export default function Page() {
 
 
                                 <TableCell className="border border-[#e5e7eb]">{entry.status}</TableCell>
+                                <TableCell className="border border-[#e5e7eb]">{entry.feedbackText}</TableCell>
+
+                                <TableCell className="border border-[#e5e7eb]">
+                                    {entry.feedbackFile ? (
+                                        <div className="flex gap-2 justify-center">
+                                            {entry.feedbackFile.split(', ').map((image, idx) => (
+                                                <a key={idx} href={`${process.env.NEXT_PUBLIC_API_URL_PROJECTMANAGEMENT}uploads/${image.trim()}`} target="_blank" rel="noopener noreferrer">
+                                                    <Image
+                                                        src={`${process.env.NEXT_PUBLIC_API_URL_PROJECTMANAGEMENT}uploads/${image.trim()}`}
+                                                        alt={`feedback image ${idx + 1}`}
+                                                        width={100}
+                                                        height={100}
+                                                        className="object-contain"
+                                                    />
+                                                </a>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <span>No feedback images</span>
+                                    )}
+                                </TableCell>
 
                                 <TableCell className="border border-[#e5e7eb]">
                                     <button
