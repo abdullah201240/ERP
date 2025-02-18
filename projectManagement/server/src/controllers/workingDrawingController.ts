@@ -61,7 +61,7 @@ export const viewCategory = asyncHandler(
             },
         });
 
-       
+
 
         return res.status(200).json(
             ApiResponse.success(viewWork, 'View Work Category retrieved successfully')
@@ -121,7 +121,7 @@ export const createUploadDrawing = asyncHandler(
     async (req: Request, res: Response, next: NextFunction) => {
         const {
             projectId, itemName, brandModel, itemQuantity, itemDescription,
-            unit, category, clientName, clientContact, projectAddress, projectName,sisterConcernId
+            unit, category, clientName, clientContact, projectAddress, projectName, sisterConcernId
         } = req.body;
 
         // Check if files are uploaded
@@ -131,7 +131,7 @@ export const createUploadDrawing = asyncHandler(
 
         // Check for required fields
         if (!projectId || !itemName || !itemQuantity || !itemDescription ||
-            !unit || !category || !clientName || !clientContact || !projectAddress || !projectName ||!sisterConcernId) {
+            !unit || !category || !clientName || !clientContact || !projectAddress || !projectName || !sisterConcernId) {
             throw new ApiError('All fields are required', 400, 'BAD_REQUEST');
         }
 
@@ -227,7 +227,7 @@ export const viewDrawingBySisterConcernId = asyncHandler(
         // Find the working drawings by sisterConcernId and sort by projectName
         const drawings = await WorkingDrawing.findAll({
             where: { sisterConcernId }, // Filter by sisterConcernId
-            
+
             order: [['projectName', 'ASC']], // Sort by projectName in ascending order
         });
 
@@ -532,7 +532,7 @@ export const deleteMaterial = asyncHandler(
 export const createDesignMaterialFeedback = asyncHandler(
     async (req: Request, res: Response, next: NextFunction) => {
         const {
-            feedback, drawingId,sisterConcernId
+            feedback, drawingId, sisterConcernId
         } = req.body;
 
         // Validate required fields
@@ -545,7 +545,7 @@ export const createDesignMaterialFeedback = asyncHandler(
             feedback,
             drawingId,
             sisterConcernId
-            
+
         });
 
         return res.status(201).json(
@@ -569,7 +569,7 @@ export const viewDesignMaterialFeedback = asyncHandler(
                     as: "workingDrawing", // Alias defined in the relationship
                 },
             ],
-            order: [['createdAt', 'DESC']], 
+            order: [['createdAt', 'DESC']],
         });
 
         if (!drawings || drawings.length === 0) {
@@ -639,7 +639,7 @@ export const updateFeedbackStatus = asyncHandler(
 
 export const viewDrawingsByProjectId = asyncHandler(
     async (req: Request, res: Response, next: NextFunction) => {
-     
+
         const { projectId } = req.params;
 
         const drawings = await WorkingDrawing.findAll({
@@ -659,23 +659,33 @@ export const viewDrawingsByProjectId = asyncHandler(
         if (!drawings || drawings.length === 0) {
             throw new ApiError('No drawings found for the specified project', 404, 'NOT_FOUND');
         }
-
         // Object to store product-wise total calculations
-        const productSummary: Record<string, { totalNeed: number; perPiecePrice: number; totalPrice: number }> = {};
+        const productSummary: Record<string, {
+            productName: string;
+            productCategory: string;
+            totalNeed: number;
+            perPiecePrice: number;
+            totalPrice: number;
+        }> = {};
+
 
         // Iterate through drawings and accumulate product-wise totals
         drawings.forEach(drawing => {
             if (drawing.materialList) {
                 drawing.materialList.forEach(material => {
                     const productCode = material.ourProductCode?.trim(); // Ensure it's a valid string
+                    const productName = material.productName?.trim(); // Ensure it's a valid string
+                    const productCategory = material.product_category?.trim(); // Ensure it's a valid string
 
-                    if (!productCode) return; // Skip if productCode is undefined or empty
+                    if (!productCode || !productName || !productCategory) return; // Skip if required fields are missing
 
                     const itemNeed = parseInt(material.itemNeed || '0'); // Default to 0 if undefined
                     const mrpPrice = parseFloat(material.mrpPrice || '0'); // Default to 0 if undefined
 
                     if (!productSummary[productCode]) {
                         productSummary[productCode] = {
+                            productName,
+                            productCategory,
                             totalNeed: 0,
                             perPiecePrice: mrpPrice,
                             totalPrice: 0
@@ -687,14 +697,16 @@ export const viewDrawingsByProjectId = asyncHandler(
                 });
             }
         });
-
         // Convert productSummary object to an array
         const productSummaryArray = Object.keys(productSummary).map(productCode => ({
             productCode,
+            productName: productSummary[productCode].productName,
+            productCategory: productSummary[productCode].productCategory,
             totalNeed: productSummary[productCode].totalNeed,
             perPiecePrice: productSummary[productCode].perPiecePrice,
             totalPrice: productSummary[productCode].totalPrice
         }));
+
 
         return res.status(200).json(
             ApiResponse.success({ drawings, productSummary: productSummaryArray }, 'Working Drawings and material summary retrieved successfully')

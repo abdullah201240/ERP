@@ -16,6 +16,9 @@ interface Project {
     totalNeed: number;
     perPiecePrice: number;
     totalPrice: number;
+    productName: string;
+    productCategory: string;
+
 }
 
 export default function Page() {
@@ -90,6 +93,10 @@ export default function Page() {
                         <TableRow className="text-center">
                             <TableHead className="text-white text-center">SI. No.</TableHead>
                             <TableHead className="text-white text-center">Product Code</TableHead>
+                            <TableHead className="text-white text-center">Product Name</TableHead>
+
+                            <TableHead className="text-white text-center">Product Category</TableHead>
+
                             <TableHead className="text-white text-center">Total Need</TableHead>
                             <TableHead className="text-white text-center">Per Piece Price</TableHead>
                             <TableHead className="text-white text-center">Total Price</TableHead>
@@ -107,9 +114,14 @@ export default function Page() {
                                 <TableRow key={project.productCode} className="text-center">
                                     <TableCell className="border border-[#e5e7eb]">{index + 1}</TableCell>
                                     <TableCell className="border border-[#e5e7eb]">{project.productCode}</TableCell>
+                                    <TableCell className="border border-[#e5e7eb]">{project.productName}</TableCell>
+
+                                    <TableCell className="border border-[#e5e7eb]">{project.productCategory}</TableCell>
+
                                     <TableCell className="border border-[#e5e7eb]">{project.totalNeed}</TableCell>
                                     <TableCell className="border border-[#e5e7eb]">{project.perPiecePrice}</TableCell>
                                     <TableCell className="border border-[#e5e7eb]">{project.totalPrice}</TableCell>
+                                    
                                 </TableRow>
                             ))
                         )}
