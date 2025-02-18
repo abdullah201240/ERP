@@ -11,9 +11,10 @@ interface SaveMaterialAttributes {
     date: string;
     sisterConcernId: string;
     status?: string; // New column (optional)
+    image?: string; // New optional field
 }
 
-interface SaveMaterialCreationAttributes extends Optional<SaveMaterialAttributes, 'id' | 'status'> { }
+interface SaveMaterialCreationAttributes extends Optional<SaveMaterialAttributes, 'id' | 'status' | 'image'> { }
 
 // Define the SaveMaterial model class
 class SaveMaterial extends Model<SaveMaterialAttributes, SaveMaterialCreationAttributes> implements SaveMaterialAttributes {
@@ -25,6 +26,7 @@ class SaveMaterial extends Model<SaveMaterialAttributes, SaveMaterialCreationAtt
     public date!: string;
     public sisterConcernId!: string;
     public status?: string;
+    public image?: string;
 }
 
 SaveMaterial.init(
@@ -63,6 +65,10 @@ SaveMaterial.init(
             type: DataTypes.STRING,
             allowNull: true,
             defaultValue: 'pending', // Set default value to 'pending'
+        },
+        image: {
+            type: DataTypes.STRING, // Storing image URL or file path
+            allowNull: true, // Optional field
         },
     },
     {

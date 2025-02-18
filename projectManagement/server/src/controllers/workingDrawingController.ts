@@ -11,6 +11,7 @@ import Boqfeedback from "../models/boqfeedback";
 import workingDrawing from "../models/workingDrawing";
 import SaveMaterial from "../models/saveMaterial";
 import { Sequelize } from "sequelize";
+import upload from "../middleware/uploadMiddleware";
 
 export const createCategory = asyncHandler(
     async (req: Request, res: Response, next: NextFunction) => {
@@ -841,27 +842,35 @@ export const deleteSaveMaterial = asyncHandler(
     }
 );
 
-export const updateSaveMaterialStatus = asyncHandler(
-    async (req: Request, res: Response, next: NextFunction) => {
+export const updateSaveMaterialStatus = [
+    upload.single("image"), // Use multer middleware
+
+    asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
         const { id } = req.params;
-        const {
-            status
-        } = req.body;
+        const { status } = req.body;
+        const image = req.file ? req.file.filename : null; // Get uploaded image filename
 
         // Find the material by ID
         const material = await SaveMaterial.findByPk(id);
 
         if (!material) {
-            throw new ApiError('Save Material not found', 404, 'NOT_FOUND');
+            throw new ApiError("Save Material not found", 404, "NOT_FOUND");
         }
 
-        // Update the material with the new data
-        material.status = status || material.status;
+        // Update status if provided
+        if (status) {
+            material.status = status;
+        }
+
+        // Update image if a new one is uploaded
+        if (image) {
+            material.image = image;
+        }
 
         await material.save();
 
         return res.status(200).json(
-            ApiResponse.success(material, 'Save Material updated successfully')
+            ApiResponse.success(material, "Save Material updated successfully")
         );
-    }
-);
+    }),
+];

@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/table";
 
 import { useParams, useRouter } from 'next/navigation';
-
+import Image from 'next/image';
 
 // Define an interface for the project data
 interface Project {
@@ -30,6 +30,7 @@ interface MaterialEntry {
     quantity: number;
     date: string;
     status: string;
+    image?: string;
 }
 
 
@@ -70,6 +71,7 @@ export default function Page() {
     }, [router]);
 
     const fetchDrawings = useCallback(async () => {
+        if (!id) return;
         setLoading(true);
         const token = localStorage.getItem('accessTokenpq');
         if (!token) {
@@ -93,6 +95,8 @@ export default function Page() {
         }
     }, [router, id]);
     const fetchMaterials = useCallback(async () => {
+        if (!id) return;
+
         const token = localStorage.getItem('accessTokenpq');
         if (!token) return;
 
@@ -125,34 +129,52 @@ export default function Page() {
 
 
 
-   interface ConfirmationPopupProps {
-    onConfirm: () => void;
-    onCancel: () => void;
-}
+    interface ConfirmationPopupProps {
+        onConfirm: (image: File | null) => void;
+        onCancel: () => void;
+    }
 
-const ConfirmationPopup: React.FC<ConfirmationPopupProps> = ({ onConfirm, onCancel }) => (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-        <div className="bg-white p-6 rounded-lg shadow-lg">
-            <p className="text-lg mb-4">Are you sure you want to send this material entry?</p>
-            <div className="flex justify-end">
-                <button
-                    onClick={onCancel}
-                    className="bg-gray-500 text-white px-4 py-2 rounded mr-2"
-                >
-                    Cancel
-                </button>
-                <button
-                    onClick={onConfirm}
-                    className="bg-blue-500 text-white px-4 py-2 rounded"
-                >
-                    OK
-                </button>
+    const ConfirmationPopup: React.FC<ConfirmationPopupProps> = ({ onConfirm, onCancel }) => {
+        const [image, setImage] = useState<File | null>(null);
+
+        const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+            if (e.target.files && e.target.files[0]) {
+                setImage(e.target.files[0]);
+            }
+        };
+        return (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+                <div className="bg-white p-6 rounded-lg shadow-lg">
+                    <p className="text-lg mb-4">Are you sure you want to send this material entry?</p>
+                    <div className="mb-4">
+                        <label className="block text-sm font-medium text-gray-700">Upload Image</label>
+                        <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleImageChange}
+                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
+                        />
+                    </div>
+                    <div className="flex justify-end">
+                        <button
+                            onClick={onCancel}
+                            className="bg-gray-500 text-white px-4 py-2 rounded mr-2"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            onClick={() => onConfirm(image)}
+                            className="bg-blue-500 text-white px-4 py-2 rounded"
+                        >
+                            OK
+                        </button>
+                    </div>
+                </div>
             </div>
-        </div>
-    </div>
-);
+        );
+    };
 
-    const handleSend = async () => {
+    const handleSend = async (image: File | null) => {
         if (!selectedEntry) return;
 
         const token = localStorage.getItem('accessTokenpq');
@@ -161,14 +183,19 @@ const ConfirmationPopup: React.FC<ConfirmationPopupProps> = ({ onConfirm, onCanc
             return;
         }
 
+        const formData = new FormData();
+        formData.append('status', 'Sent from procurement');
+        if (image) {
+            formData.append('image', image);
+        }
+
         try {
             const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL_PROJECTMANAGEMENT}workingDrawing/saveMaterialsStatus/${selectedEntry.id}`, {
                 method: 'PUT',
                 headers: {
                     'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ status: 'Sent from procurement' }),
+                body: formData,
             });
 
             if (!response.ok) throw new Error("Failed to update status");
@@ -179,6 +206,7 @@ const ConfirmationPopup: React.FC<ConfirmationPopupProps> = ({ onConfirm, onCanc
                     entry.id === selectedEntry.id ? { ...entry, status: 'Sent from procurement' } : entry
                 )
             );
+            await fetchMaterials();
 
             setIsPopupOpen(false);
             setSelectedEntry(null);
@@ -250,6 +278,8 @@ const ConfirmationPopup: React.FC<ConfirmationPopupProps> = ({ onConfirm, onCanc
                         <TableHead className="text-white text-center">Quantity</TableHead>
 
                         <TableHead className="text-white text-center">Date</TableHead>
+                        <TableHead className="text-white text-center">Image</TableHead>
+
                         <TableHead className="text-white text-center">Status</TableHead>
 
                         <TableHead className="text-white text-center">Actions</TableHead>
@@ -272,6 +302,25 @@ const ConfirmationPopup: React.FC<ConfirmationPopupProps> = ({ onConfirm, onCanc
                                 <TableCell className="border border-[#e5e7eb]">{entry.quantity}</TableCell>
 
                                 <TableCell className="border border-[#e5e7eb]">{entry.date}</TableCell>
+                                <TableCell className="border border-[#e5e7eb] text-center">
+                                    {entry.image ? (
+                                        <div className="flex justify-center items-center">
+                                            <a href={`${process.env.NEXT_PUBLIC_API_URL_PROJECTMANAGEMENT}uploads/${entry.image}`} target="_blank" rel="noopener noreferrer">
+                                                <Image
+                                                    src={`${process.env.NEXT_PUBLIC_API_URL_PROJECTMANAGEMENT}uploads/${entry.image}`}
+                                                    alt="image"
+                                                    width={100}
+                                                    height={100}
+                                                    className="object-contain"
+                                                />
+                                            </a>
+                                        </div>
+                                    ) : (
+                                        null
+                                    )}
+                                </TableCell>
+
+
                                 <TableCell className="border border-[#e5e7eb]">{entry.status}</TableCell>
 
                                 <TableCell className="border border-[#e5e7eb]">
@@ -293,7 +342,7 @@ const ConfirmationPopup: React.FC<ConfirmationPopupProps> = ({ onConfirm, onCanc
 
             {isPopupOpen && (
                 <ConfirmationPopup
-                    onConfirm={handleSend}
+                    onConfirm={(image) => handleSend(image)}
                     onCancel={() => setIsPopupOpen(false)}
                 />
             )}
