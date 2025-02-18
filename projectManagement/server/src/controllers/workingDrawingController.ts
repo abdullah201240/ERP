@@ -10,6 +10,7 @@ import DesignMaterialList from "../models/designMaterialList";
 import Boqfeedback from "../models/boqfeedback";
 import workingDrawing from "../models/workingDrawing";
 import SaveMaterial from "../models/saveMaterial";
+import { Sequelize } from "sequelize";
 
 export const createCategory = asyncHandler(
     async (req: Request, res: Response, next: NextFunction) => {
@@ -766,9 +767,20 @@ export const getSaveMaterialsByProject = asyncHandler(
     async (req: Request, res: Response, next: NextFunction) => {
         const { id } = req.params;
 
+        // Get today's date in YYYY-MM-DD format
+        const today = new Date().toISOString().split('T')[0];
+
+        // Fetch all materials with sorting logic
         const saveMaterials = await SaveMaterial.findAll({
             where: { projectId: id },
-            
+            order: [
+                // First, get today's data
+                [Sequelize.literal(`CASE WHEN date = '${today}' THEN 0 
+                                        WHEN date > '${today}' THEN 1 
+                                        ELSE 2 END`), 'ASC'],  // 0 = today, 1 = future, 2 = past
+                // Then sort data by date in ascending order (earliest first)
+                ['date', 'ASC']
+            ],
         });
 
         if (!saveMaterials.length) {
@@ -780,6 +792,8 @@ export const getSaveMaterialsByProject = asyncHandler(
         );
     }
 );
+
+
 // Update Save Materials by ID
 export const updateSaveMaterial = asyncHandler(
     async (req: Request, res: Response, next: NextFunction) => {
@@ -823,6 +837,31 @@ export const deleteSaveMaterial = asyncHandler(
 
         return res.status(200).json(
             ApiResponse.success(null, 'Save Material deleted successfully')
+        );
+    }
+);
+
+export const updateSaveMaterialStatus = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction) => {
+        const { id } = req.params;
+        const {
+            status
+        } = req.body;
+
+        // Find the material by ID
+        const material = await SaveMaterial.findByPk(id);
+
+        if (!material) {
+            throw new ApiError('Save Material not found', 404, 'NOT_FOUND');
+        }
+
+        // Update the material with the new data
+        material.status = status || material.status;
+
+        await material.save();
+
+        return res.status(200).json(
+            ApiResponse.success(material, 'Save Material updated successfully')
         );
     }
 );

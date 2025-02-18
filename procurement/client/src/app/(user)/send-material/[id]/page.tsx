@@ -29,6 +29,7 @@ interface MaterialEntry {
     productName: string;
     quantity: number;
     date: string;
+    status: string;
 }
 
 
@@ -40,7 +41,8 @@ export default function Page() {
 
     const id = params?.id;
     const [materialEntries, setMaterialEntries] = useState<MaterialEntry[]>([]);
-  
+    const [isPopupOpen, setIsPopupOpen] = useState(false);
+    const [selectedEntry, setSelectedEntry] = useState<MaterialEntry | null>(null);
     useEffect(() => {
         const checkTokenAndFetchProfile = async () => {
             const token = localStorage.getItem('accessTokenpq');
@@ -58,7 +60,7 @@ export default function Page() {
                 }
                 const data = await response.json();
                 console.table(data.data)
-                
+
             } catch (error) {
                 console.error(error);
             }
@@ -121,11 +123,69 @@ export default function Page() {
 
     }, [fetchDrawings, fetchMaterials]);
 
-   
 
 
-  
- 
+   interface ConfirmationPopupProps {
+    onConfirm: () => void;
+    onCancel: () => void;
+}
+
+const ConfirmationPopup: React.FC<ConfirmationPopupProps> = ({ onConfirm, onCancel }) => (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+        <div className="bg-white p-6 rounded-lg shadow-lg">
+            <p className="text-lg mb-4">Are you sure you want to send this material entry?</p>
+            <div className="flex justify-end">
+                <button
+                    onClick={onCancel}
+                    className="bg-gray-500 text-white px-4 py-2 rounded mr-2"
+                >
+                    Cancel
+                </button>
+                <button
+                    onClick={onConfirm}
+                    className="bg-blue-500 text-white px-4 py-2 rounded"
+                >
+                    OK
+                </button>
+            </div>
+        </div>
+    </div>
+);
+
+    const handleSend = async () => {
+        if (!selectedEntry) return;
+
+        const token = localStorage.getItem('accessTokenpq');
+        if (!token) {
+            router.push('/');
+            return;
+        }
+
+        try {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL_PROJECTMANAGEMENT}workingDrawing/saveMaterialsStatus/${selectedEntry.id}`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ status: 'Sent from procurement' }),
+            });
+
+            if (!response.ok) throw new Error("Failed to update status");
+
+            // Update the local state
+            setMaterialEntries(prevEntries =>
+                prevEntries.map(entry =>
+                    entry.id === selectedEntry.id ? { ...entry, status: 'Sent from procurement' } : entry
+                )
+            );
+
+            setIsPopupOpen(false);
+            setSelectedEntry(null);
+        } catch (error) {
+            console.error("Error updating status:", error);
+        }
+    };
 
     return (
         <div className="p-6">
@@ -168,6 +228,9 @@ export default function Page() {
                                     <TableCell className="border border-[#e5e7eb]">{project.perPiecePrice}</TableCell>
                                     <TableCell className="border border-[#e5e7eb]">{project.totalPrice}</TableCell>
 
+
+
+
                                 </TableRow>
                             ))
                         )}
@@ -187,6 +250,8 @@ export default function Page() {
                         <TableHead className="text-white text-center">Quantity</TableHead>
 
                         <TableHead className="text-white text-center">Date</TableHead>
+                        <TableHead className="text-white text-center">Status</TableHead>
+
                         <TableHead className="text-white text-center">Actions</TableHead>
                     </TableRow>
                 </TableHeader>
@@ -199,7 +264,7 @@ export default function Page() {
                         </TableRow>
                     ) : (
                         materialEntries.map((entry, index) => (
-                            <TableRow key={entry.productCode} className="text-center">
+                            <TableRow key={entry.id} className="text-center">
                                 <TableCell className="border border-[#e5e7eb]">{index + 1}</TableCell>
                                 <TableCell className="border border-[#e5e7eb]">{entry.productCode}</TableCell>
                                 <TableCell className="border border-[#e5e7eb]">{entry.productName}</TableCell>
@@ -207,15 +272,32 @@ export default function Page() {
                                 <TableCell className="border border-[#e5e7eb]">{entry.quantity}</TableCell>
 
                                 <TableCell className="border border-[#e5e7eb]">{entry.date}</TableCell>
-                               
+                                <TableCell className="border border-[#e5e7eb]">{entry.status}</TableCell>
+
+                                <TableCell className="border border-[#e5e7eb]">
+                                    <button
+                                        onClick={() => {
+                                            setSelectedEntry(entry);
+                                            setIsPopupOpen(true);
+                                        }}
+                                        className="bg-gradient-to-r from-blue-500 to-indigo-600 px-4 py-2 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 ease-in-out transform hover:scale-105 hover:bg-gradient-to-r hover:from-indigo-600 hover:to-blue-500 focus:outline-none focus:ring-2 focus:ring-indigo-300"
+                                    >
+                                        Send
+                                    </button>
+                                </TableCell>
                             </TableRow>
                         ))
                     )}
                 </TableBody>
             </Table>
 
+            {isPopupOpen && (
+                <ConfirmationPopup
+                    onConfirm={handleSend}
+                    onCancel={() => setIsPopupOpen(false)}
+                />
+            )}
 
-           
 
         </div>
     );
