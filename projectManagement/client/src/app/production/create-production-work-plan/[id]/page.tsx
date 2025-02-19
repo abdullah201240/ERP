@@ -81,7 +81,7 @@ export default function Page() {
                 return;
             }
 
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}workingDrawing/drawingSisterConcernId/${employeeDetails.sisterConcernId}`, {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}workingDrawing/drawingSisterConcernId/${employeeDetails.sisterConcernId}/${id}`, {
                 headers: { Authorization: token },
             });
 
@@ -95,7 +95,7 @@ export default function Page() {
             console.error("Error fetching drawings:", error);
             setDrawings([]);
         }
-    }, [router, employeeDetails]);
+    }, [router, employeeDetails,id]);
 
     useEffect(() => {
         fetchDrawings();

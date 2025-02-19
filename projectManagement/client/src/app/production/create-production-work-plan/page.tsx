@@ -153,7 +153,7 @@ export default function Page() {
                                         <Link href={`/production/create-production-work-plan/${project.projectId}`}>
                                             <p className="mr-8 bg-gradient-to-r from-blue-500 to-indigo-600 px-4 py-2 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 ease-in-out transform hover:scale-105">Make Work Plan</p>
                                         </Link>
-                                        <Link href={`/production/create-production-work-plan/barchart/${project.id}`}>
+                                        <Link href={`/production/create-production-work-plan/barchart/${project.projectId}`}>
                                             <p className="bg-gradient-to-r from-blue-500 to-indigo-600 px-4 py-2 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 ease-in-out transform hover:scale-105">Barchart</p>
                                         </Link>
                                     </TableCell>

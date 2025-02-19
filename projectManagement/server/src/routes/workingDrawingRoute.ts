@@ -16,7 +16,7 @@ router.get('/drawingAll/:projectId', viewAllDrawings);
 
 // View a specific working drawing by ID
 router.get('/drawing/:id', viewDrawingById);
-router.get('/drawingSisterConcernId/:sisterConcernId', viewDrawingBySisterConcernId);
+router.get('/drawingSisterConcernId/:sisterConcernId/:projectId', viewDrawingBySisterConcernId);
 
 
 // Delete a working drawing by ID

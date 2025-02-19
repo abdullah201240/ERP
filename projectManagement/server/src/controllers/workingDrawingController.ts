@@ -228,11 +228,11 @@ export const viewAllDrawings = asyncHandler(
 
 export const viewDrawingBySisterConcernId = asyncHandler(
     async (req: Request, res: Response, next: NextFunction) => {
-        const { sisterConcernId } = req.params;
+        const { sisterConcernId,projectId } = req.params;
 
         // Find the working drawings by sisterConcernId and sort by projectName
         const drawings = await WorkingDrawing.findAll({
-            where: { sisterConcernId }, // Filter by sisterConcernId
+            where: { sisterConcernId ,projectId}, // Filter by sisterConcernId
 
             order: [['projectName', 'ASC']], // Sort by projectName in ascending order
         });
