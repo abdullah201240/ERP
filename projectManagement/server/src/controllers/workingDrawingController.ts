@@ -12,6 +12,9 @@ import workingDrawing from "../models/workingDrawing";
 import SaveMaterial from "../models/saveMaterial";
 import { Sequelize } from "sequelize";
 import upload from "../middleware/uploadMiddleware";
+import ProductionWorkPlan from "../models/productionWorkPlan";
+import axios from "axios";
+import ERROR_MESSAGES from "../utils/errors/errorMassage";
 
 export const createCategory = asyncHandler(
     async (req: Request, res: Response, next: NextFunction) => {
@@ -911,3 +914,128 @@ export const updateSaveMaterialFeedback = [
         );
     }),
 ];
+
+export const createProductionWorkPlans = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction) => {
+        const {
+            workingDrawingsId, assignee,workType,startDate,endDate,remarks,projectId
+        } = req.body;
+
+        // Validate required fields
+        if (!workingDrawingsId || !assignee  ||!workType ||!startDate || !endDate  ) {
+            throw new ApiError('Required fields missing', 400, 'BAD_REQUEST');
+        }
+
+        // Create new record
+        const material = await ProductionWorkPlan.create({
+            workingDrawingsId,
+            assignee,
+            workType,
+            startDate,
+            endDate,
+            remarks,
+            projectId
+
+        });
+
+        return res.status(201).json(
+            ApiResponse.success(material, 'Production WorkPlans created successfully')
+        );
+    }
+);
+
+export const getProductionWorkPlans = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction) => {
+        const { id } = req.params;
+
+        // Fetch all production work plans for the given workingDrawingsId
+        const projects = await ProductionWorkPlan.findAll({
+            where: { workingDrawingsId: id },
+        });
+
+        if (!projects.length) {
+            throw new ApiError('No ProductionWorkPlans found', 404, 'NOT_FOUND');
+        }
+
+        // Fetch employee details for each project
+        const updatedProjects = await Promise.all(
+            projects.map(async (project) => {
+                try {
+                    const response = await axios.get(
+                        `${process.env.EXTERNAL_API_URL}sisterConcern/employeeById/${project.assignee}`
+                    );
+
+                    if (response.status === 200 && response.data) {
+                        return {
+                            ...project.toJSON(),
+                            employeeName: response.data.name, // Assuming `name` is in API response
+                        };
+                    } else {
+                        return {
+                            ...project.toJSON(),
+                            employeeName: 'Unknown',
+                        };
+                    }
+                } catch (error) {
+                    return {
+                        ...project.toJSON(),
+                        employeeName: 'Unknown',
+                    };
+                }
+            })
+        );
+
+        return res.status(200).json(
+            ApiResponse.success(updatedProjects, 'Production Work Plans fetched successfully')
+        );
+    }
+);
+
+// Delete material by ID
+export const deleteProductionWorkPlans = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction) => {
+        const { id } = req.params;
+
+        // Check if the record exists
+        const productionWorkPlans = await ProductionWorkPlan.findByPk(id);
+        if (!productionWorkPlans) {
+            throw new ApiError('Production Work Plan not found', 404, 'NOT_FOUND');
+        }
+
+        // Delete the record
+        await productionWorkPlans.destroy();
+
+        return res.status(200).json(
+            ApiResponse.success(null, 'Production Work Plans deleted successfully')
+        );
+    }
+);
+
+// Update production work plan by ID
+export const updateProductionWorkPlans = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction) => {
+        const { id } = req.params;
+        const { workingDrawingsId, assignee, workType, startDate, endDate, remarks } = req.body;
+
+        // Find the existing production work plan
+        const productionWorkPlan = await ProductionWorkPlan.findByPk(id);
+
+        if (!productionWorkPlan) {
+            throw new ApiError('Production Work Plan not found', 404, 'NOT_FOUND');
+        }
+
+        // Update the production work plan
+        await productionWorkPlan.update({
+            workingDrawingsId: workingDrawingsId || productionWorkPlan.workingDrawingsId,
+            assignee: assignee || productionWorkPlan.assignee,
+            workType: workType || productionWorkPlan.workType,
+            startDate: startDate || productionWorkPlan.startDate,
+            endDate: endDate || productionWorkPlan.endDate,
+            remarks: remarks || productionWorkPlan.remarks,
+        });
+
+        return res.status(200).json(
+            ApiResponse.success(productionWorkPlan, 'Production Work Plan updated successfully')
+        );
+    }
+);

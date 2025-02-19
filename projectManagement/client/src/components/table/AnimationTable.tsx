@@ -296,9 +296,8 @@ const AnimationTable: React.FC<AnimationTableProps> = ({ projectId , reload}) =>
                 throw new Error('Failed to submit data');
             }
 
-            const result = await response.json();
+            await response.json();
             toast.success('Design plan updated successfully!');
-            console.log(result);
 
             // Reset form fields
             setStepType('');

@@ -70,6 +70,7 @@ interface Layout2DTableProps {
     reload: boolean;
 }
 
+
 const Layout2DTable: React.FC<Layout2DTableProps> = ({ projectId, reload }) => {
     const router = useRouter();
     const [projects, setProjects] = useState<PreProjectSiteVisitPlan[]>([]);

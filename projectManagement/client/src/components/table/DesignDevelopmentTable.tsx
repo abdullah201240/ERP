@@ -123,6 +123,7 @@ export default function DesignDevelopmentTable() {
 
                     const passedTime = currentDate.getTime() - startDate.getTime();
                     const daysPassed = Math.max(0, Math.floor(passedTime / (1000 * 60 * 60 * 24)));
+                    
 
                     return {
                         ...project,

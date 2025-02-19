@@ -1,6 +1,6 @@
 import express from "express";
 import { verifyJWT } from "../middleware/auth"; 
-import { addWorkingDrawingImage, createCategory, createDesignMaterial, createDesignMaterialFeedback, createSaveMaterials, createUploadDrawing, deleteCategory, deleteDrawing, deleteMaterial, deleteSaveMaterial, deleteWorkingDrawingImage, getMaterialsByProject, getSaveMaterialsByProject, getWorkingDrawingByProject, updateCategory, updateDrawing, updateDrawingStatus, updateFeedbackStatus, updateSaveMaterial, updateSaveMaterialFeedback, updateSaveMaterialStatus, viewAllDrawings, viewCategory, viewDesignMaterialFeedback, viewDrawingById, viewDrawingBySisterConcernId, viewDrawingsByProjectId } from "../controllers/workingDrawingController";
+import { addWorkingDrawingImage, createCategory, createDesignMaterial, createDesignMaterialFeedback, createProductionWorkPlans, createSaveMaterials, createUploadDrawing, deleteCategory, deleteDrawing, deleteMaterial, deleteProductionWorkPlans, deleteSaveMaterial, deleteWorkingDrawingImage, getMaterialsByProject, getProductionWorkPlans, getSaveMaterialsByProject, getWorkingDrawingByProject, updateCategory, updateDrawing, updateDrawingStatus, updateFeedbackStatus, updateProductionWorkPlans, updateSaveMaterial, updateSaveMaterialFeedback, updateSaveMaterialStatus, viewAllDrawings, viewCategory, viewDesignMaterialFeedback, viewDrawingById, viewDrawingBySisterConcernId, viewDrawingsByProjectId } from "../controllers/workingDrawingController";
 import upload from "../middleware/uploadMiddleware";
 const router = express.Router();
 
@@ -49,6 +49,13 @@ router.put('/saveMaterials/:id', updateSaveMaterial);
 router.put('/saveMaterialsStatus/:id', updateSaveMaterialStatus);
 router.delete('/saveMaterials/:id', deleteSaveMaterial);
 router.put('/updateSaveMaterialFeedback/:id', updateSaveMaterialFeedback);
+
+router.post('/productionWorkPlan', createProductionWorkPlans);
+router.get('/productionWorkPlan/:id', getProductionWorkPlans);
+router.delete('/productionWorkPlan/:id', deleteProductionWorkPlans);
+
+
+router.put('/productionWorkPlan/:id', updateProductionWorkPlans);
 
 
 export default router;
