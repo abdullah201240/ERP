@@ -1015,7 +1015,7 @@ export const deleteProductionWorkPlans = asyncHandler(
 export const updateProductionWorkPlans = asyncHandler(
     async (req: Request, res: Response, next: NextFunction) => {
         const { id } = req.params;
-        const { workingDrawingsId, assignee, workType, startDate, endDate, remarks } = req.body;
+        const { workingDrawingsId, assignee, workType, startDate, endDate, remarks,completed } = req.body;
 
         // Find the existing production work plan
         const productionWorkPlan = await ProductionWorkPlan.findByPk(id);
@@ -1032,6 +1032,7 @@ export const updateProductionWorkPlans = asyncHandler(
             startDate: startDate || productionWorkPlan.startDate,
             endDate: endDate || productionWorkPlan.endDate,
             remarks: remarks || productionWorkPlan.remarks,
+            completed: completed || productionWorkPlan.completed
         });
 
         return res.status(200).json(

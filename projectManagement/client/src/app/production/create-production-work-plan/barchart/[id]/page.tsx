@@ -192,52 +192,7 @@ const Page: React.FC = () => {
 
                         TaskListTable={() => (
                             <div>
-                                {/* <Table className="w-full">
-                                    <TableBody>
-                                        {tasks.map((task, index) => {
-                                            // Ensure task.start and task.end are defined before calculating days
-                                            if (!task.start || !task.end) {
-                                                return (
-                                                    <TableRow key={task.id} className="text-center h-12">
-                                                        <TableCell className="text-center border border-[#e5e7eb]">{index + 1}</TableCell>
-                                                        <TableCell className="border border-[#e5e7eb]">{task.name}</TableCell>
-                                                        <TableCell className="border border-[#e5e7eb]">Invalid Dates</TableCell>
-                                                    </TableRow>
-                                                );
-                                            }
-
-                                            const days = (task.end.getTime() - task.start.getTime()) / (1000 * 60 * 60 * 24);
-
-                                            return (
-                                                <><TableRow key={task.id} className="text-center h-12">
-                                                        <TableCell className="text-center border border-[#e5e7eb]">{index + 1}</TableCell>
-                                                        <TableCell className="border border-[#e5e7eb]">{task.name}</TableCell>
-                                                        <TableCell className="border border-[#e5e7eb]">
-                                                            {task.start.toLocaleDateString("en-US", {
-                                                                weekday: "long", // e.g., Monday
-                                                                year: "numeric", // e.g., 2024
-                                                                month: "long", // e.g., August
-                                                                day: "numeric", // e.g., 20
-                                                            })}
-                                                        </TableCell>
-
-
-                                                        <TableCell className="border border-[#e5e7eb]">
-                                                            {task.end.toLocaleDateString("en-US", {
-                                                                weekday: "long", // e.g., Monday
-                                                                year: "numeric", // e.g., 2024
-                                                                month: "long", // e.g., August
-                                                                day: "numeric", // e.g., 20
-                                                            })}
-                                                        </TableCell>
-
-
-                                                        <TableCell className="border border-[#e5e7eb]">{days} Days</TableCell>
-                                                    </TableRow></>
-                                            );
-                                        })}
-                                    </TableBody>
-                                </Table> */}
+                               
                             </div>
                         )}
                     />
