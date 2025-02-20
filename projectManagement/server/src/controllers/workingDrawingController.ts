@@ -1039,3 +1039,50 @@ export const updateProductionWorkPlans = asyncHandler(
         );
     }
 );
+
+export const getProductionWorkPlans2 = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction) => {
+        const { id } = req.params;
+
+        // Fetch all production work plans for the given workingDrawingsId
+        const projects = await ProductionWorkPlan.findAll({
+            where: { projectId: id },
+        });
+
+        if (!projects.length) {
+            throw new ApiError('No ProductionWorkPlans found', 404, 'NOT_FOUND');
+        }
+
+        // Fetch employee details for each project
+        const updatedProjects = await Promise.all(
+            projects.map(async (project) => {
+                try {
+                    const response = await axios.get(
+                        `${process.env.EXTERNAL_API_URL}sisterConcern/employeeById/${project.assignee}`
+                    );
+
+                    if (response.status === 200 && response.data) {
+                        return {
+                            ...project.toJSON(),
+                            employeeName: response.data.name, // Assuming `name` is in API response
+                        };
+                    } else {
+                        return {
+                            ...project.toJSON(),
+                            employeeName: 'Unknown',
+                        };
+                    }
+                } catch (error) {
+                    return {
+                        ...project.toJSON(),
+                        employeeName: 'Unknown',
+                    };
+                }
+            })
+        );
+
+        return res.status(200).json(
+            ApiResponse.success(updatedProjects, 'Production Work Plans fetched successfully')
+        );
+    }
+);

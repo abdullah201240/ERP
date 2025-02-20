@@ -122,6 +122,7 @@ export default function Page() {
     const router = useRouter();
     const params = useParams();
     const id = params?.project;
+    const projectId = params?.id;
     const [drawings, setDrawings] = useState<Drawing | null>(null);
     const [productionWorkPlans, setProductionWorkPlans] = useState<ProductionWorkPlan[]>([]);
 
@@ -369,6 +370,7 @@ export default function Page() {
 
         const stepData = {
             workingDrawingsId: id,
+            projectId,
             assignee,
             workType,
             startDate,
