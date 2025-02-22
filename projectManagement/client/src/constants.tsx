@@ -56,10 +56,10 @@ export const SIDENAV_ITEMS: SideNavItem[] = [
       { title: 'BOQ Review', path: '/production/boq-review' },
       { title: 'Create Production Work Plan', path: '/production/create-production-work-plan' },
       { title: 'Production Work Update', path: '/production/production-work-update' },
+      { title: 'Send Material List', path: '/production/send-material-list' },
       { title: 'Received Materials', path: '/production/received-materials' },
       { title: 'Bill Generation', path: '/production/bill-generation' },
       { title: 'Project Handover', path: '/production/project-handover' },
-      { title: 'Send Material List', path: '/production/send-material-list' },
 
     
       
