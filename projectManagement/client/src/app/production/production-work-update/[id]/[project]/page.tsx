@@ -84,6 +84,7 @@ interface ProductionWorkPlan {
   completed: string;
   employeeName: string
   productionWorkUpdate: ProductionWorkUpdate[];
+  status:string
 
 
 }
@@ -237,6 +238,36 @@ export default function Page() {
       );
     } catch (error) {
       console.error("Error updating completed percentage:", error);
+    }
+  };
+  const handleStatusChange = async (id: number, status: string) => {
+    try {
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        router.push('/');
+        return;
+      }
+     
+
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}workingDrawing/productionWorkPlan/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': token,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({status }),
+      });
+
+      if (!response.ok) throw new Error("Failed to update completed percentage");
+
+      // Update the UI
+      setProductionWorkPlans(prev =>
+        prev.map(plan =>
+          plan.id === id ? { ...plan, status } : plan
+        )
+      );
+    } catch (error) {
+      console.error("Error updating status percentage:", error);
     }
   };
   const handleAddClick = (workPlanId: number) => {
@@ -399,20 +430,39 @@ export default function Page() {
 
                     const totalDays = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
                     const daysPassed = Math.ceil((currentDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
-                    const daysRemaining = totalDays - daysPassed;
-
+                    const daysRemaining = Math.max((totalDays - daysPassed) + 1, 0);
+                    let tracking = "Not applicable";
+                     if(productionWorkPlan.status === "In Progress" && daysRemaining === 0){
+                      tracking="Over due"
+                     }
+                     if(productionWorkPlan.status === "In Progress" && daysRemaining > 0){
+                      tracking="On Track"
+                     }
 
                     return (
                       <TableRow key={productionWorkPlan.id} className='text-center'>
                         <TableCell className='text-center border border-[#e5e7eb]'>{index + 1}</TableCell>
                         <TableCell className='border border-[#e5e7eb]'>{productionWorkPlan.workType}</TableCell>
-                        <TableCell className='border border-[#e5e7eb]'>{productionWorkPlan.workType}</TableCell>
+                        <TableCell className='border border-[#e5e7eb] text-center'>
+                          <select
+                            value={productionWorkPlan?.status}
+                            onChange={(event) => handleStatusChange(productionWorkPlan.id, event.target.value)}
+                            className="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                          >
+                            {["Yet to Start", "In Progress", "Complete"].map((percent) => (
+                              <option key={percent} value={`${percent}`}>{percent}</option>
+                            ))}
+                          </select>
+                          
+                          
+                          
+                          </TableCell>
                         <TableCell className='border border-[#e5e7eb]'>{productionWorkPlan.startDate}</TableCell>
                         <TableCell className='border border-[#e5e7eb]'>{productionWorkPlan.endDate}</TableCell>
                         <TableCell className='border border-[#e5e7eb]'>{totalDays + 1} days</TableCell>
                         <TableCell className='border border-[#e5e7eb]'>{daysPassed} days</TableCell>
-                        <TableCell className='border border-[#e5e7eb]'>{daysRemaining + 1} days</TableCell>
-                        <TableCell className='border border-[#e5e7eb]'>{daysRemaining + 1} days</TableCell>
+                        <TableCell className='border border-[#e5e7eb]'>{daysRemaining} days</TableCell>
+                        <TableCell className='border border-[#e5e7eb]'>{tracking}</TableCell>
                         <TableCell className='border border-[#e5e7eb] text-center'>
                           <select
                             value={productionWorkPlan?.completed}

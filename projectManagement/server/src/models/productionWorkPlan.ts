@@ -12,6 +12,8 @@ interface ProductionWorkPlanAttributes {
   endDate: string;
   remarks?: string;
   completed?: string;
+  status?: string; // New field with default value
+
 }
 
 interface ProductionWorkPlanCreationAttributes extends Optional<ProductionWorkPlanAttributes, 'id'> {}
@@ -27,6 +29,8 @@ class ProductionWorkPlan extends Model<ProductionWorkPlanAttributes, ProductionW
   public endDate!: string;
   public remarks?: string;
   public completed?: string;
+  public status?: string; // New field
+
 }
 
 ProductionWorkPlan.init(
@@ -68,6 +72,11 @@ ProductionWorkPlan.init(
     completed: {
       type: DataTypes.STRING,
       allowNull: true,
+    },
+    status: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      defaultValue: "Yet to Start", // Default value added
     },
   },
   {
