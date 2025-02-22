@@ -15,6 +15,7 @@ import upload from "../middleware/uploadMiddleware";
 import ProductionWorkPlan from "../models/productionWorkPlan";
 import axios from "axios";
 import ERROR_MESSAGES from "../utils/errors/errorMassage";
+import ProductionWorkUpdate from "../models/productionWorkUpdate";
 
 export const createCategory = asyncHandler(
     async (req: Request, res: Response, next: NextFunction) => {
@@ -951,6 +952,13 @@ export const getProductionWorkPlans = asyncHandler(
         // Fetch all production work plans for the given workingDrawingsId
         const projects = await ProductionWorkPlan.findAll({
             where: { workingDrawingsId: id },
+            include: [
+                {
+                    model: ProductionWorkUpdate,
+                    as: "productionWorkUpdate",
+                }
+                
+            ],
         });
 
         if (!projects.length) {
@@ -1084,6 +1092,34 @@ export const getProductionWorkPlans2 = asyncHandler(
 
         return res.status(200).json(
             ApiResponse.success(updatedProjects, 'Production Work Plans fetched successfully')
+        );
+    }
+);
+
+export const createProductionWorkUpdate = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction) => {
+        const {
+            workingDrawingsId, date,workUpdate,productionWorkPlansId
+        } = req.body;
+
+        // Validate required fields
+        if (!workingDrawingsId || !date  ||!workUpdate || !productionWorkPlansId  ) {
+            throw new ApiError('Required fields missing', 400, 'BAD_REQUEST');
+        }
+
+        // Create new record
+        const material = await ProductionWorkUpdate.create({
+            workingDrawingsId,
+            date,
+            workUpdate,
+            productionWorkPlansId
+            
+           
+
+        });
+
+        return res.status(201).json(
+            ApiResponse.success(material, 'Production WorkUpdate created successfully')
         );
     }
 );

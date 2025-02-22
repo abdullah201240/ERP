@@ -13,6 +13,8 @@ import WorkingDrawing from './workingDrawing'; // Import WorkingDrawing model
 import WorkingDrawingImage from './workingDrawingImage'; // Import WorkingDrawingImage model
 import DesignMaterialList from './designMaterialList'
 import Boqfeedback from './boqfeedback';
+import ProductionWorkPlan from './productionWorkPlan';
+import ProductionWorkUpdate from './productionWorkUpdate';
 // A Project can have many Employees
 Project.hasMany(Assigned, {
   foreignKey: 'pid', // Foreign key in Employee table pointing to Project
@@ -131,7 +133,12 @@ Boqfeedback.belongsTo(WorkingDrawing, {
   as: 'workingDrawing', // Alias for accessing the related WorkingDrawing
 });
 
+ProductionWorkPlan.hasMany(ProductionWorkUpdate, {
+  foreignKey: 'productionWorkPlansId', // Foreign key in WorkingDrawingImage pointing to WorkingDrawing
+  as: 'productionWorkUpdate', // Alias for the relation
+  onDelete: 'CASCADE', // Cleanup when a WorkingDrawing is deleted
+});
 
 
 export { Project,DegineBOQ,AssignedDegineBoq,DesignPlan, Assigned, PreSiteVisitPlan, AssignedPreSiteVisitPlan, SupervisionSiteVisitPlan, AssignedSupervisionSiteVisitPlan,WorkingDrawing,
-  WorkingDrawingImage,Boqfeedback,DesignMaterialList };
+  WorkingDrawingImage,Boqfeedback,DesignMaterialList,ProductionWorkPlan ,ProductionWorkUpdate};

@@ -9,7 +9,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import Link from 'next/link';
+import WorkUpdateModal from '@/components/WorkUpdateModal'; // Import the modal component
+import ReviewWorkUpdatesModal from '@/components/ReviewWorkUpdatesModal'; // Import the review modal
+
 
 
 interface Drawing {
@@ -58,7 +60,13 @@ interface Materials {
   unit: string;
 }
 
-
+interface ProductionWorkUpdate {
+  id: number;
+  workingDrawingsId: string;
+  productionWorkPlansId: string;
+  date: string;
+  workUpdate: string;
+}
 
 interface ProductionWorkPlan {
   id: number;
@@ -75,6 +83,7 @@ interface ProductionWorkPlan {
 
   completed: string;
   employeeName: string
+  productionWorkUpdate: ProductionWorkUpdate[];
 
 
 }
@@ -87,6 +96,11 @@ export default function Page() {
   const [productionWorkPlans, setProductionWorkPlans] = useState<ProductionWorkPlan[]>([]);
 
   const [materialList, setMaterialList] = useState<Materials[]>([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedWorkPlanId, setSelectedWorkPlanId] = useState<number | null>(null);
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+  const [selectedWorkPlanIdForReview, setSelectedWorkPlanIdForReview] = useState<number | null>(null);
+  const [selectedWorkPlanUpdates, setSelectedWorkPlanUpdates] = useState<ProductionWorkUpdate[]>([]);
 
 
 
@@ -225,6 +239,43 @@ export default function Page() {
       console.error("Error updating completed percentage:", error);
     }
   };
+  const handleAddClick = (workPlanId: number) => {
+    setSelectedWorkPlanId(workPlanId);
+    setIsModalOpen(true);
+  };
+
+  const handleModalSubmit = async (reportingDate: string, workUpdate: string) => {
+    try {
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        router.push('/');
+        return;
+      }
+
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}workingDrawing/productionWorkUpdate`, {
+        method: 'POST',
+        headers: {
+          'Authorization': token,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ date: reportingDate, workUpdate, productionWorkPlansId: selectedWorkPlanId, workingDrawingsId: id }),
+      });
+
+      if (!response.ok) throw new Error("Failed to submit work update");
+
+      // Optionally, you can refetch the production work plans to update the UI
+      fetchProductionWorkPlan();
+    } catch (error) {
+      console.error("Error submitting work update:", error);
+    }
+  };
+
+  const handleReviewClick = (workPlanId: number, productionWorkUpdates: ProductionWorkUpdate[]) => {
+    setSelectedWorkPlanIdForReview(workPlanId);
+    setSelectedWorkPlanUpdates(productionWorkUpdates);
+    setIsReviewModalOpen(true);
+  };
+
 
 
   return (
@@ -364,7 +415,7 @@ export default function Page() {
                         <TableCell className='border border-[#e5e7eb]'>{daysRemaining + 1} days</TableCell>
                         <TableCell className='border border-[#e5e7eb] text-center'>
                           <select
-                            value={productionWorkPlan.completed}
+                            value={productionWorkPlan?.completed}
                             onChange={(event) => handleCompletedChange(productionWorkPlan.id, event.target.value)}
                             className="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
                           >
@@ -372,23 +423,26 @@ export default function Page() {
                               <option key={percent} value={`${percent}`}>{percent}%</option>
                             ))}
                           </select>
-                          </TableCell>
+                        </TableCell>
 
                         <TableCell className='border border-[#e5e7eb]'>
-
-                          <Link href={`/production/production-work-update/${id}/${productionWorkPlan.id}`}>
-                            <p className="mr-8 bg-gradient-to-r from-[#FF841A] to-[#FF841A] px-4 py-2 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 ease-in-out transform hover:scale-105">Add</p>
-                          </Link>
-
+                          <button
+                            onClick={() => handleAddClick(productionWorkPlan.id)}
+                            className="mr-8 bg-gradient-to-r from-[#FF841A] to-[#FF841A] px-4 py-2 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 ease-in-out transform hover:scale-105"
+                          >
+                            Add
+                          </button>
                         </TableCell>
-                        <TableCell className='border border-[#e5e7eb]  flex items-center justify-center'>
-                          <Link href={`/production/production-work-update/${id}/${productionWorkPlan.id}`}>
-                            <p className="mr-8 bg-gradient-to-r from-blue-500 to-indigo-600 px-4 py-2 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 ease-in-out transform hover:scale-105">Review</p>
-                          </Link>
-
+                        <TableCell className="border border-[#e5e7eb] flex items-center justify-center">
+                          <button
+                            onClick={() => handleReviewClick(productionWorkPlan.id, productionWorkPlan.productionWorkUpdate)}
+                            className="mr-8 bg-gradient-to-r from-blue-500 to-indigo-600 px-4 py-2 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 ease-in-out transform hover:scale-105"
+                          >
+                            Review
+                          </button>
                         </TableCell>
                         <TableCell className='border border-[#e5e7eb]'>{productionWorkPlan.employeeName}</TableCell>
-                        <TableCell className='border border-[#e5e7eb]'>{productionWorkPlan.remarks}</TableCell>
+                        <TableCell className='border border-[#e5e7eb]'>{productionWorkPlan?.remarks}</TableCell>
 
                       </TableRow>
                     );
@@ -405,7 +459,18 @@ export default function Page() {
         <p>Loading...</p>
       )}
 
-
+      <WorkUpdateModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSubmit={handleModalSubmit}
+      />
+      {/* Review Modal */}
+      <ReviewWorkUpdatesModal
+        isOpen={isReviewModalOpen}
+        onClose={() => setIsReviewModalOpen(false)}
+        workPlanId={selectedWorkPlanIdForReview!}
+        productionWorkUpdates={selectedWorkPlanUpdates}
+      />
 
     </div>
   );
