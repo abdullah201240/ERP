@@ -229,11 +229,11 @@ export const viewAllDrawings = asyncHandler(
 
 export const viewDrawingBySisterConcernId = asyncHandler(
     async (req: Request, res: Response, next: NextFunction) => {
-        const { sisterConcernId,projectId } = req.params;
+        const { sisterConcernId, projectId } = req.params;
 
         // Find the working drawings by sisterConcernId and sort by projectName
         const drawings = await WorkingDrawing.findAll({
-            where: { sisterConcernId ,projectId}, // Filter by sisterConcernId
+            where: { sisterConcernId, projectId }, // Filter by sisterConcernId
 
             order: [['projectName', 'ASC']], // Sort by projectName in ascending order
         });
@@ -744,11 +744,11 @@ export const getWorkingDrawingByProject = asyncHandler(
 export const createSaveMaterials = asyncHandler(
     async (req: Request, res: Response, next: NextFunction) => {
         const {
-            projectId, productCode, productName,quantity,date,sisterConcernId
+            projectId, productCode, productName, quantity, date, sisterConcernId
         } = req.body;
 
         // Validate required fields
-        if (!projectId || !productCode ||!productName ||!quantity ||!date || !sisterConcernId) {
+        if (!projectId || !productCode || !productName || !quantity || !date || !sisterConcernId) {
             throw new ApiError('Required fields missing', 400, 'BAD_REQUEST');
         }
 
@@ -804,7 +804,7 @@ export const updateSaveMaterial = asyncHandler(
     async (req: Request, res: Response, next: NextFunction) => {
         const { id } = req.params;
         const {
-              quantity, date
+            quantity, date
         } = req.body;
 
         // Find the material by ID
@@ -884,7 +884,7 @@ export const updateSaveMaterialFeedback = [
 
     asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
         const { id } = req.params;
-        const { status ,feedbackText} = req.body;
+        const { status, feedbackText } = req.body;
         const feedbackFile = req.files as Express.Multer.File[];
 
         // Find the material by ID
@@ -898,9 +898,9 @@ export const updateSaveMaterialFeedback = [
         if (status) {
             material.status = status;
         }
-        if(feedbackText){
+        if (feedbackText) {
             material.feedbackText = feedbackText;
-            
+
         }
 
         // Collect image filenames and update image field (if any files were uploaded)
@@ -919,11 +919,11 @@ export const updateSaveMaterialFeedback = [
 export const createProductionWorkPlans = asyncHandler(
     async (req: Request, res: Response, next: NextFunction) => {
         const {
-            workingDrawingsId, assignee,workType,startDate,endDate,remarks,projectId
+            workingDrawingsId, assignee, workType, startDate, endDate, remarks, projectId
         } = req.body;
 
         // Validate required fields
-        if (!workingDrawingsId || !assignee  ||!workType ||!startDate || !endDate  ) {
+        if (!workingDrawingsId || !assignee || !workType || !startDate || !endDate) {
             throw new ApiError('Required fields missing', 400, 'BAD_REQUEST');
         }
 
@@ -957,7 +957,7 @@ export const getProductionWorkPlans = asyncHandler(
                     model: ProductionWorkUpdate,
                     as: "productionWorkUpdate",
                 }
-                
+
             ],
         });
 
@@ -1023,7 +1023,7 @@ export const deleteProductionWorkPlans = asyncHandler(
 export const updateProductionWorkPlans = asyncHandler(
     async (req: Request, res: Response, next: NextFunction) => {
         const { id } = req.params;
-        const { workingDrawingsId, assignee, workType, startDate, endDate, remarks,completed ,status} = req.body;
+        const { workingDrawingsId, assignee, workType, startDate, endDate, remarks, completed, status } = req.body;
 
         // Find the existing production work plan
         const productionWorkPlan = await ProductionWorkPlan.findByPk(id);
@@ -1100,11 +1100,11 @@ export const getProductionWorkPlans2 = asyncHandler(
 export const createProductionWorkUpdate = asyncHandler(
     async (req: Request, res: Response, next: NextFunction) => {
         const {
-            workingDrawingsId, date,workUpdate,productionWorkPlansId
+            workingDrawingsId, date, workUpdate, productionWorkPlansId
         } = req.body;
 
         // Validate required fields
-        if (!workingDrawingsId || !date  ||!workUpdate || !productionWorkPlansId  ) {
+        if (!workingDrawingsId || !date || !workUpdate || !productionWorkPlansId) {
             throw new ApiError('Required fields missing', 400, 'BAD_REQUEST');
         }
 
@@ -1114,8 +1114,8 @@ export const createProductionWorkUpdate = asyncHandler(
             date,
             workUpdate,
             productionWorkPlansId
-            
-           
+
+
 
         });
 
@@ -1124,3 +1124,21 @@ export const createProductionWorkUpdate = asyncHandler(
         );
     }
 );
+
+export const UpdateHandOverToAccounts = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction) => {
+        const { id } = req.params;
+        // Find the record by ID
+        const workPlan = await WorkingDrawing.findByPk(id);
+        if (!workPlan) {
+            return res.status(404).json({ message: 'Production Work Plan not found' });
+        }
+
+        // Update the handOverAccounts field to 1
+        workPlan.handOverAccounts = 1;
+        await workPlan.save();
+        return res.status(200).json(
+            ApiResponse.success(workPlan, 'Updated successfully')
+        );
+
+    })

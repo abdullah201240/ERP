@@ -1,6 +1,6 @@
 import express from "express";
 import { verifyJWT } from "../middleware/auth"; 
-import { addWorkingDrawingImage, createCategory, createDesignMaterial, createDesignMaterialFeedback, createProductionWorkPlans, createProductionWorkUpdate, createSaveMaterials, createUploadDrawing, deleteCategory, deleteDrawing, deleteMaterial, deleteProductionWorkPlans, deleteSaveMaterial, deleteWorkingDrawingImage, getMaterialsByProject, getProductionWorkPlans, getProductionWorkPlans2, getSaveMaterialsByProject, getWorkingDrawingByProject, updateCategory, updateDrawing, updateDrawingStatus, updateFeedbackStatus, updateProductionWorkPlans, updateSaveMaterial, updateSaveMaterialFeedback, updateSaveMaterialStatus, viewAllDrawings, viewCategory, viewDesignMaterialFeedback, viewDrawingById, viewDrawingBySisterConcernId, viewDrawingsByProjectId } from "../controllers/workingDrawingController";
+import { addWorkingDrawingImage, createCategory, createDesignMaterial, createDesignMaterialFeedback, createProductionWorkPlans, createProductionWorkUpdate, createSaveMaterials, createUploadDrawing, deleteCategory, deleteDrawing, deleteMaterial, deleteProductionWorkPlans, deleteSaveMaterial, deleteWorkingDrawingImage, getMaterialsByProject, getProductionWorkPlans, getProductionWorkPlans2, getSaveMaterialsByProject, getWorkingDrawingByProject, updateCategory, updateDrawing, updateDrawingStatus, updateFeedbackStatus, UpdateHandOverToAccounts, updateProductionWorkPlans, updateSaveMaterial, updateSaveMaterialFeedback, updateSaveMaterialStatus, viewAllDrawings, viewCategory, viewDesignMaterialFeedback, viewDrawingById, viewDrawingBySisterConcernId, viewDrawingsByProjectId } from "../controllers/workingDrawingController";
 import upload from "../middleware/uploadMiddleware";
 const router = express.Router();
 
@@ -60,7 +60,7 @@ router.get('/productionWorkPlan2/:id', getProductionWorkPlans2);
 
 
 router.post('/productionWorkUpdate', createProductionWorkUpdate);
-
+router.put('/update-hand-over/:id', UpdateHandOverToAccounts);
 
 
 export default router;

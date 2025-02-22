@@ -13,7 +13,7 @@ interface ProductionWorkPlanAttributes {
   remarks?: string;
   completed?: string;
   status?: string; // New field with default value
-
+  handOverAccounts?: number; // New optional field with default value
 }
 
 interface ProductionWorkPlanCreationAttributes extends Optional<ProductionWorkPlanAttributes, 'id'> {}
@@ -30,7 +30,7 @@ class ProductionWorkPlan extends Model<ProductionWorkPlanAttributes, ProductionW
   public remarks?: string;
   public completed?: string;
   public status?: string; // New field
-
+  public handOverAccounts?: number; // New optional field
 }
 
 ProductionWorkPlan.init(
@@ -77,6 +77,11 @@ ProductionWorkPlan.init(
       type: DataTypes.STRING,
       allowNull: false,
       defaultValue: "Yet to Start", // Default value added
+    },
+    handOverAccounts: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      defaultValue: 0, // Default value added
     },
   },
   {

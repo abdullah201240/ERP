@@ -9,9 +9,21 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { Button } from '@/components/ui/button';
 
 interface Drawing {
     id: number;
@@ -25,6 +37,7 @@ interface Drawing {
     projectName: string;
     createdAt: string;
     status: string;
+    handOverAccounts: number;
 }
 
 interface EmployeeDetails {
@@ -48,6 +61,8 @@ export default function Page() {
     const router = useRouter();
     const params = useParams();
     const id = params?.id;
+    const [error, setError] = useState<string | null>(null);
+    const [updateId, setUpdateId] = useState<number | null>(null);
     const fetchCompanyProfile = useCallback(async () => {
         try {
             const token = localStorage.getItem('accessToken');
@@ -95,16 +110,42 @@ export default function Page() {
             console.error("Error fetching drawings:", error);
             setDrawings([]);
         }
-    }, [router, employeeDetails,id]);
+    }, [router, employeeDetails, id]);
 
     useEffect(() => {
         fetchDrawings();
     }, [fetchDrawings]);
+    const handleUpdate = async () => {
+        if (updateId === null) return;
+        const token = localStorage.getItem('accessToken');
 
+        if (!token) {
+            router.push('/');
+        } else {
+            try {
+                const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}workingDrawing/update-hand-over/${updateId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': token
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to delete project');
+                }
+
+            } catch (err) {
+                setError((err as Error).message);
+            }
+        }
+    };
+    if (error) {
+        return <div>Error: {error}</div>;
+    }
 
     return (
         <div>
-          <h1 className='mt-4 mb-4'>All BOQ</h1>
+            <h1 className='mt-4 mb-4'>All BOQ</h1>
             <Table>
                 <TableHeader className='bg-[#2A515B] text-white'>
                     <TableRow className='text-center'>
@@ -114,6 +155,9 @@ export default function Page() {
                         <TableHead className='text-white text-center'>Client Name</TableHead>
                         <TableHead className='text-white text-center'>Client Contact</TableHead>
                         <TableHead className='text-white text-center'>Item Name</TableHead>
+                        <TableHead className='text-white text-center'>Hand Over Accounts</TableHead>
+
+
                         <TableHead className='text-white text-center'>Status</TableHead>
                         <TableHead className='text-white text-center'>Action</TableHead>
                     </TableRow>
@@ -141,13 +185,42 @@ export default function Page() {
                                 <TableCell className='border border-[#e5e7eb]'>{drawing.clientContact}</TableCell>
                                 <TableCell className='border border-[#e5e7eb]'>{drawing.itemName}</TableCell>
                                 <TableCell className='border border-[#e5e7eb]'>
+                                    {drawing.handOverAccounts === 1 ? "Sent to Accounts" : "Not Sent Yet"}
+                                </TableCell>
+
+
+                                <TableCell className='border border-[#e5e7eb]'>
                                     {drawing.status}
                                 </TableCell>
                                 <TableCell className='border border-[#e5e7eb]  flex items-center justify-center'>
-                                <Link href={`/production/bill-generation/${id}/${drawing.id}`}>
+                                    <Link href={`/production/bill-generation/${id}/${drawing.id}`}>
                                         <p className="mr-8 bg-gradient-to-r from-blue-500 to-indigo-600 px-4 py-2 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 ease-in-out transform hover:scale-105">View Bill</p>
                                     </Link>
-                                   
+
+                                    <AlertDialog>
+                                        <AlertDialogTrigger asChild>
+                                            <Button onClick={() => setUpdateId(drawing.id)} className="mr-8 bg-gradient-to-r from-green-500 to-teal-600 px-4 py-2 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 ease-in-out transform hover:scale-105">
+                                                Sent Bill
+                                            </Button>
+
+
+                                        </AlertDialogTrigger>
+                                        <AlertDialogContent>
+                                            <AlertDialogHeader>
+                                                <AlertDialogTitle>Confirm hand over to accounts?</AlertDialogTitle>
+                                                <AlertDialogDescription>
+                                                    Are you sure you want to hand over to accounts? This action cannot be undone, and the project will be permanently update from the system.
+                                                </AlertDialogDescription>
+                                            </AlertDialogHeader>
+                                            <AlertDialogFooter>
+                                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                <AlertDialogAction onClick={handleUpdate}>Sent</AlertDialogAction>
+                                            </AlertDialogFooter>
+                                        </AlertDialogContent>
+                                    </AlertDialog>
+
+
+
                                 </TableCell>
                             </TableRow>
                         ))

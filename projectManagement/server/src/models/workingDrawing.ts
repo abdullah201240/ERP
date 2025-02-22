@@ -18,6 +18,7 @@ interface WorkingDrawingAttributes {
   projectName: string; 
   sisterConcernId?: string; // Add this line
   status?: string;
+  handOverAccounts?: number; // New optional field with default value
 
 }
 
@@ -40,6 +41,8 @@ class WorkingDrawing extends Model<WorkingDrawingAttributes, WorkingDrawingCreat
   public sisterConcernId?: string;
   public status?: string;
   public materialList?: DesignMaterialList[];
+
+  public handOverAccounts?: number; // New optional field
 
 
 
@@ -105,6 +108,11 @@ WorkingDrawing.init(
       type: DataTypes.STRING,
       allowNull: true, // Set it to false if you want this field to be required
       defaultValue: 'pending', // Default value for the status field
+    },
+    handOverAccounts: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      defaultValue: 0, // Default value added
     },
   },
   {
