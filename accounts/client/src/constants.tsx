@@ -58,7 +58,11 @@ export const SIDENAV_ITEMS: SideNavItem[] = [
     path: '/payable-management',
     icon: <Icon icon="mdi:credit-card-outline" width="19" height="19" />,
   },
-
+  {
+    title: 'Billing',
+    path: '/billing',
+    icon: <Icon icon="mdi:receipt-text" width="19" height="19" />,
+  },
   {
     title: 'Manage Client Data',
     path: '/manage-client-data',
