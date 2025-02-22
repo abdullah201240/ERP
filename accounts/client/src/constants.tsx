@@ -10,65 +10,64 @@ export const SIDENAV_ITEMS: SideNavItem[] = [
   },
 
   {
-    title: 'Purchase Management',
+    title: 'Journal Entry ',
+    path: '/journal-entry',
+    icon: <Icon icon="material-symbols:dashboard-rounded" width="19" height="19" />,
+  },
+  
+  {
+    title: 'Financial Reports',
     path: '/',
     icon: <Icon icon="arcticons:purchased-apps" width="19" height="19" />,
     submenu: true,
     subMenuItems: [
       
-      { title: 'Create a Purchase Order', path: '/create-purchase-order' },
+      { title: 'Cash Book', path: '/cash-book' },
 
-      { title: 'Purchase Req For Review', path: '/product-unit' },
-      { title: 'Send Material', path: '/send-material' },
-    ],
+      { title: 'Income Statement', path: '/income-statement' },
+      { title: 'Balance Sheet', path: '/balance-sheet' },
+      { title: 'Cash Flow Statement', path: '/cash-flow-statement' },
+
+      { title: 'Owner’s Equity Statement', path: '/owner-equity-statement' },
+    ], 
   },
+
+
   {
-    title: 'Products',
+    title: 'Asset Management ',
     path: '/',
-    icon: <Icon icon="fa-solid:box-open" width="19" height="19" />,
+    icon: <Icon icon="arcticons:purchased-apps" width="19" height="19" />,
     submenu: true,
     subMenuItems: [
       
-      { title: 'Category', path: '/product-category' },
+      { title: 'Asset List', path: '/asset-list' },
 
-      { title: 'Unit List', path: '/product-unit' },
-      { title: 'All Products', path: '/product' },
-      { title: 'Supervision', path: '/create-supervision' },
-    ],
+      { title: 'New Asset Entry', path: '/new-asset-entry' },
+      { title: 'Asset Write Off', path: '/asset-write-Off' },
+    ], 
   },
   {
-    title: 'Design & Development',
-    path: '/settings',
-    icon: <Icon icon="mdi:design" width="19" height="19" />,
-    submenu: true,
-    subMenuItems: [
-      { title: 'Create Design Plan', path: '/create-design-plan' },
-      { title: 'Design Work & Update', path: '/design-work-update' },
-      { title: 'Service Package', path: '/service-package' },
-      { title: 'BOQ', path: '/design-boq' },
-      { title: 'Generate BOQ & Quotation', path: '/generate-boq-quotation' },
-      { title: 'Generate Invoice', path: '/generate-invoice' },
-      { title: 'Upload Working Drawing', path: '/upload-working-drawing' },
-      { title: 'Review Working Drawing BOQ', path: '/review-working-drawing-boq' },
-      { title: 'Work Category', path: '/work-category' },
-     
-
-    ],
+    title: 'Bank Management',
+    path: '/bank-management',
+    icon: <Icon icon="material-symbols:dashboard-rounded" width="19" height="19" />,
   },
 
-  
-  
   {
-    title: 'Production',
-    path: '/help',
-    icon: <Icon icon="lucide:trending-up" width="19" height="19" />,
+    title: 'Receivable Management',
+    path: '/receivable-management',
+    icon: <Icon icon="material-symbols:dashboard-rounded" width="19" height="19" />,
+  },
+
+  {
+    title: 'Payable Management',
+    path: '/payable-management',
+    icon: <Icon icon="material-symbols:dashboard-rounded" width="19" height="19" />,
   },
   {
     title: 'Manage Client Data',
-    path: '/help',
+    path: '/manage-client-data',
     icon: <Icon icon="lucide:user" width="19" height="19" />,
   },
-  
   
 
 ];
