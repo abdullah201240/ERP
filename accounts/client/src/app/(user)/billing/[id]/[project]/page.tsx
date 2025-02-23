@@ -1,6 +1,6 @@
 'use client'
 import { useCallback, useEffect, useState } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import {
     Table,
     TableBody,
@@ -11,14 +11,18 @@ import {
 } from "@/components/ui/table";
 import { toWords } from 'number-to-words';
 // Dynamically import html2pdf from CDN
-import html2canvas from 'html2canvas';
-import { jsPDF } from 'jspdf';
+
 
 import dynamic from 'next/dynamic';
 const ReactEditor = dynamic(() => import('react-text-editor-kit'), {
     ssr: false,
 });
 import Image from 'next/image';
+
+
+
+
+
 
 interface Material {
     id: number;
@@ -85,6 +89,8 @@ interface EmployeeDetails {
 export default function Page() {
     const router = useRouter();
     const params = useParams();
+    const searchParams = useSearchParams();
+
     const id = params?.project;
     const [drawings, setDrawings] = useState<Drawing | null>(null);
     const [subject, setSubject] = useState('');
@@ -96,7 +102,7 @@ export default function Page() {
         const itemTotalPrice = parseFloat(item.mrpPrice || "0") * parseFloat(item.itemQuantity || "0");
         return total + itemTotalPrice;
     }, 0) || 0;
-        const vatAmount = totalAmount * 0.075;  // 7.5% VAT
+    const vatAmount = totalAmount * 0.075;  // 7.5% VAT
     const grandTotal = totalAmount + vatAmount;
     const grandTotalInWords = toWords(grandTotal).replace(/,/g, ''); // Clean commas if any
     const totalInWordsWithoutVAT = toWords(totalAmount).replace(/,/g, ''); // Total without VAT in words
@@ -171,43 +177,41 @@ export default function Page() {
         fetchDrawings();
     }, [fetchDrawings]);
 
-    const generatePDF = () => {
-        const input = document.getElementById('ganttChart')!;
-        html2canvas(input, {
-            scale: 2,
-            windowWidth: document.body.scrollWidth,
-            windowHeight: document.body.scrollHeight,
-            scrollX: 0,
-            scrollY: 0,
-        }).then((canvas) => {
-            const imgData = canvas.toDataURL('image/png');
-            const pdf = new jsPDF('p', 'mm', 'a4');  // 'p' for portrait and 'a4' size paper
+    useEffect(() => {
+        const drawingsParam = searchParams.get('drawings');
+        const subjectParam = searchParams.get('subject');
+        const termsConditionParam = searchParams.get('termsCondition');
+        const includeVATParam = searchParams.get('includeVAT');
+        const employeeDetailsParam = searchParams.get('employeeDetails');
 
-            const pageWidth = pdf.internal.pageSize.width;
-            const pageHeight = pdf.internal.pageSize.height;
+        if (drawingsParam) {
+            setDrawings(JSON.parse(drawingsParam));
+        }
+        if (subjectParam) {
+            setSubject(subjectParam);
+        }
+        if (termsConditionParam) {
+            setTermsCondition(termsConditionParam);
+        }
+        if (includeVATParam) {
+            setIncludeVAT(includeVATParam === 'true');
+        }
+        if (employeeDetailsParam) {
+            setEmployeeDetails(JSON.parse(employeeDetailsParam));
+        }
+    }, [searchParams]);
 
-            const imgWidth = pageWidth - 20; // 10mm padding on each side
-            const imgHeight = (canvas.height * imgWidth) / canvas.width;
+    const handleViewClick = () => {
+        const queryParams = new URLSearchParams({
+            drawings: JSON.stringify(drawings),
+            subject: subject,
+            termsCondition: termsCondition,
+            includeVAT: includeVAT.toString(),
+            employeeDetails: JSON.stringify(employeeDetails),
+        }).toString();
 
-            // If image height exceeds the page height, we need to adjust
-            if (imgHeight > pageHeight) {
-                const scaleFactor = pageHeight / imgHeight;
-                pdf.addImage(imgData, 'PNG', 10, 10, imgWidth * scaleFactor, imgHeight * scaleFactor);
-            } else {
-                pdf.addImage(imgData, 'PNG', 10, 10, imgWidth, imgHeight);
-            }
-
-            // If the content exceeds one page, add another page and continue
-            if (imgHeight > pageHeight) {
-                pdf.addPage();
-                pdf.addImage(imgData, 'PNG', 10, 10, imgWidth, imgHeight);
-            }
-
-            pdf.save('gantt-chart.pdf');
-        });
+        window.open(`/print/bill?${queryParams}`, '_blank');
     };
-
-
 
 
 
@@ -265,16 +269,17 @@ export default function Page() {
                         </label>
                     </div>
                 </form>
-                <div className='mt-12'>
-                    <button onClick={generatePDF} className="mb-4 p-2 bg-blue-500 text-white rounded">
-                        Download PDF
-                    </button>
-                </div>
+                <button
+                    onClick={handleViewClick}
+                    className="bg-blue-500 text-white px-4 py-2 rounded-md mt-4"
+                >
+                    Print
+                </button>
 
             </div>
 
 
-            <div className='mt-12' id="ganttChart">
+            <div id="printable-content" className='mt-12' >
                 <div className="bg-white p-4 md:p-12 shadow rounded">
                     <div className="flex justify-end mt-12">
                         <Image
@@ -305,14 +310,20 @@ export default function Page() {
                                 <TableCell className='text-center border border-[#e5e7eb]'>1</TableCell>
                                 <TableCell className='text-center border border-[#e5e7eb]'>{drawings?.category}</TableCell>
 
-                                <TableCell className='text-center border border-[#e5e7eb]'>{drawings?.materialList?.reduce((total, item) => total + parseFloat(item.mrpPrice || "0"), 0).toFixed(2)}</TableCell>
+                                <TableCell className='text-center border border-[#e5e7eb]'>{drawings?.materialList?.reduce((total, item) => {
+                                    const itemTotalPrice = parseFloat(item.mrpPrice || "0") * parseFloat(item.itemQuantity || "0");
+                                    return total + itemTotalPrice;
+                                }, 0).toFixed(2) || 0}</TableCell>
 
                             </TableRow>
                             <TableRow>
                                 <TableCell colSpan={2} className='text-right border border-[#e5e7eb]'>Total Amount
                                     in Tk.
                                 </TableCell>
-                                <TableCell colSpan={3} className='text-center border border-[#e5e7eb]'>{drawings?.materialList?.reduce((total, item) => total + parseFloat(item.mrpPrice || "0"), 0).toFixed(2)}</TableCell>
+                                <TableCell colSpan={3} className='text-center border border-[#e5e7eb]'>{drawings?.materialList?.reduce((total, item) => {
+                                    const itemTotalPrice = parseFloat(item.mrpPrice || "0") * parseFloat(item.itemQuantity || "0");
+                                    return total + itemTotalPrice;
+                                }, 0).toFixed(2) || 0}</TableCell>
 
 
 
@@ -405,6 +416,11 @@ export default function Page() {
 
 
             </div>
+
+
+
         </div>
+
+
     );
 }

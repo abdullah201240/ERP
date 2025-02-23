@@ -2,7 +2,7 @@ import express from "express";
 import employeeRoute from "./employeeRoute";
 import productRoute from "./product";
 
-
+import meterialRoute from './meterial'
 
 
 
@@ -13,6 +13,7 @@ const router = express.Router();
  */
 router.use("/employee", employeeRoute);
 router.use("/product", productRoute);
+router.use("/meterial", meterialRoute);
 
 
 
