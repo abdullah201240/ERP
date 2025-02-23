@@ -248,6 +248,27 @@ export const viewDrawingBySisterConcernId = asyncHandler(
         );
     }
 );
+export const viewDrawingBySisterConcernId2 = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction) => {
+        const { sisterConcernId } = req.params;
+
+        // Find the working drawings by sisterConcernId and sort by projectName
+        const drawings = await WorkingDrawing.findAll({
+            where: { sisterConcernId }, // Filter by sisterConcernId
+
+            order: [['projectName', 'ASC']], // Sort by projectName in ascending order
+        });
+
+        // Check if drawings are found
+        if (!drawings || drawings.length === 0) {
+            throw new ApiError('Drawing not found', 404, 'NOT_FOUND');
+        }
+
+        return res.status(200).json(
+            ApiResponse.success(drawings, 'Working Drawing retrieved successfully')
+        );
+    }
+);
 // Route to update status
 export const updateDrawingStatus = asyncHandler(
     async (req: Request, res: Response, next: NextFunction) => {
