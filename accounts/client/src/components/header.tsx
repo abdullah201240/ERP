@@ -20,14 +20,14 @@ const Header = () => {
   const handleLogout = async () => {
     if (isLoggingOut) return; // Prevent multiple clicks
     setIsLoggingOut(true);
-    const accessTokenpq = localStorage.getItem('accessTokenpq');
+    const token = localStorage.getItem('accessTokenAccounts');
 
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}employee/auth/logout`, {
         method: "POST",
         credentials: "include", // Ensure cookies are sent
         headers: {
-          'Authorization': `${accessTokenpq}`, // Send token in the Authorization header
+          'Authorization': `${token}`, // Send token in the Authorization header
         },
       });
 

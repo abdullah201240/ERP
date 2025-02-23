@@ -131,7 +131,7 @@ const Page: React.FC = () => {
 
                     <Gantt
                         tasks={tasks}
-                        viewMode={ViewMode.Month}
+                        viewMode={ViewMode.Day}
                         columnWidth={100}
                         locale="en"
                         TaskListHeader={() => (

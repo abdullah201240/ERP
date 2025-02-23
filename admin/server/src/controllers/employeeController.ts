@@ -8,6 +8,8 @@ import ERROR_MESSAGES from '../utils/errors/errorMassage'
 import jwt, { SignOptions } from 'jsonwebtoken';
 import { Op } from "sequelize";
 import redisClient from "../config/redisClient";
+import SisterConcern from "../models/sisterConcern";
+import "../models/association"; // Import before running queries
 
 
 
@@ -400,7 +402,6 @@ export const deleteEmployee = asyncHandler(
 
 export const loginEmployeeOthersPlatform = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
-    console.log(req.body)
     // Validate request body with Zod
     const validationResult = employeeLoginValidator.safeParse(req.body);
 
@@ -419,7 +420,18 @@ export const loginEmployeeOthersPlatform = asyncHandler(
     const { email, password } = validationResult.data;
 
     // Find employee by email
-    const employee = await Employee.findOne({ where: { email } });
+     // If not in cache, fetch from database
+     const employee = await Employee.findOne({
+      where: { email },
+      include: [
+        {
+          model: SisterConcern,
+          foreignKey: "sisterConcernId",
+          as:"sisterConcern"
+        }
+      ]
+    });
+    
     if (!employee) {
       return next(
         new ApiError(
@@ -479,7 +491,10 @@ export const getEmployeeByEmail = asyncHandler(
     }
 
     // If not in cache, fetch from database
-    const employee = await Employee.findOne({ where: { email } });
+    const employee = await Employee.findOne({
+      where: { email }
+      
+    });
     if (!employee) {
       return next(
         new ApiError(
@@ -522,10 +537,21 @@ export const getEmployeeById = asyncHandler(
       console.log('Retrieving data from cache');
       return res.status(200).json(JSON.parse(cachedData));
     }
+    console.log('Retrieving data from Database');
+
 
     // If not in cache, fetch from database
-    const employee = await Employee.findOne({ where: { id } });
-    if (!employee) {
+    const employee = await Employee.findOne({
+      where: { id },
+      include: [
+        {
+          model: SisterConcern,
+          foreignKey: "sisterConcernId",
+          as:"sisterConcern"
+        }
+      ]
+    });
+     if (!employee) {
       return next(new ApiError("Employee not found", 404, ErrorCodes.NOT_FOUND.code));
     }
 
