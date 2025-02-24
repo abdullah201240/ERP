@@ -150,7 +150,7 @@ export default function Page() {
 
                                 <TableCell className='border border-[#e5e7eb]  flex items-center justify-center'>
                                     <Link href={`/billing/${id}/${drawing.id}`}>
-                                        <p className="mr-8 bg-gradient-to-r from-blue-500 to-indigo-600 px-4 py-2 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 ease-in-out transform hover:scale-105">View Bill</p>
+                                        <p className="mr-8 bg-gradient-to-r from-blue-500 to-indigo-600 px-4 py-2 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 ease-in-out transform hover:scale-105">Make Bill</p>
                                     </Link>
 
 

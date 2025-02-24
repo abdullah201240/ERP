@@ -4,8 +4,9 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "next build",
-    "start": "next start",
+    "build": "NEXT_PUBLIC_BUILD_EXPIRATION_DATE=2025-01-01 next build",
+    "start": "ts-node checkExpiration.ts && next start",
+    "export": "next export",
     "lint": "next lint"
   },
   "dependencies": {
@@ -15,6 +16,7 @@
     "@radix-ui/react-select": "^2.1.6",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "date-fns": "^4.1.0",
     "framer-motion": "^12.0.8",
     "jspdf": "^3.0.0",
     "lucide-react": "^0.474.0",

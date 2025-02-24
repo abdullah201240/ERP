@@ -77,7 +77,7 @@ export default function AddMaterials() {
     const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
     
     const [projectDetails, setProjectDetails] = useState<ProjectDetails>({
-        id: null || 0,
+        id:  0,
         projectId: '',
         brandModel: '',
         itemQuantity: '',
@@ -92,7 +92,7 @@ export default function AddMaterials() {
     });
 
     const [productDetails, setProductDetails] = useState<Products>({
-        id: null || 0,
+        id:  0,
         name: '',
         brand: '',
         countryOfOrigin: '',

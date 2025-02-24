@@ -23,7 +23,6 @@ import Image from 'next/image';
 
 
 
-
 interface Material {
     id: number;
     brand: string;
@@ -85,6 +84,7 @@ interface EmployeeDetails {
     employeeId: string;
     logo: string;
 }
+
 
 export default function Page() {
     const router = useRouter();

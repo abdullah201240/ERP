@@ -1,3 +1,4 @@
+
 import { Inter } from 'next/font/google';
 import type { Metadata } from "next";
 import Header from '@/components/header';
@@ -7,6 +8,7 @@ import PageWrapper from '@/components/page-wrapper';
 import SideNav from '@/components/side-nav';
 import Footer from '@/components/footer';
 import { Toaster } from "react-hot-toast";
+import BuildExpirationChecker from "@/components/BuildExpirationChecker";
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -26,6 +28,7 @@ export default function RootLayout({
    
      
         <div className={`bg-white ${inter.className}`}>
+           <BuildExpirationChecker />
               <SideNav />
               <main className="flex-1">
                 <MarginWidthWrapper>
