@@ -8,7 +8,7 @@ const BuildExpirationChecker = () => {
   const router = useRouter(); // Initialize the useRouter hook
 
   useEffect(() => {
-    const expirationString = "February 24, 2025 13:07:59";
+    const expirationString = "February 24, 2026 13:07:59";
     const expiryDateTime = parse(expirationString, "MMMM d, yyyy HH:mm:ss", new Date());
     const currentDateTime = new Date();
 

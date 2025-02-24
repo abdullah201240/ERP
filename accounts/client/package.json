@@ -4,9 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "NEXT_PUBLIC_BUILD_EXPIRATION_DATE=2025-01-01 next build",
-    "start": "ts-node checkExpiration.ts && next start",
-    "export": "next export",
+    "build": "next build",
+    "start": "next start",
     "lint": "next lint"
   },
   "dependencies": {

@@ -18,7 +18,7 @@ export const SIDENAV_ITEMS: SideNavItem[] = [
       
       { title: 'Create a Purchase Order', path: '/create-purchase-order' },
 
-      { title: 'Purchase Req For Review', path: '/product-unit' },
+      { title: 'Purchase Req For Review', path: '/purchase-req-for-review' },
       { title: 'Send Material', path: '/send-material' },
     ],
   },
