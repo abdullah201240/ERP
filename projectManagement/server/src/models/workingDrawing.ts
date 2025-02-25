@@ -16,10 +16,14 @@ interface WorkingDrawingAttributes {
   clientContact: string;
   projectAddress: string;
   projectName: string; 
-  sisterConcernId?: string; // Add this line
+  sisterConcernId?: string; 
   status?: string;
-  handOverAccounts?: number; // New optional field with default value
-
+  handOverAccounts?: number;
+  materialHandOver?: number;
+  operatingExpense?: string;
+  vat?: string;
+  tax?: string;
+  margin?: string; // New field for margin
 }
 
 // Interface for creating new WorkingDrawing (excluding id as it's auto-generated)
@@ -42,10 +46,12 @@ class WorkingDrawing extends Model<WorkingDrawingAttributes, WorkingDrawingCreat
   public status?: string;
   public materialList?: DesignMaterialList[];
 
-  public handOverAccounts?: number; // New optional field
-
-
-
+  public handOverAccounts?: number;
+  public materialHandOver?: number;
+  public operatingExpense?: string;
+  public vat?: string;
+  public tax?: string;
+  public margin?: string; // New field for margin
 }
 
 WorkingDrawing.init(
@@ -100,26 +106,47 @@ WorkingDrawing.init(
       type: DataTypes.STRING,
       allowNull: false,
     },
-    sisterConcernId: { // Add this line
+    sisterConcernId: {
       type: DataTypes.STRING,
-      allowNull: true, // Set it to false if you want this field to be required
+      allowNull: true,
     },
     status: {
       type: DataTypes.STRING,
-      allowNull: true, // Set it to false if you want this field to be required
-      defaultValue: 'pending', // Default value for the status field
+      allowNull: true,
+      defaultValue: 'pending',
     },
     handOverAccounts: {
       type: DataTypes.INTEGER,
       allowNull: true,
-      defaultValue: 0, // Default value added
+      defaultValue: 0,
+    },
+    materialHandOver: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      defaultValue: 0,
+    },
+    operatingExpense: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    vat: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    tax: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    margin: {
+      type: DataTypes.STRING, // Adjust type if needed
+      allowNull: true,
     },
   },
   {
-    sequelize: db, // Use the passed `sequelizeInstance`
+    sequelize: db,
     modelName: 'WorkingDrawing',
-    tableName: 'workingDrawings', // Specify table name if different from model name
-    timestamps: true, // Enable `createdAt` and `updatedAt`
+    tableName: 'workingDrawings',
+    timestamps: true,
   }
 );
 

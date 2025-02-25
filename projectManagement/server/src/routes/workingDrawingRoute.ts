@@ -1,6 +1,6 @@
 import express from "express";
 import { verifyJWT } from "../middleware/auth"; 
-import { addWorkingDrawingImage, createCategory, createDesignMaterial, createDesignMaterialFeedback, createProductionWorkPlans, createProductionWorkUpdate, createSaveMaterials, createUploadDrawing, deleteCategory, deleteDrawing, deleteMaterial, deleteProductionWorkPlans, deleteSaveMaterial, deleteWorkingDrawingImage, getMaterialsByProject, getProductionWorkPlans, getProductionWorkPlans2, getSaveMaterialsByProject, getWorkingDrawingByProject, updateCategory, updateDrawing, updateDrawingStatus, updateFeedbackStatus, UpdateHandOverToAccounts, updateProductionWorkPlans, updateSaveMaterial, updateSaveMaterialFeedback, updateSaveMaterialStatus, viewAllDrawings, viewCategory, viewDesignMaterialFeedback, viewDrawingById, viewDrawingBySisterConcernId, viewDrawingBySisterConcernId2, viewDrawingsByProjectId } from "../controllers/workingDrawingController";
+import { addWorkingDrawingImage, createCategory, createDesignMaterial, createDesignMaterialFeedback, createProductionWorkPlans, createProductionWorkUpdate, createSaveMaterials, createUploadDrawing, deleteCategory, deleteDrawing, deleteMaterial, deleteProductionWorkPlans, deleteSaveMaterial, deleteWorkingDrawingImage, getMaterialsByProject, getProductionWorkPlans, getProductionWorkPlans2, getSaveMaterialsByProject, getWorkingDrawingByProject, updateCategory, updateDrawing, updateDrawingStatus, updateFeedbackStatus, UpdateHandOverToAccounts, UpdateMaterialHandOverToAccounts, updateProductionWorkPlans, updateSaveMaterial, updateSaveMaterialFeedback, updateSaveMaterialStatus, UpdateVatTaxAccounts, viewAllDrawings, viewCategory, viewDesignMaterialFeedback, viewDrawingById, viewDrawingBySisterConcernId, viewDrawingBySisterConcernId2, viewDrawingsByProjectId } from "../controllers/workingDrawingController";
 import upload from "../middleware/uploadMiddleware";
 const router = express.Router();
 
@@ -62,6 +62,9 @@ router.get('/productionWorkPlan2/:id', getProductionWorkPlans2);
 
 router.post('/productionWorkUpdate', createProductionWorkUpdate);
 router.put('/update-hand-over/:id', UpdateHandOverToAccounts);
+router.put('/update-material-hand-over/:id', UpdateMaterialHandOverToAccounts);
+
+router.put('/update-vat-tax/:id', UpdateVatTaxAccounts);
 
 
 export default router;

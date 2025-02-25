@@ -64,6 +64,11 @@ export const SIDENAV_ITEMS: SideNavItem[] = [
     icon: <Icon icon="mdi:receipt-text" width="19" height="19" />,
   },
   {
+    title: 'Purchase Req For Review',
+    path: '/purchase-req-for-review',
+    icon: <Icon icon="mdi:clipboard-list" width="19" height="19" />, // Updated icon
+  },
+  {
     title: 'Manage Client Data',
     path: '/manage-client-data',
     icon: <Icon icon="mdi:account-group" width="19" height="19" />,

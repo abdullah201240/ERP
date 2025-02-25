@@ -10,8 +10,7 @@ import {
     TableRow,
 } from "../../../../components/ui/table";
 import Link from 'next/link';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '../../../../components/ui/alert-dialog';
-import { Button } from '../../../../components/ui/button';
+
 interface Drawing {
     id: number;
     projectId: string;
@@ -43,15 +42,13 @@ export default function Page() {
     const params = useParams();
     const id = params?.id;
     const router = useRouter();
-    const [error, setError] = useState<string | null>(null);
     const [drawings, setDrawings] = useState<Drawing[]>([]);
     const [employeeDetails, setEmployeeDetails] = useState<EmployeeDetails | null>(null);
-    const [updateId, setUpdateId] = useState<number | null>(null);
 
     const fetchCompanyProfile = useCallback(async () => {
         try {
-            const token = localStorage.getItem('accessTokenpq');
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}employee/auth/profile`, {
+            const token = localStorage.getItem('accessTokenCompany');
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}sisterConcern/auth/sisterConcern/profile`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
             const data = await response.json();
@@ -64,7 +61,7 @@ export default function Page() {
     }, []);
 
     useEffect(() => {
-        const token = localStorage.getItem('accessTokenpq');
+        const token = localStorage.getItem('accessTokenCompany');
         if (!token) {
             router.push('/');
         } else {
@@ -74,20 +71,20 @@ export default function Page() {
     const fetchDrawings = useCallback(async () => {
         try {
             if (!employeeDetails) return;
-            const token = localStorage.getItem('accessToken');
+            const token = localStorage.getItem('accessTokenCompany');
             if (!token) {
                 router.push('/');
                 return;
             }
 
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL_PROJECTMANAGEMENT}workingDrawing/drawingSisterConcernId/${employeeDetails.sisterConcernId}/${id}`, {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL_PROJECTMANAGEMENT}workingDrawing/drawingSisterConcernId/${employeeDetails.id}/${id}`, {
                 headers: { Authorization: token },
             });
 
             if (!response.ok) throw new Error("Failed to fetch drawings");
             const data = await response.json();
             // Filter only approved drawings
-            const approvedDrawings = (data.data || []).filter((drawing: Drawing) => drawing.status === 'Approved');
+            const approvedDrawings = (data.data || []).filter((drawing: Drawing) => drawing.materialHandOver === 1);
 
             setDrawings(approvedDrawings);
         } catch (error) {
@@ -99,34 +96,8 @@ export default function Page() {
     useEffect(() => {
         fetchDrawings();
     }, [fetchDrawings]);
-    const handleUpdate = async () => {
-        if (updateId === null) return;
-        const token = localStorage.getItem('accessToken');
-
-        if (!token) {
-            router.push('/');
-        } else {
-            try {
-                const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL_PROJECTMANAGEMENT}workingDrawing/update-material-hand-over/${updateId}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Authorization': token
-                    }
-                });
-
-                if (!response.ok) {
-                    throw new Error('Failed to delete project');
-                }
-                await fetchDrawings();
-
-            } catch (err) {
-                setError((err as Error).message);
-            }
-        }
-    };
-    if (error) {
-        return <div>Error: {error}</div>;
-    }
+   
+   
   return (
     <div>
        <h1 className='text-xl mt-4 mb-4'>All Request </h1>
@@ -170,30 +141,10 @@ export default function Page() {
                                 </TableCell>
 
                                 <TableCell className='border border-[#e5e7eb]  flex items-center justify-center'>
-                                    <Link href={`/purchase-req-for-review/${id}/${drawing.id}`}>
+                                    <Link href={`/sisterConcern/purchase-req-for-review/${id}/${drawing.id}`}>
                                         <p className="bg-gradient-to-r from-blue-500 to-indigo-600 px-4 py-2 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 ease-in-out transform hover:scale-105 mr-8 ">Review</p>
                                     </Link>
-                                    <AlertDialog>
-                                        <AlertDialogTrigger asChild>
-                                            <Button onClick={() => setUpdateId(drawing.id)} className="mr-8 bg-gradient-to-r from-green-500 to-teal-600 px-4 py-2 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 ease-in-out transform hover:scale-105">
-                                                Sent Request
-                                            </Button>
-
-
-                                        </AlertDialogTrigger>
-                                        <AlertDialogContent>
-                                            <AlertDialogHeader>
-                                                <AlertDialogTitle>Confirm hand over to accounts?</AlertDialogTitle>
-                                                <AlertDialogDescription>
-                                                    Are you sure you want to hand over to accounts? This action cannot be undone, and the project will be permanently update from the system.
-                                                </AlertDialogDescription>
-                                            </AlertDialogHeader>
-                                            <AlertDialogFooter>
-                                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                                <AlertDialogAction onClick={handleUpdate}>Sent</AlertDialogAction>
-                                            </AlertDialogFooter>
-                                        </AlertDialogContent>
-                                    </AlertDialog>
+                                   
                                 </TableCell>
                             </TableRow>
                         ))

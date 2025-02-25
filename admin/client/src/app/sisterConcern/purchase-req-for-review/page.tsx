@@ -7,7 +7,7 @@ import {
     TableHead,
     TableHeader,
     TableRow,
-} from "@/components/ui/table";
+} from "../../../components/ui/table";
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
@@ -47,14 +47,14 @@ export default function Page() {
     useEffect(() => {
         const checkTokenAndFetchProfile = async () => {
 
-          const token = localStorage.getItem('accessTokenpq');
-          if (!token) {
+            const token = localStorage.getItem('accessTokenCompany');
+            if (!token) {
                 router.push('/');
                 return;
             }
 
             try {
-                const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}employee/auth/profile`, {
+                const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}sisterConcern/auth/sisterConcern/profile`, {
                     headers: { 'Authorization': token }
                 });
                 if (!response.ok) {
@@ -80,13 +80,13 @@ export default function Page() {
             if (!employeeDetails) {
                 return
             }
-            const token = localStorage.getItem('accessTokenpq');
+            const token = localStorage.getItem('accessTokenCompany');
             if (!token) {
                 router.push('/');
                 return;
             }
 
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL_PROJECTMANAGEMENT}workingDrawing/getWorkingDrawingByProject/${employeeDetails?.sisterConcernId}`, {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL_PROJECTMANAGEMENT}workingDrawing/getWorkingDrawingByProject/${employeeDetails?.id}`, {
                 headers: { Authorization: token },
             });
 
@@ -147,7 +147,7 @@ export default function Page() {
                                     <TableCell className="border border-[#e5e7eb]">{project.clientContact}</TableCell>
                                     <TableCell className="border border-[#e5e7eb]">{project.projectAddress}</TableCell>
                                     <TableCell className='border border-[#e5e7eb]  flex items-center justify-center'>
-                                        <Link href={`/purchase-req-for-review/${project.projectId}`}>
+                                        <Link href={`/sisterConcern/purchase-req-for-review/${project.projectId}`}>
                                             <p className="mr-8 bg-gradient-to-r from-blue-500 to-indigo-600 px-4 py-2 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 ease-in-out transform hover:scale-105">View</p>
                                         </Link>
 

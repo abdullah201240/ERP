@@ -7,7 +7,7 @@ import {
     TableHead,
     TableHeader,
     TableRow,
-} from "@/components/ui/table";
+} from "../../../components/ui/table";
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
@@ -47,7 +47,7 @@ export default function Page() {
     useEffect(() => {
         const checkTokenAndFetchProfile = async () => {
 
-          const token = localStorage.getItem('accessTokenpq');
+            const token = localStorage.getItem('accessTokenAccounts');
           if (!token) {
                 router.push('/');
                 return;
@@ -80,7 +80,7 @@ export default function Page() {
             if (!employeeDetails) {
                 return
             }
-            const token = localStorage.getItem('accessTokenpq');
+            const token = localStorage.getItem('accessTokenAccounts');
             if (!token) {
                 router.push('/');
                 return;

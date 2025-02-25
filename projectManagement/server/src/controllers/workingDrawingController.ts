@@ -1161,3 +1161,47 @@ export const UpdateHandOverToAccounts = asyncHandler(
         );
 
     })
+
+    export const UpdateMaterialHandOverToAccounts = asyncHandler(
+        async (req: Request, res: Response, next: NextFunction) => {
+            const { id } = req.params;
+            // Find the record by ID
+            const workPlan = await WorkingDrawing.findByPk(id);
+            if (!workPlan) {
+                return res.status(404).json({ message: 'Production Work Plan not found' });
+            }
+    
+            // Update the handOverAccounts field to 1
+            workPlan.materialHandOver = 1;
+            await workPlan.save();
+            return res.status(200).json(
+                ApiResponse.success(workPlan, 'Updated successfully')
+            );
+    
+        })
+
+        export const UpdateVatTaxAccounts = asyncHandler(
+            async (req: Request, res: Response, next: NextFunction) => {
+                const { id } = req.params;
+                const { operatingExpense, vat, tax ,margin } = req.body;
+        
+                // Find the record by ID
+                const workPlan = await WorkingDrawing.findByPk(id);
+                if (!workPlan) {
+                    return res.status(404).json({ message: 'Production Work Plan not found' });
+                }
+        
+                // Update the fields correctly
+                await workPlan.update({
+                    operatingExpense: operatingExpense ?? workPlan.operatingExpense,
+                    vat: vat ?? workPlan.vat,
+                    tax: tax ?? workPlan.tax,
+                    margin: margin ?? workPlan.margin,
+                });
+        
+                return res.status(200).json(
+                    ApiResponse.success(workPlan, 'Updated successfully')
+                );
+            }
+        );
+        
