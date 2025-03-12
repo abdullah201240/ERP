@@ -4,30 +4,33 @@ import React, { useEffect, useState } from 'react';
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
- 
+
 import { SIDENAV_ITEMS } from '@/constants';
 import { SideNavItem } from '@/types';
 import { Icon } from '@iconify/react';
 import Image from 'next/image';
-import Logo from '@/app/assets/img/Logo.webp';
+interface EmployeeDetails {
+  id: number;
+  email: string;
+  logo: string;
 
-const fetchUserEmail = async (): Promise<string | null> => {
-  const accessTokenCompany = typeof window !== 'undefined' ? localStorage.getItem('accessTokenCompany') : null;
-
-  if (!accessTokenCompany) {
+}
+const fetchUserEmail = async (): Promise<EmployeeDetails | null> => {
+  const token = localStorage.getItem('accessTokenCompany');
+  if (!token) {
     return null;
   }
 
   try {
     const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}company/auth/company/profile`, {
       headers: {
-        Authorization: accessTokenCompany,
+        Authorization: `Bearer ${token}`,
       },
     });
     const data = await response.json();
 
     if (data.success) {
-      return data.data.email;
+      return data.data; // Assuming data.data is of type EmployeeDetails
     } else {
       return null;
     }
@@ -36,19 +39,24 @@ const fetchUserEmail = async (): Promise<string | null> => {
     return null;
   }
 };
-
 const SideNav = () => {
   const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [employeeDetails, setEmployeeDetails] = useState<EmployeeDetails | null>(null);
+
   useEffect(() => {
     const getUserEmail = async () => {
-      const email = await fetchUserEmail();
-      setUserEmail(email);
+      const data = await fetchUserEmail();
+      if(data){
+        setUserEmail(data.email);
+        setEmployeeDetails(data);
+            }
+    
     };
 
     getUserEmail();
   }, []);
 
-  const teamEmail = process.env.NEXT_PUBLIC_TEAM_EMAIL; 
+  const teamEmail = process.env.NEXT_PUBLIC_TEAM_EMAIL;
 
   const filteredNavItems = userEmail === teamEmail ? [
     ...SIDENAV_ITEMS,
@@ -59,7 +67,7 @@ const SideNav = () => {
       submenu: true,
       subMenuItems: [
         { title: 'Add Company', path: '/addCompany' },
-        
+
       ],
     },
   ] : SIDENAV_ITEMS;
@@ -71,15 +79,15 @@ const SideNav = () => {
           href="/dashboard"
           className="flex flex-row space-x-3 items-center justify-center md:justify-start md:px-6  h-12 w-full"
         >
-            <Image 
-            src={Logo}
+          <Image
+            src={`${process.env.NEXT_PUBLIC_API_URL}uploads/${employeeDetails?.logo}`}
             alt='logo'
             width={50}
             height={50}
-            
-            
-            />
-          
+
+
+          />
+
         </Link>
 
         <div className="flex flex-col space-y-2 md:px-6 overflow-y-auto h-full scrollbar-thin scrollbar-thumb-[#bababa] scrollbar-track-[#f0f0f0]">
@@ -107,12 +115,11 @@ const MenuItem = ({ item }: { item: SideNavItem }) => {
         <>
           <button
             onClick={toggleSubMenu}
-            className={`flex flex-row items-start p-2 rounded-lg hover-bg-[#2A5158] w-full justify-between hover:bg-[#2A5158] hover:text-white ${
-              pathname.includes(item.path) ? 'bg-white text-black' : ''
-            }`}
+            className={`flex flex-row items-start p-2 rounded-lg hover-bg-[#2A5158] w-full justify-between hover:bg-[#2A5158] hover:text-white ${pathname.includes(item.path) ? 'bg-white text-black' : ''
+              }`}
           >
             <div className="flex flex-row space-x-2 items-start text-left">
-                 <span className='pt-0.5'>{item.icon}</span> 
+              <span className='pt-0.5'>{item.icon}</span>
               <span className="font-semibold text-xm  flex">{item.title}</span>
             </div>
 
@@ -128,9 +135,8 @@ const MenuItem = ({ item }: { item: SideNavItem }) => {
                   <Link
                     key={idx}
                     href={subItem.path}
-                    className={`${
-                      subItem.path === pathname ? 'font-bold' : ''
-                    }`}
+                    className={`${subItem.path === pathname ? 'font-bold' : ''
+                      }`}
                   >
                     <span>{subItem.title}</span>
                   </Link>
@@ -142,12 +148,11 @@ const MenuItem = ({ item }: { item: SideNavItem }) => {
       ) : (
         <Link
           href={item.path}
-          className={`flex flex-row space-x-2 items-start p-2 rounded-lg hover:bg-[#2A5158] hover:text-white ${
-            item.path === pathname ? 'bg-[#2A5158] text-white' : ''
-          }`}
+          className={`flex flex-row space-x-2 items-start p-2 rounded-lg hover:bg-[#2A5158] hover:text-white ${item.path === pathname ? 'bg-[#2A5158] text-white' : ''
+            }`}
         >
-                 <span className='pt-0.5'>{item.icon}</span> 
-                 <span className="font-semibold text-xm flex">{item.title}</span>
+          <span className='pt-0.5'>{item.icon}</span>
+          <span className="font-semibold text-xm flex">{item.title}</span>
         </Link>
       )}
 

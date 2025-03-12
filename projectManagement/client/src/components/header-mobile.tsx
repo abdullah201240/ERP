@@ -15,6 +15,7 @@ type MenuItemWithSubMenuProps = {
 };
 
 const sidebar = {
+  
   open: (height = 1000) => ({
     clipPath: `circle(${height * 2 + 200}px at 100% 0)`,
     transition: {
@@ -38,6 +39,7 @@ const HeaderMobile = () => {
   const containerRef = useRef<HTMLElement | null>(null); // Fix: Explicitly typing the ref
   const { height } = useDimensions(containerRef);
   const [isOpen, toggleOpen] = useCycle(false, true);
+  const sideNavItems = SIDENAV_ITEMS();
 
   return (
     <motion.nav
@@ -55,7 +57,7 @@ const HeaderMobile = () => {
         variants={variants}
         className="absolute grid w-full gap-3 px-10 py-16 max-h-screen overflow-y-auto"
       >
-        {SIDENAV_ITEMS.map((item, idx) => {
+        {sideNavItems.map((item, idx) => {
           const isLastItem = idx === SIDENAV_ITEMS.length - 1;
 
           return (

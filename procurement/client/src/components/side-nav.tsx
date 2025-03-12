@@ -1,17 +1,67 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
  
 import { SIDENAV_ITEMS } from '@/constants';
 import { SideNavItem } from '@/types';
 import { Icon } from '@iconify/react';
 import Image from 'next/image';
-import Logo from '@/app/assets/img/Logo.webp';
-
+interface EmployeeDetails {
+  id: number;
+  name: string;
+  email: string;
+  phone: string;
+  dob: string;
+  gender: string;
+  companyId: string;
+  sisterConcernId: string;
+  photo: string;
+  employeeId: string;
+  logo: string;
+}
 const SideNav = () => {
+  const sideNavItems = SIDENAV_ITEMS();
+
+  const router = useRouter();
+
+  const [employeeDetails, setEmployeeDetails] = useState<EmployeeDetails | null>(null);
+  useEffect(() => {
+    const token = localStorage.getItem('accessTokenpq');
+    if (!token) {
+        console.log("no token");
+        router.push('/');
+    } 
+}, [router]);
+
+const fetchCompanyProfile = useCallback(async () => {
+    try {
+        const token = localStorage.getItem('accessTokenpq');
+
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}employee/auth/profile`, {
+            headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await response.json();
+        console.table(data.data);
+        if (data.success) {
+            setEmployeeDetails(data.data);
+        }
+    } catch (error) {
+        console.error('Error fetching profile:', error);
+    }
+}, []);
+
+useEffect(() => {
+    const token = localStorage.getItem('accessTokenpq');
+    if (!token) {
+        router.push('/');
+    } else {
+        fetchCompanyProfile();
+    }
+}, [router, fetchCompanyProfile]);
+
   return (
     <div className="md:w-60 bg-white h-screen flex-1 fixed  hidden md:flex">
       <div className="flex flex-col space-y-6 w-full mt-4">
@@ -20,7 +70,7 @@ const SideNav = () => {
           className="flex flex-row space-x-3 items-center justify-center md:justify-start md:px-6  h-12 w-full"
         >
             <Image 
-            src={Logo}
+            src={`${process.env.NEXT_PUBLIC_API_URL_ADMIN}uploads/${employeeDetails?.logo}`}
             alt='logo'
             width={50}
             height={50}
@@ -31,7 +81,7 @@ const SideNav = () => {
         </Link>
 
         <div className="flex flex-col space-y-2 md:px-6 overflow-y-auto h-full scrollbar-thin scrollbar-thumb-[#bababa] scrollbar-track-[#f0f0f0]">
-        {SIDENAV_ITEMS.map((item, idx) => {
+        {sideNavItems.map((item, idx) => {
             return <MenuItem key={idx} item={item} />;
           })}
         </div>

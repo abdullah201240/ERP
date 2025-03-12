@@ -967,56 +967,72 @@ export const createProductionWorkPlans = asyncHandler(
 export const getProductionWorkPlans = asyncHandler(
     async (req: Request, res: Response, next: NextFunction) => {
         const { id } = req.params;
+        const { employeeId } = req.query as { employeeId?: string };
 
         // Fetch all production work plans for the given workingDrawingsId
-        const projects = await ProductionWorkPlan.findAll({
+        let projects = await ProductionWorkPlan.findAll({
             where: { workingDrawingsId: id },
             include: [
                 {
                     model: ProductionWorkUpdate,
                     as: "productionWorkUpdate",
-                }
-
+                },
             ],
         });
 
         if (!projects.length) {
-            throw new ApiError('No ProductionWorkPlans found', 404, 'NOT_FOUND');
+            throw new ApiError("No ProductionWorkPlans found", 404, "NOT_FOUND");
         }
 
         // Fetch employee details for each project
         const updatedProjects = await Promise.all(
             projects.map(async (project) => {
                 try {
-                    const response = await axios.get(
-                        `${process.env.EXTERNAL_API_URL}sisterConcern/employeeById/${project.assignee}`
-                    );
+                    const apiUrl = `${process.env.EXTERNAL_API_URL}sisterConcern/employeeById/${project.assignee}`;
 
-                    if (response.status === 200 && response.data) {
-                        return {
-                            ...project.toJSON(),
-                            employeeName: response.data.name, // Assuming `name` is in API response
-                        };
-                    } else {
-                        return {
-                            ...project.toJSON(),
-                            employeeName: 'Unknown',
-                        };
+                    if (!process.env.EXTERNAL_API_URL) {
+                        console.error("EXTERNAL_API_URL is not defined in .env");
+                        return { ...project.toJSON(), employeeName: "Unknown" };
                     }
-                } catch (error) {
+
+                    const response = await axios.get(apiUrl);
+
+                    const employeeName =
+                        response.status === 200 && response.data ? response.data.name : "Unknown";
+
                     return {
                         ...project.toJSON(),
-                        employeeName: 'Unknown',
+                        employeeName,
+                    };
+                } catch (error: any) {
+                    console.error("Error fetching employee details:", error.message);
+                    return {
+                        ...project.toJSON(),
+                        employeeName: "Unknown",
                     };
                 }
             })
         );
 
+        // Apply filter for employeeId if it is provided
+        let filteredProjects = updatedProjects;
+        if (employeeId) {
+            console.log("okay")
+
+            console.log(employeeId)
+            filteredProjects = updatedProjects.filter((project) => {
+                // Ensure both are of the same type, comparing them as strings or numbers
+                return String(project.assignee) === String(employeeId);
+            });
+        }
+
         return res.status(200).json(
-            ApiResponse.success(updatedProjects, 'Production Work Plans fetched successfully')
+            ApiResponse.success(filteredProjects, "Production Work Plans fetched successfully")
         );
     }
 );
+
+
 
 // Delete material by ID
 export const deleteProductionWorkPlans = asyncHandler(
@@ -1162,46 +1178,45 @@ export const UpdateHandOverToAccounts = asyncHandler(
 
     })
 
-    export const UpdateMaterialHandOverToAccounts = asyncHandler(
-        async (req: Request, res: Response, next: NextFunction) => {
-            const { id } = req.params;
-            // Find the record by ID
-            const workPlan = await WorkingDrawing.findByPk(id);
-            if (!workPlan) {
-                return res.status(404).json({ message: 'Production Work Plan not found' });
-            }
-    
-            // Update the handOverAccounts field to 1
-            workPlan.materialHandOver = 1;
-            await workPlan.save();
-            return res.status(200).json(
-                ApiResponse.success(workPlan, 'Updated successfully')
-            );
-    
-        })
+export const UpdateMaterialHandOverToAccounts = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction) => {
+        const { id } = req.params;
+        // Find the record by ID
+        const workPlan = await WorkingDrawing.findByPk(id);
+        if (!workPlan) {
+            return res.status(404).json({ message: 'Production Work Plan not found' });
+        }
 
-        export const UpdateVatTaxAccounts = asyncHandler(
-            async (req: Request, res: Response, next: NextFunction) => {
-                const { id } = req.params;
-                const { operatingExpense, vat, tax ,margin } = req.body;
-        
-                // Find the record by ID
-                const workPlan = await WorkingDrawing.findByPk(id);
-                if (!workPlan) {
-                    return res.status(404).json({ message: 'Production Work Plan not found' });
-                }
-        
-                // Update the fields correctly
-                await workPlan.update({
-                    operatingExpense: operatingExpense ?? workPlan.operatingExpense,
-                    vat: vat ?? workPlan.vat,
-                    tax: tax ?? workPlan.tax,
-                    margin: margin ?? workPlan.margin,
-                });
-        
-                return res.status(200).json(
-                    ApiResponse.success(workPlan, 'Updated successfully')
-                );
-            }
+        // Update the handOverAccounts field to 1
+        workPlan.materialHandOver = 1;
+        await workPlan.save();
+        return res.status(200).json(
+            ApiResponse.success(workPlan, 'Updated successfully')
         );
-        
+
+    })
+
+export const UpdateVatTaxAccounts = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction) => {
+        const { id } = req.params;
+        const { operatingExpense, vat, tax, margin } = req.body;
+
+        // Find the record by ID
+        const workPlan = await WorkingDrawing.findByPk(id);
+        if (!workPlan) {
+            return res.status(404).json({ message: 'Production Work Plan not found' });
+        }
+
+        // Update the fields correctly
+        await workPlan.update({
+            operatingExpense: operatingExpense ?? workPlan.operatingExpense,
+            vat: vat ?? workPlan.vat,
+            tax: tax ?? workPlan.tax,
+            margin: margin ?? workPlan.margin,
+        });
+
+        return res.status(200).json(
+            ApiResponse.success(workPlan, 'Updated successfully')
+        );
+    }
+);

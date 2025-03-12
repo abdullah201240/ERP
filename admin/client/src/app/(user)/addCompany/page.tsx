@@ -6,7 +6,8 @@ import CreateCompany from '@/components/CreateCompany';
 
 export default function Home() {
   const router = useRouter();
-  
+
+
 
   useEffect(() => {
     const checkTokenAndFetchProfile = async () => {
@@ -30,7 +31,7 @@ export default function Home() {
           router.push('/'); // Adjust the path to your login page
           return; // Exit the function early
         }
-
+       
         // Handle the response data here if needed
       } catch (error) {
         console.error(error);

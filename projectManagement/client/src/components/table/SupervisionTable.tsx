@@ -41,7 +41,38 @@ interface PreProjectSiteVisitPlan {
     assigned: { eName: string; eid: string; id: string }[];
 }
 
-const SupervisionTable: React.FC<PreProjectPlanTableProps> = ({ reload ,projectId }) => {
+interface EmployeeDetails {
+    id: number;
+    name: string;
+    email: string;
+
+    phone: string;
+
+    dob: string;
+
+    gender: string;
+
+    companyId: string;
+
+    sisterConcernId: string;
+
+    photo: string;
+
+    employeeId: string;
+
+
+}
+
+interface Access {
+    id: number;
+    employee_id: number;
+    permission_id: number;
+    createdAt: string;
+    updatedAt: string;
+}
+
+
+const SupervisionTable: React.FC<PreProjectPlanTableProps> = ({ reload, projectId }) => {
     const router = useRouter();
     const [projects, setProjects] = useState<PreProjectSiteVisitPlan[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
@@ -50,11 +81,69 @@ const SupervisionTable: React.FC<PreProjectPlanTableProps> = ({ reload ,projectI
     const [searchQuery, setSearchQuery] = useState<string>(''); // State for search query
     const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
     const [deleteId, setDeleteId] = useState<number | null>(null); // State to hold the project ID to delete
+    const [accessData, setAccessData] = useState<Access[]>([]);
+    const [employeeDetails, setEmployeeDetails] = useState<EmployeeDetails | null>(null);
 
     // Pagination state
     const [currentPage, setCurrentPage] = useState<number>(1);
     const itemsPerPage = 10;
 
+    const fetchCompanyProfile = useCallback(async () => {
+        try {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}employee/auth/profile`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            const data = await response.json();
+            console.table(data.data)
+            if (data.success) {
+                setEmployeeDetails(data.data);
+            }
+        } catch (error) {
+            console.error('Error fetching profile:', error);
+        }
+    }, [token]);
+    useEffect(() => {
+        const token = localStorage.getItem('accessToken');
+
+        if (!token) {
+            router.push('/'); // Redirect to login page if token doesn't exist
+        } else {
+            fetchCompanyProfile();
+        }
+    }, [router, fetchCompanyProfile]);
+    const fetchAccess = useCallback(async () => {
+        try {
+            if (!employeeDetails) {
+                return
+            }
+            const token = localStorage.getItem('accessToken');
+            if (!token) {
+                router.push('/');
+                return;
+            }
+            const response = await fetch(
+                `${process.env.NEXT_PUBLIC_API_URL_ADMIN}access/view-all/${employeeDetails?.id}`,
+                {
+                    headers: { Authorization: `Bearer ${token}` },
+                }
+            );
+            const data = await response.json(); // Extract JSON data
+            setAccessData(data.data || []); // Store API response in state
+
+        } catch (error) {
+            console.error('Error fetching access:', error);
+        }
+    }, [router, employeeDetails]);
+    useEffect(() => {
+        const token = localStorage.getItem('accessToken');
+
+        if (!token) {
+            router.push('/'); // Redirect to login page if token doesn't exist
+        } else {
+            fetchAccess();
+
+        }
+    }, [router, fetchAccess]);
 
     const fetchProjects = useCallback(async () => {
         if (!token) {
@@ -73,16 +162,16 @@ const SupervisionTable: React.FC<PreProjectPlanTableProps> = ({ reload ,projectI
                 }
                 const data = await response.json();
 
-                    setProjects(data.data.supervisionSiteVisitPlan || []);
-                    setTotalProjects(data.data.totalSupervisionSiteVisitPlan || 0);
-                
+                setProjects(data.data.supervisionSiteVisitPlan || []);
+                setTotalProjects(data.data.totalSupervisionSiteVisitPlan || 0);
+
             } catch (err) {
                 setError((err as Error).message);
             } finally {
                 setLoading(false);
             }
         }
-    }, [token, currentPage, itemsPerPage, searchQuery, router,projectId]);
+    }, [token, currentPage, itemsPerPage, searchQuery, router, projectId]);
 
     useEffect(() => {
         fetchProjects();
@@ -164,8 +253,10 @@ const SupervisionTable: React.FC<PreProjectPlanTableProps> = ({ reload ,projectI
                         <TableHead className='text-white text-center'>Visit Date & Time</TableHead>
                         <TableHead className='text-white text-center'>Client Name</TableHead>
                         <TableHead className='text-white text-center'>Client Pnone</TableHead>
+                        {accessData.some(access => access.permission_id === 14 || access.permission_id === 15) && (
 
-                        <TableHead className='text-white text-center'>Action</TableHead>
+                            <TableHead className='text-white text-center'>Action</TableHead>
+                        )}
                     </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -189,39 +280,45 @@ const SupervisionTable: React.FC<PreProjectPlanTableProps> = ({ reload ,projectI
                                 <TableCell className='border border-[#e5e7eb]'>{project.visitDateTime}</TableCell>
                                 <TableCell className='border border-[#e5e7eb]'>{project.clientName}</TableCell>
                                 <TableCell className='border border-[#e5e7eb]'>{project.clientNumber}</TableCell>
-                                <TableCell className='border border-[#e5e7eb] text-3xl flex items-center justify-center'>
-                                <Link href={`/editSupervisionPlan/${project.id}`}>
-                                <FaEdit className='mr-8 opacity-50' />
+                                {accessData.some(access => access.permission_id === 14 || access.permission_id === 15) && (
 
-                                    </Link>
-                                    
-                                    
-                                   
+                                    <TableCell className='border border-[#e5e7eb] text-3xl flex items-center justify-center'>
+                                        {accessData.some(access => access.permission_id === 14) && (
 
-                                    <AlertDialog>
-                                        <AlertDialogTrigger asChild>
-                                            <RiDeleteBin6Line
-                                                className='opacity-50 cursor-pointer'
-                                                onClick={() => setDeleteId(project.id)} // Set the project ID to delete
-                                            />
-                                        </AlertDialogTrigger>
-                                        <AlertDialogContent>
-                                            <AlertDialogHeader>
-                                                <AlertDialogTitle>Confirm Pre Project Site Visit Plan Deletion</AlertDialogTitle>
-                                                <AlertDialogDescription>
-                                                    Are you sure you want to delete this Pre Project Site Visit Plan? This action cannot be undone, and the project will be permanently removed from the system.
-                                                </AlertDialogDescription>
-                                            </AlertDialogHeader>
+                                            <Link href={`/editSupervisionPlan/${project.id}`}>
+                                                <FaEdit className='mr-8 opacity-50' />
 
-                                            <AlertDialogFooter>
-                                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                                <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
-                                            </AlertDialogFooter>
-                                        </AlertDialogContent>
-                                    </AlertDialog>
+                                            </Link>
+                                        )}
 
 
-                                </TableCell>
+                                        {accessData.some(access => access.permission_id === 15) && (
+
+                                            <AlertDialog>
+                                                <AlertDialogTrigger asChild>
+                                                    <RiDeleteBin6Line
+                                                        className='opacity-50 cursor-pointer'
+                                                        onClick={() => setDeleteId(project.id)} // Set the project ID to delete
+                                                    />
+                                                </AlertDialogTrigger>
+                                                <AlertDialogContent>
+                                                    <AlertDialogHeader>
+                                                        <AlertDialogTitle>Confirm Pre Project Site Visit Plan Deletion</AlertDialogTitle>
+                                                        <AlertDialogDescription>
+                                                            Are you sure you want to delete this Pre Project Site Visit Plan? This action cannot be undone, and the project will be permanently removed from the system.
+                                                        </AlertDialogDescription>
+                                                    </AlertDialogHeader>
+
+                                                    <AlertDialogFooter>
+                                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                        <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
+                                                    </AlertDialogFooter>
+                                                </AlertDialogContent>
+                                            </AlertDialog>
+                                        )}
+
+                                    </TableCell>
+                                )}
                             </TableRow>
                         ))
                     )}

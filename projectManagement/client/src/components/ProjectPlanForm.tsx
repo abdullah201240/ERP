@@ -39,7 +39,17 @@ interface EmployeeDetails {
 
     employeeId: string;
 
+
 }
+
+interface Access {
+    id: number;
+    employee_id: number;
+    permission_id: number;
+    createdAt: string;
+    updatedAt: string;
+}
+
 
 export default function ProjectPlanForm() {
     const [token, setToken] = useState<string | null>(null); // State to store token
@@ -61,6 +71,7 @@ export default function ProjectPlanForm() {
     const [reloadTable, setReloadTable] = useState(false);
     const [employeeDetails, setEmployeeDetails] = useState<EmployeeDetails | null>(null);
     const [projectSelected, setProjectSelected] = useState(false);
+    const [accessData, setAccessData] = useState<Access[]>([]);
 
     useEffect(() => {
         // Check if we are running on the client-side (to access localStorage
@@ -96,6 +107,39 @@ export default function ProjectPlanForm() {
             fetchCompanyProfile();
         }
     }, [router, fetchCompanyProfile]);
+    const fetchAccess = useCallback(async () => {
+        try {
+            if (!employeeDetails) {
+                return
+            }
+            const token = localStorage.getItem('accessToken');
+            if (!token) {
+                router.push('/');
+                return;
+            }
+            const response = await fetch(
+                `${process.env.NEXT_PUBLIC_API_URL_ADMIN}access/view-all/${employeeDetails?.id}`,
+                {
+                    headers: { Authorization: `Bearer ${token}` },
+                }
+            );
+            const data = await response.json(); // Extract JSON data
+            setAccessData(data.data || []); // Store API response in state
+
+        } catch (error) {
+            console.error('Error fetching access:', error);
+        }
+    }, [router, employeeDetails]);
+    useEffect(() => {
+        const token = localStorage.getItem('accessToken');
+
+        if (!token) {
+            router.push('/'); // Redirect to login page if token doesn't exist
+        } else {
+            fetchAccess();
+
+        }
+    }, [router, fetchAccess]);
 
     const fetchProjects = useCallback(
         async (pageNumber = 1, query = '') => {
@@ -280,6 +324,7 @@ export default function ProjectPlanForm() {
                                     className="block w-full rounded-md border-gray-300 shadow-sm p-2 bg-gray-100 mt-2"
                                 />
                             </div>
+                            {accessData.some(access => access.permission_id === 8) && (
 
                             <div>
                                 <label className="text-white mb-2">Visit Date & Time</label>
@@ -290,7 +335,9 @@ export default function ProjectPlanForm() {
                                     className="block w-full rounded-md border-gray-300 shadow-sm p-2 bg-gray-100 mt-2"
                                 />
                             </div>
+                             )}
                         </div>
+                        {accessData.some(access => access.permission_id === 8) && (
 
                         <button
                             type="submit"
@@ -300,6 +347,7 @@ export default function ProjectPlanForm() {
                         >
                             {loading ? 'Adding Project Site Visit Plan...' : 'Add Project Site Visit Plan'}
                         </button>
+                         )}
                     </form>
                 </div>
 

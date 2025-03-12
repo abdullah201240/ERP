@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/table";
 
 import { useRouter } from 'next/navigation';
+import { useAccessControl } from '@/hooks/useAccessControl';
 
 // Define the types for Employee and Project
 interface Employee {
@@ -34,6 +35,18 @@ interface PreProjectSiteVisitPlan {
 interface AnimationTableProps {
     projectId: number | null;
 }
+interface EmployeeDetails {
+    id: number;
+    name: string;
+    email: string;
+    phone: string;
+    dob: string;
+    gender: string;
+    companyId: string;
+    sisterConcernId: string;
+    photo: string;
+    employeeId: string;
+  }
 
 const WorkUpdateAnimationTable: React.FC<AnimationTableProps> = ({ projectId }) => {
     const router = useRouter();
@@ -42,39 +55,86 @@ const WorkUpdateAnimationTable: React.FC<AnimationTableProps> = ({ projectId }) 
     const [error, setError] = useState<string | null>(null);
     const [editingIndex, setEditingIndex] = useState<number | null>(null); // Track which row is being edited
     const [updatedPercentage, setUpdatedPercentage] = useState<string>(''); // Track the updated percentage
-    const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+    const { accessData, fetchAccess } = useAccessControl();
+    const [employeeDetails, setEmployeeDetails] = useState<EmployeeDetails | null>(null);
 
-    const fetchProjects = useCallback(async () => {
+
+    const fetchEmployeeProfile = useCallback(async () => {
+        const token = localStorage.getItem('accessToken');
         if (!token) {
-            router.push('/');
-        } else {
-            try {
-                const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}projects/designPlan?projectId=${projectId}&stepType=Animation`, {
-                    headers: {
-                        'Authorization': token
-                    }
-                });
-
-                if (!response.ok) {
-                    throw new Error('Failed to fetch projects');
-                }
-
-                const data = await response.json();
-
-                if (data.success && Array.isArray(data.data)) {
-                    setProjects(data.data);
-                } else {
-                    throw new Error('Fetched data is not in expected format');
-                }
-            } catch (err) {
-                setError((err as Error).message);
-            } finally {
-                setLoading(false);
-            }
+          router.push('/');
+          return;
         }
-    }, [token, router, projectId]);
+    
+        try {
+          const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}employee/auth/profile`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          const data = await response.json();
+          if (data.success) {
+            setEmployeeDetails(data.data);
+          }
+        } catch (error) {
+          console.error('Error fetching employee profile:', error);
+        }
+      }, [router]);
+    
+      useEffect(() => {
+        fetchEmployeeProfile();
+      }, [fetchEmployeeProfile]);
+      useEffect(() => {
+        if (employeeDetails) {
+          fetchAccess(employeeDetails.id);
+        }
+      }, [employeeDetails, fetchAccess]);
+
+  const fetchProjects = useCallback(async () => {
+    const token = localStorage.getItem('accessToken');
+
+      if (!token) {
+          router.push('/');
+          return;
+      }
+  
+      if (!employeeDetails) {
+          return;
+      }
+  
+      try {
+          let apiUrl = `${process.env.NEXT_PUBLIC_API_URL}projects/designPlan?projectId=${projectId}&stepType=Animation&employeeId=${employeeDetails.id}`;
+  
+          if (accessData.some(access => access.permission_id === 16)) {
+              apiUrl = `${process.env.NEXT_PUBLIC_API_URL}projects/designPlan?projectId=${projectId}&stepType=Animation`;
+          }
+  
+          const response = await fetch(apiUrl, {
+              headers: {
+                  'Authorization': token
+              }
+          });
+  
+          if (!response.ok) {
+              throw new Error('Failed to fetch projects');
+          }
+  
+          const data = await response.json();
+  
+          if (data.success && Array.isArray(data.data)) {
+              setProjects(data.data);
+          } else {
+              throw new Error('Fetched data is not in expected format');
+          }
+      } catch (err) {
+          setError((err as Error).message);
+      } finally {
+          setLoading(false);
+      }
+  }, [ router, projectId, accessData, employeeDetails]);
+  
 
     const handlePercentageChange = async (projectId: number, newPercentage: string) => {
+        const token = localStorage.getItem('accessToken');
+
         // Update the percentage locally first
         setProjects(prevProjects =>
             prevProjects.map(project =>

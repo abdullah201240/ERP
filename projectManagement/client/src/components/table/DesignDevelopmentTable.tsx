@@ -11,6 +11,7 @@ import {
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { FaArrowLeft, FaArrowRight } from 'react-icons/fa';
+import toast from 'react-hot-toast';
 
 interface Project {
     id: number;
@@ -58,6 +59,13 @@ interface EmployeeDetails {
 interface DesignStep {
     completed: string; // Assuming 'completed' is a string that represents a percentage
 }
+interface Access {
+    id: number;
+    employee_id: number;
+    permission_id: number;
+    createdAt: string;
+    updatedAt: string;
+}
 
 export default function DesignDevelopmentTable() {
     const router = useRouter();
@@ -68,7 +76,8 @@ export default function DesignDevelopmentTable() {
     const [error, setError] = useState<string | null>(null);
     const [totalProjects, setTotalProjects] = useState<number>(0);
     const [searchQuery, setSearchQuery] = useState<string>(''); // State for search query
-    const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+
+    const [accessData, setAccessData] = useState<Access[]>([]);
 
     // Pagination state
     const [currentPage, setCurrentPage] = useState<number>(1);
@@ -76,22 +85,32 @@ export default function DesignDevelopmentTable() {
     // Memoize the fetchCompanyProfile to avoid recreating the function unnecessarily
     const fetchCompanyProfile = useCallback(async () => {
         try {
+            const token = localStorage.getItem('accessToken');
+
             const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}employee/auth/profile`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
             const data = await response.json();
-            console.table(data.data)
+            if (!response.ok) {
+                router.push('/notFound');
+
+                toast.error('No permission to login. First allocation permission !');
+
+                return; // Exit the function early
+            }
+
             if (data.success) {
                 setEmployeeDetails(data.data);
             }
         } catch (error) {
             console.error('Error fetching profile:', error);
         }
-    }, [token]);
+    }, [router]);
 
     // Memoize the fetchProjects function to avoid unnecessary re-renders
     const fetchProjects = useCallback(async () => {
         try {
+            const token = localStorage.getItem('accessToken');
 
             if (!employeeDetails) return;
             const controller = new AbortController();
@@ -123,7 +142,7 @@ export default function DesignDevelopmentTable() {
 
                     const passedTime = currentDate.getTime() - startDate.getTime();
                     const daysPassed = Math.max(0, Math.floor(passedTime / (1000 * 60 * 60 * 24)));
-                    
+
 
                     return {
                         ...project,
@@ -141,16 +160,53 @@ export default function DesignDevelopmentTable() {
         } finally {
             setLoading(false);
         }
-    }, [token, currentPage, searchQuery, employeeDetails]);
+    }, [currentPage, searchQuery, employeeDetails]);
+    const fetchAccess = useCallback(async () => {
+        try {
+            if (!employeeDetails) {
+                return
+            }
+            const token = localStorage.getItem('accessToken');
+            if (!token) {
+                router.push('/');
+                return;
+            }
+            const response = await fetch(
+                `${process.env.NEXT_PUBLIC_API_URL_ADMIN}access/view-all/${employeeDetails?.id}`,
+                {
+                    headers: { Authorization: `Bearer ${token}` },
+                }
+            );
+            const data = await response.json(); // Extract JSON data
+            setAccessData(data.data || []); // Store API response in state
 
+        } catch (error) {
+            console.error('Error fetching access:', error);
+        }
+    }, [router, employeeDetails]);
     // Trigger fetch functions when necessary
     useEffect(() => {
+        const token = localStorage.getItem('accessToken');
+
         if (!token) {
             router.push('/'); // Redirect to login page if token doesn't exist
         } else {
             fetchCompanyProfile();
+
         }
-    }, [router, token, fetchCompanyProfile]);
+    }, [router, fetchCompanyProfile]);
+    useEffect(() => {
+        const token = localStorage.getItem('accessToken');
+
+        if (!token) {
+            router.push('/'); // Redirect to login page if token doesn't exist
+        } else {
+            fetchAccess();
+
+        }
+    }, [router, fetchAccess]);
+
+
 
     useEffect(() => {
         if (employeeDetails) {
@@ -180,16 +236,16 @@ export default function DesignDevelopmentTable() {
 
     const okay = (design: { stepName: string; stepType: string; completed: string }[]): [string, string] => {
         if (!design || design.length === 0) return ['2D,3D,Rendering,Animation,Working', ''];
-    
+
         // Get unique step types that are not fully completed
         const remainingTasks = [...new Set(
             design.filter(step => step.completed !== '100').map(step => step.stepType)
         )].join(', ');
-    
+
         // If all tasks are complete, return appropriate message
         return remainingTasks ? ['', remainingTasks] : ['All Stages Complete', ''];
     };
-    
+
 
 
 
@@ -230,7 +286,7 @@ export default function DesignDevelopmentTable() {
             return 'Animation  in Progress';
         }
 
-        
+
         // Check if all Working tasks are 100% complete
         const allWorkinggComplete = design
             .filter(step => step.stepType === 'Working')
@@ -243,7 +299,7 @@ export default function DesignDevelopmentTable() {
 
 
         // If both 2D and 3D are complete, check for other tasks
-        const otherTasks = design.filter(step => step.stepType !== '2D' && step.stepType !== '3D'  && step.stepType !== 'Animation'  && step.stepType !== 'Rendering'  && step.stepType !== 'Working' );
+        const otherTasks = design.filter(step => step.stepType !== '2D' && step.stepType !== '3D' && step.stepType !== 'Animation' && step.stepType !== 'Rendering' && step.stepType !== 'Working');
         if (otherTasks.length > 0) {
             const allOtherComplete = otherTasks.every(step => step.completed === '100');
             if (!allOtherComplete) {
@@ -253,16 +309,16 @@ export default function DesignDevelopmentTable() {
 
         return 'All Stages Complete';
     };
-    
+
     const calculateCompletionPercentage = (design: DesignStep[]): string => {
         if (!design || design.length === 0) return '0%';
-    
+
         const totalCompletion = design.reduce((acc, step) => acc + parseFloat(step.completed), 0);
         const averageCompletion = totalCompletion / design.length;
-    
+
         return `${averageCompletion.toFixed(2)}%`; // Returns the percentage as a string with two decimal places
     };
-    
+
 
 
 
@@ -299,7 +355,10 @@ export default function DesignDevelopmentTable() {
                         <TableHead className='text-white text-center'>Days Remaining</TableHead>
                         <TableHead className='text-white text-center'>Remaining Tasks</TableHead>
                         <TableHead className='text-white text-center'>Completion (%)</TableHead>
-                        <TableHead className='text-white text-center'>View Details</TableHead>
+                        {accessData.some(access => access.permission_id === 3) && (
+                            <TableHead className="text-white text-center">View Details</TableHead>
+                        )}
+
                     </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -309,7 +368,7 @@ export default function DesignDevelopmentTable() {
                         </TableRow>
                     ) : (
                         projects.map((project, index) => (
-                        
+
 
                             <TableRow key={project.id} className='text-center'>
                                 <TableCell className='text-center border border-[#e5e7eb]'>{index + 1 + (currentPage - 1) * itemsPerPage}</TableCell>
@@ -323,14 +382,25 @@ export default function DesignDevelopmentTable() {
                                 <TableCell className='border border-[#e5e7eb]'>{project.daysPassed || 'N/A'}</TableCell>
                                 <TableCell className='border border-[#e5e7eb]'>{project.daysRemaining}</TableCell>
 
-                                
+
                                 <TableCell className='border border-[#e5e7eb]'>{project.design ? okay(project.design) : 'N/A'}</TableCell>
-                                <TableCell className='border border-[#e5e7eb]'>{project.design ? calculateCompletionPercentage(project.design) : '0%'}</TableCell>                                
-                                <TableCell className='border border-[#e5e7eb]'>
-                                    <Link href={`/projects/${project.id}`} >
-                                        <p className="bg-gradient-to-r from-blue-500 to-indigo-600 px-4 py-2 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 ease-in-out transform hover:scale-105 hover:bg-gradient-to-r hover:from-indigo-600 hover:to-blue-500 focus:outline-none focus:ring-2 focus:ring-indigo-300">View</p>
-                                    </Link>
-                                </TableCell>
+                                <TableCell className='border border-[#e5e7eb]'>{project.design ? calculateCompletionPercentage(project.design) : '0%'}</TableCell>
+
+
+                                {accessData.some(access => access.permission_id === 3) && (
+                                    <TableCell className='border border-[#e5e7eb]'>
+                                        <Link href={`/projects/${project.id}`} >
+                                            <p className="bg-gradient-to-r from-blue-500 to-indigo-600 px-4 py-2 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 ease-in-out transform hover:scale-105 hover:bg-gradient-to-r hover:from-indigo-600 hover:to-blue-500 focus:outline-none focus:ring-2 focus:ring-indigo-300">View</p>
+                                        </Link>
+                                    </TableCell>
+
+                                )}
+
+
+
+
+
+
                             </TableRow>
                         ))
                     )}

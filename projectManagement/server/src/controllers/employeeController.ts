@@ -52,7 +52,8 @@ export const loginEmployee = asyncHandler(
 
     // Generate access token
     const accessToken = jwt.sign(
-      { id: employeeData.id, email: employeeData.email, name: employeeData.name ,companyId: employeeData.companyId , sisterConcernId: employeeData.sisterConcernId , photo: employeeData.photo ,dob: employeeData.dob , gender: employeeData.gender,phone: employeeData.phone,employeeId: employeeData.employeeId },
+      { id: employeeData.id, email: employeeData.email, name: employeeData.name ,companyId: employeeData.companyId , sisterConcernId: employeeData.sisterConcernId , photo: employeeData.photo ,dob: employeeData.dob , gender: employeeData.gender,phone: employeeData.phone,employeeId: employeeData.employeeId ,logo:employeeData.sisterConcern.logo
+      },
       ACCESS_TOKEN_SECRET as string,
       { expiresIn: process.env.ACCESS_TOKEN_EXPIRY || "1h" }
     );
@@ -94,7 +95,7 @@ export const getProfile = asyncHandler(
     }
 
     // Assuming the JWT payload contains all the required fields directly
-    const { id, name, email, phone, dob, gender ,companyId , sisterConcernId ,photo,employeeId } = user.user; // Extract from the payload
+    const { id, name, email, phone, dob, gender ,companyId , sisterConcernId ,photo,employeeId ,logo } = user.user; // Extract from the payload
 
     // Return the user profile details
     return res.status(200).json(
@@ -109,7 +110,8 @@ export const getProfile = asyncHandler(
           companyId,
           sisterConcernId,
           photo,
-          employeeId
+          employeeId,
+          logo
         },
         "Profile retrieved successfully"
       )

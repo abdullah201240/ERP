@@ -59,6 +59,10 @@ export const createEmployee = asyncHandler(
     const { name, email, password, phone, employeeId, dob, gender } = req.body;
     const companyId = parseInt(req.body.companyId, 10);
     const sisterConcernId = parseInt(req.body.sisterConcernId, 10);
+    if(sisterConcernId=== 0 ||companyId=== 0 ){
+      return next(new ApiError("sisterConcernId  is required", 400, ErrorCodes.BAD_REQUEST.code));
+
+    }
     // Check for missing fields
     if (!name || !email || !password || !phone || !dob || !gender) {
       throw new ApiError(
@@ -120,20 +124,20 @@ export const createEmployee = asyncHandler(
       // Attempt to clear the cache
       await clearEmployeeCache();
       console.log("Cache cleared successfully"); // Log success
-      return res.status(201).json({ 
-        message: "Employee created successfully", 
+      return res.status(201).json({
+        message: "Employee created successfully",
         employee: employeeResponse,
         cacheMessage: "Cache cleared successfully" // Indicate cache was cleared
       });
     } catch (error) {
       console.error("Failed to clear cache:", error); // Log the error
-      return res.status(201).json({ 
-        message: "Employee created successfully", 
+      return res.status(201).json({
+        message: "Employee created successfully",
         employee: employeeResponse,
         cacheMessage: "Cache not cleared" // Indicate cache was not cleared
       });
     }
-    
+
   }
 );
 
@@ -333,7 +337,7 @@ export const getAllEmployee = asyncHandler(
 export const updateEmployee = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     const { id } = req.params; // Employee ID from URL params
-    const { name, email, phone, dob, gender, companyId, sisterConcernId } = req.body;
+    const { name, email, phone, dob, gender, companyId, sisterConcernId,employeeId } = req.body;
 
     // Convert companyId and sisterConcernId to integers if provided
     const updatedCompanyId = companyId ? parseInt(companyId, 10) : undefined;
@@ -368,6 +372,7 @@ export const updateEmployee = asyncHandler(
       gender: gender || employee.gender,
       companyId: updatedCompanyId ?? employee.companyId,
       sisterConcernId: updatedSisterConcernId ?? employee.sisterConcernId,
+      employeeId: employeeId || employee.employeeId,
       photo,
     });
     // Clear cached product list
@@ -420,18 +425,18 @@ export const loginEmployeeOthersPlatform = asyncHandler(
     const { email, password } = validationResult.data;
 
     // Find employee by email
-     // If not in cache, fetch from database
-     const employee = await Employee.findOne({
+    // If not in cache, fetch from database
+    const employee = await Employee.findOne({
       where: { email },
       include: [
         {
           model: SisterConcern,
           foreignKey: "sisterConcernId",
-          as:"sisterConcern"
+          as: "sisterConcern"
         }
       ]
     });
-    
+
     if (!employee) {
       return next(
         new ApiError(
@@ -493,7 +498,7 @@ export const getEmployeeByEmail = asyncHandler(
     // If not in cache, fetch from database
     const employee = await Employee.findOne({
       where: { email }
-      
+
     });
     if (!employee) {
       return next(
@@ -547,11 +552,11 @@ export const getEmployeeById = asyncHandler(
         {
           model: SisterConcern,
           foreignKey: "sisterConcernId",
-          as:"sisterConcern"
+          as: "sisterConcern"
         }
       ]
     });
-     if (!employee) {
+    if (!employee) {
       return next(new ApiError("Employee not found", 404, ErrorCodes.NOT_FOUND.code));
     }
 
@@ -613,3 +618,4 @@ export const getEmployees = asyncHandler(
     return res.status(200).json({ success: true, employees });
   }
 );
+

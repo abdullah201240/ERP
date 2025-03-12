@@ -24,6 +24,29 @@ interface FormData {
   requirementDetails: string;
   creatorName: string;
   creatorEmail: string;
+  employee_id: string;
+  permission_id: string
+}
+
+interface EmployeeDetails {
+  id: string;
+  name: string;
+  email: string;
+
+  phone: string;
+
+  dob: string;
+
+  gender: string;
+
+  companyId: string;
+
+  sisterConcernId: string;
+
+  photo: string;
+
+  employeeId: string;
+
 }
 
 export default function UpdateProjectPage() {
@@ -50,28 +73,11 @@ export default function UpdateProjectPage() {
     assignedTo: [],
     requirementDetails: '',
     creatorName: '',
-    creatorEmail: ''
+    creatorEmail: '',
+    employee_id: '',
+    permission_id: '',
+
   });
-  interface EmployeeDetails {
-    id: number;
-    name: string;
-    email: string;
-
-    phone: string;
-
-    dob: string;
-
-    gender: string;
-
-    companyId: string;
-
-    sisterConcernId: string;
-
-    photo: string;
-
-    employeeId: string;
-
-}
 
   const [employees, setEmployees] = useState<{ id: string; name: string }[]>([]);
   const [loading, setLoading] = useState(true);
@@ -91,78 +97,78 @@ export default function UpdateProjectPage() {
     const token = localStorage.getItem('accessToken');
 
     try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}employee/auth/profile`, {
-            headers: { Authorization: `Bearer ${token}` },
-        });
-        const data = await response.json();
-        console.table(data.data)
-        if (data.success) {
-            setEmployeeDetails(data.data);
-        }
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}employee/auth/profile`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await response.json();
+      console.table(data.data)
+      if (data.success) {
+        setEmployeeDetails(data.data);
+      }
     } catch (error) {
-        console.error('Error fetching profile:', error);
+      console.error('Error fetching profile:', error);
     }
-}, []);
+  }, []);
 
-useEffect(() => {
-  const token = localStorage.getItem('accessToken');
-
-  if (!token) {
-      router.push('/'); // Redirect to login page if token doesn't exist
-  } else {
-      fetchCompanyProfile();
-  }
-}, [router, fetchCompanyProfile]);
-
-
-
-const fetchEmployees = async (page: number) => {
-  try {
+  useEffect(() => {
     const token = localStorage.getItem('accessToken');
 
     if (!token) {
-      router.push('/');
-      return; // Exit the function if there's no token
+      router.push('/'); // Redirect to login page if token doesn't exist
+    } else {
+      fetchCompanyProfile();
     }
-    if (!employeeDetails) return;
+  }, [router, fetchCompanyProfile]);
 
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL_ADMIN}sisterConcern/employee/${employeeDetails.sisterConcernId}?page=${page}&limit=10`, {
-      headers: {
-        Authorization: token, // Ensure token is not null
-      },
-    });
 
-    if (!response.ok) {
-      throw new Error('Failed to fetch employees');
-    }
 
-    const employeeData = await response.json();
-    setEmployees((prev) => [...prev, ...employeeData.data.employees]);
-    setHasMoreEmployees(employeeData.data.totalEmployees > employees.length);
-  } catch (error) {
-    console.error(error);
-    setError('Failed to load employees');
-  }
-};
+  const fetchEmployees = async (page: number) => {
+    try {
+      const token = localStorage.getItem('accessToken');
 
-useEffect(() => {
-  const handleClickOutside = (event: MouseEvent) => {
-    if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-      setIsDropdownOpen(false);
+      if (!token) {
+        router.push('/');
+        return; // Exit the function if there's no token
+      }
+      if (!employeeDetails) return;
+
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL_ADMIN}sisterConcern/employee/${employeeDetails.sisterConcernId}?page=${page}&limit=10`, {
+        headers: {
+          Authorization: token, // Ensure token is not null
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch employees');
+      }
+
+      const employeeData = await response.json();
+      setEmployees((prev) => [...prev, ...employeeData.data.employees]);
+      setHasMoreEmployees(employeeData.data.totalEmployees > employees.length);
+    } catch (error) {
+      console.error(error);
+      setError('Failed to load employees');
     }
   };
 
-  document.addEventListener('mousedown', handleClickOutside);
-  return () => {
-    document.removeEventListener('mousedown', handleClickOutside);
-  };
-}, []);
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    };
 
-useEffect(() => {
-  if (isDropdownOpen) {
-    fetchEmployees(currentPage);
-  }
-}, [isDropdownOpen, currentPage]);
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (isDropdownOpen) {
+      fetchEmployees(currentPage);
+    }
+  }, [isDropdownOpen, currentPage]);
 
   const handleScroll: React.UIEventHandler<HTMLUListElement> = (event) => {
     const { scrollTop, scrollHeight, clientHeight } = event.currentTarget;
@@ -295,20 +301,34 @@ useEffect(() => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    // Ensure employeeDetails is loaded
+    if (!employeeDetails || !employeeDetails.id) {
+      toast.error('Employee details are not loaded yet. Please wait...');
+      return;
+    }
+  
+
     try {
       const token = localStorage.getItem('accessToken');
 
       if (!token) {
-        router.push('/'); // Redirect to login page if token doesn't exist
+        router.push('/'); 
         return;
       }
+  
+      // Add employee_Id and permission_id to formData
+      const updatedFormData = {
+        ...formData,
+        permission_id: "1" , // Replace with the actual value for permission_id
+        employee_Id:"1",  // Use the actual value for employee_Id
+      };
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}projects/project/${pageId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': token,
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(updatedFormData),
       });
 
       if (!response.ok) {
@@ -357,8 +377,8 @@ useEffect(() => {
             </div>
 
             <div className="relative">
-            <label className='text-white mb-2'>Assigned To</label>
-            <div
+              <label className='text-white mb-2'>Assigned To</label>
+              <div
                 onClick={toggleDropdown}
                 className="w-full rounded-md border-gray-300 shadow-sm focus-within:border-black focus-within:ring-black focus-within:ring-opacity-50 p-2 bg-gray-100 mt-2 cursor-pointer pr-10 flex flex-wrap gap-2"
               >
@@ -616,6 +636,8 @@ useEffect(() => {
             <button
               type="submit"
               className="block w-full border border-white text-white font-bold py-3 px-4 rounded-md"
+              disabled={!employeeDetails || !employeeDetails.id} // Disable if employeeDetails is not loaded
+
             >
               Update
             </button>

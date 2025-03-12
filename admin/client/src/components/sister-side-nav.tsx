@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -9,9 +9,52 @@ import { SIDENAV_ITEMS_SISTER } from '@/sister-constants';
 import { SideNavItem } from '@/types';
 import { Icon } from '@iconify/react';
 import Image from 'next/image';
-import Logo from '@/app/assets/img/Logo.webp';
+interface EmployeeDetails {
+  id: number;
+  email: string;
+  logo: string;
 
+}
 const SideNav = () => {
+  const [employeeDetails, setEmployeeDetails] = useState<EmployeeDetails | null>(null);
+
+
+  const fetchUserEmail = async (): Promise<EmployeeDetails | null> => {
+    const token = localStorage.getItem('accessTokenCompany');
+    if (!token) {
+      return null;
+    }
+  
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}sisterConcern/auth/sisterConcern/profile`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      const data = await response.json();
+  
+      if (data.success) {
+        return data.data; // Assuming data.data is of type EmployeeDetails
+      } else {
+        return null;
+      }
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+      return null;
+    }
+  };
+
+  useEffect(() => {
+    const getUserEmail = async () => {
+      const data = await fetchUserEmail();
+      if(data){
+        setEmployeeDetails(data);
+            }
+    
+    };
+
+    getUserEmail();
+  }, []);
   return (
     <div className="md:w-60 bg-white h-screen flex-1 fixed  hidden md:flex">
       <div className="flex flex-col space-y-6 w-full mt-4">
@@ -19,14 +62,14 @@ const SideNav = () => {
           href="/dashboard"
           className="flex flex-row space-x-3 items-center justify-center md:justify-start md:px-6  h-12 w-full"
         >
-            <Image 
-            src={Logo}
+           <Image
+            src={`${process.env.NEXT_PUBLIC_API_URL}uploads/${employeeDetails?.logo}`}
             alt='logo'
             width={50}
             height={50}
-            
-            
-            />
+
+
+          />
           
         </Link>
 
@@ -45,6 +88,7 @@ export default SideNav;
 const MenuItem = ({ item }: { item: SideNavItem }) => {
   const pathname = usePathname();
   const [subMenuOpen, setSubMenuOpen] = useState(false);
+ 
   const toggleSubMenu = () => {
     setSubMenuOpen(!subMenuOpen);
   };

@@ -1,12 +1,13 @@
 'use client';
-import { useEffect } from 'react';
+import {  useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Design from '@/components/table/DesignDevelopmentTable';
+import toast from 'react-hot-toast';
 
 
 export default function Home() {
   const router = useRouter();
-  
+
 
   useEffect(() => {
     const checkTokenAndFetchProfile = async () => {
@@ -27,7 +28,10 @@ export default function Home() {
         });
 
         if (!response.ok) {
-          router.push('/'); // Adjust the path to your login page
+          router.push('/notFound');
+
+          toast.error('No permission to login. First allocation permission !');
+
           return; // Exit the function early
         }
 
@@ -40,6 +44,8 @@ export default function Home() {
 
     checkTokenAndFetchProfile();
   }, [router]);
+
+
 
   return (
     <div>

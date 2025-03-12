@@ -10,6 +10,8 @@ import Design3DTable from './table/Design3DTable';
 import Layout2DTable from './table/Layout2DTable';
 import WorkingDrawingTable from './table/WorkingDrawingTable';
 import RenderingTable from './table/RenderingTable';
+import { useAccessControl } from '../hooks/useAccessControl'; // Import the custom hook
+
 interface Project {
     id: number;
     projectName: string;
@@ -68,19 +70,25 @@ export default function CreateDesignPlanFrom() {
     const [remarks, setRemarks] = useState('');
     const [reloadTable, setReloadTable] = useState(false);
     const [employeeDetails, setEmployeeDetails] = useState<EmployeeDetails | null>(null);
+    const { accessData, fetchAccess } = useAccessControl(); // Use the custom hook
+
 
     useEffect(() => {
         // Check if we are running on the client-side (to access localStorage)
-        if (typeof window !== 'undefined') {
-            const storedToken = localStorage.getItem('accessToken');
-            if (!storedToken) {
-                router.push('/'); // Redirect if no token is found
-            } else {
-                setToken(storedToken); // Set the token to state
-            }
+        const storedToken = localStorage.getItem('accessToken');
+        if (!storedToken) {
+            router.push('/'); // Redirect if no token is found
+        } else {
+            setToken(storedToken); // Set the token to state
         }
-    }, [router]);
 
+    }, [router]);
+    useEffect(() => {
+        if (employeeDetails) {
+            fetchAccess(employeeDetails.id); // Fetch access data when employeeDetails is available
+        }
+    }, [employeeDetails, fetchAccess]);
+    
     const renderTable = (projectId: number | null) => {
         switch (selected) {
             case '2D': return <Layout2DTable projectId={projectId} reload={reloadTable} />;
@@ -156,7 +164,7 @@ export default function CreateDesignPlanFrom() {
                 if (!employeeDetails) return;
 
                 const response = await fetch(
-                 `${process.env.NEXT_PUBLIC_API_URL_ADMIN}sisterConcern/employee/${employeeDetails.sisterConcernId}?page=${pageNumber}&limit=10&search=${query}`,
+                    `${process.env.NEXT_PUBLIC_API_URL_ADMIN}sisterConcern/employee/${employeeDetails.sisterConcernId}?page=${pageNumber}&limit=10&search=${query}`,
                     {
                         headers: {
                             Authorization: `Bearer ${token}`,
@@ -183,7 +191,7 @@ export default function CreateDesignPlanFrom() {
                 setLoading1(false);
             }
         },
-        [token,employeeDetails] // Adding token as a dependency
+        [token, employeeDetails] // Adding token as a dependency
     );
     useEffect(() => {
         const token = localStorage.getItem('accessToken');
@@ -380,25 +388,26 @@ export default function CreateDesignPlanFrom() {
                     <div className='mt-8'>
                         {renderTable(selectedProject)}
                     </div>
+                    {accessData.some(access => access.permission_id === 16) && (
 
 
-                    <div className='text-right mt-8'>
+                        <div className='text-right mt-8'>
 
 
 
-                        <Button
-                            data-modal-target="default-modal" data-modal-toggle="default-modal"
-                            className='bg-[#F99641] text-black hover:bg-[#2A5158] hover:text-white'
-                            onClick={() => setIsModalOpen(true)} // Open modal on click
+                            <Button
+                                data-modal-target="default-modal" data-modal-toggle="default-modal"
+                                className='bg-[#F99641] text-black hover:bg-[#2A5158] hover:text-white'
+                                onClick={() => setIsModalOpen(true)} // Open modal on click
 
 
-                        >
-                            + Add steps
-                        </Button>
+                            >
+                                + Add steps
+                            </Button>
 
 
-                    </div>
-
+                        </div>
+                    )}
 
 
                 </div>

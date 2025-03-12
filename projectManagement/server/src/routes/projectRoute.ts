@@ -1,12 +1,13 @@
 import express from "express";
 import { verifyJWT } from "../middleware/auth"; 
 import { createAssignedTo, createDegineBOQ, createDesignPlan, createProject, createService, degineBOQPart, degineInvoiceCreate, deleteAssignedTo, deleteDegineBOQById, deleteDegineBOQPartById, deleteDesignInvoice, deleteDesignPlan, deleteProject, deleteService, getAllBOQ, getDesignPlans, getDesignPlansProject, getProjectById, getProjectsPaginated, updateCompletionPercentage, updateDegineBOQById, updateDesignPlan, updateProject, updateService, viewAllDegineBOQPart, viewAllDegineBOQs, viewAllDegineInvoice, viewAllDegineInvoiceById, viewAllServices, viewDegineBOQById, viewServiceById } from "../controllers/projectController";
+import verifyPermission from "../middleware/verifyPermission";
 
 const router = express.Router();
 
 // Route to create a new project
 router.post('/create-project', verifyJWT, createProject);
-router.put("/project/:id",verifyJWT, updateProject); // Add update route
+router.put("/project/:id",verifyJWT,verifyPermission(), updateProject); // Add update route
 
 // Route to fetch all projects
 router.get('/view-all-projects/:id', getProjectsPaginated);

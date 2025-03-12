@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/table";
 import WorkUpdateModal from '@/components/WorkUpdateModal'; // Import the modal component
 import ReviewWorkUpdatesModal from '@/components/ReviewWorkUpdatesModal'; // Import the review modal
+import { useAccessControl } from '@/hooks/useAccessControl';
 
 
 
@@ -84,10 +85,25 @@ interface ProductionWorkPlan {
   completed: string;
   employeeName: string
   productionWorkUpdate: ProductionWorkUpdate[];
-  status:string
+  status: string
 
 
 }
+
+interface EmployeeDetails {
+  id: number;
+  name: string;
+  email: string;
+  phone: string;
+  dob: string;
+  gender: string;
+  companyId: string;
+  sisterConcernId: string;
+  photo: string;
+  employeeId: string;
+}
+
+
 
 export default function Page() {
   const router = useRouter();
@@ -102,9 +118,37 @@ export default function Page() {
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   const [selectedWorkPlanIdForReview, setSelectedWorkPlanIdForReview] = useState<number | null>(null);
   const [selectedWorkPlanUpdates, setSelectedWorkPlanUpdates] = useState<ProductionWorkUpdate[]>([]);
+  const { accessData, fetchAccess } = useAccessControl();
+  const [employeeDetails, setEmployeeDetails] = useState<EmployeeDetails | null>(null);
 
+  const fetchEmployeeProfile = useCallback(async () => {
+    const token = localStorage.getItem('accessToken');
+    if (!token) {
+      router.push('/');
+      return;
+    }
 
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}employee/auth/profile`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await response.json();
+      if (data.success) {
+        setEmployeeDetails(data.data);
+      }
+    } catch (error) {
+      console.error('Error fetching employee profile:', error);
+    }
+  }, [router]);
 
+  useEffect(() => {
+    fetchEmployeeProfile();
+  }, [fetchEmployeeProfile]);
+  useEffect(() => {
+    if (employeeDetails) {
+      fetchAccess(employeeDetails.id);
+    }
+  }, [employeeDetails, fetchAccess]);
   useEffect(() => {
     const checkTokenAndFetchProfile = async () => {
       const token = localStorage.getItem('accessToken');
@@ -174,16 +218,28 @@ export default function Page() {
   }, [router, id]);
 
   const fetchProductionWorkPlan = useCallback(async () => {
+    const token = localStorage.getItem('accessToken');
+    if (!token) {
+      router.push('/');
+      return;
+    }
+
+    if (!employeeDetails) {
+      return;
+    }
     try {
-      const token = localStorage.getItem('accessToken');
-      if (!token) {
-        router.push('/');
-        return;
+
+      let apiUrl = `${process.env.NEXT_PUBLIC_API_URL}workingDrawing/productionWorkPlan/${id}?employeeId=${employeeDetails.id}`;
+
+      if (accessData.some(access => access.permission_id === 29)) {
+        apiUrl = `${process.env.NEXT_PUBLIC_API_URL}workingDrawing/productionWorkPlan/${id}`;
       }
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}workingDrawing/productionWorkPlan/${id}`, {
-        headers: { Authorization: token },
-      });
+      const response = await fetch(apiUrl, {
+        headers: {
+            'Authorization': token
+        }
+    });
 
       if (!response.ok) throw new Error("Failed to fetch ProductionWorkPlan");
       const data = await response.json();
@@ -197,7 +253,7 @@ export default function Page() {
     } catch (error) {
       console.error("Error fetching ProductionWorkPlan:", error);
     }
-  }, [router, id]);
+  }, [router, id, employeeDetails,accessData]);
 
 
 
@@ -247,7 +303,7 @@ export default function Page() {
         router.push('/');
         return;
       }
-     
+
 
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}workingDrawing/productionWorkPlan/${id}`, {
         method: 'PUT',
@@ -255,7 +311,7 @@ export default function Page() {
           'Authorization': token,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({status }),
+        body: JSON.stringify({ status }),
       });
 
       if (!response.ok) throw new Error("Failed to update completed percentage");
@@ -432,12 +488,12 @@ export default function Page() {
                     const daysPassed = Math.ceil((currentDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
                     const daysRemaining = Math.max((totalDays - daysPassed) + 1, 0);
                     let tracking = "Not applicable";
-                     if(productionWorkPlan.status === "In Progress" && daysRemaining === 0){
-                      tracking="Over due"
-                     }
-                     if(productionWorkPlan.status === "In Progress" && daysRemaining > 0){
-                      tracking="On Track"
-                     }
+                    if (productionWorkPlan.status === "In Progress" && daysRemaining === 0) {
+                      tracking = "Over due"
+                    }
+                    if (productionWorkPlan.status === "In Progress" && daysRemaining > 0) {
+                      tracking = "On Track"
+                    }
 
                     return (
                       <TableRow key={productionWorkPlan.id} className='text-center'>
@@ -453,10 +509,10 @@ export default function Page() {
                               <option key={percent} value={`${percent}`}>{percent}</option>
                             ))}
                           </select>
-                          
-                          
-                          
-                          </TableCell>
+
+
+
+                        </TableCell>
                         <TableCell className='border border-[#e5e7eb]'>{productionWorkPlan.startDate}</TableCell>
                         <TableCell className='border border-[#e5e7eb]'>{productionWorkPlan.endDate}</TableCell>
                         <TableCell className='border border-[#e5e7eb]'>{totalDays + 1} days</TableCell>

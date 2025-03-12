@@ -293,8 +293,6 @@ export default function Page() {
                                     <TableHead className='text-white text-center'>Sourching Price (Total)</TableHead>
                                     <TableHead className='text-white text-center'>MRP (Per Unit)</TableHead>
                                     <TableHead className='text-white text-center'>MRP (Total)</TableHead>
-                                    <TableHead className='text-white text-center'>Operating Cost</TableHead>
-                                    <TableHead className='text-white text-center'>Total Amount</TableHead>
                                     <TableHead className='text-white text-center'>Margin Amount</TableHead>
                                     <TableHead className='text-white text-center'>After
                                     Margin Amount</TableHead>
@@ -325,17 +323,15 @@ export default function Page() {
 
 
 
-                                        const operatingCost = (parseFloat(operatingExpense) / 100) * sourceTotal;
-                                        const finalTotal = sourceTotal+ operatingCost ;
-                                        const marginAmount = (parseFloat(margin) / 100) * finalTotal;
-                                        const finalTotalwithMargin = sourceTotal+ operatingCost  + marginAmount;
+                                        const marginAmount = (parseFloat(margin) / 100) * sourceTotal;
+                                        const finalTotalwithMargin = sourceTotal  + marginAmount;
                                         const taxAmount = (parseFloat(tax) / 100) * finalTotalwithMargin;
 
-                                        const finalTotalwithTax = sourceTotal+ operatingCost  + marginAmount+taxAmount ;
+                                        const finalTotalwithTax = sourceTotal  + marginAmount+taxAmount ;
 
 
                                         const vatAmount = (parseFloat(vat) / 100) * finalTotalwithTax;
-                                        const finalTotalwithAll = sourceTotal+ operatingCost + taxAmount + marginAmount + vatAmount;
+                                        const finalTotalwithAll = sourceTotal + taxAmount + marginAmount + vatAmount;
 
 
                                         return (
@@ -351,8 +347,6 @@ export default function Page() {
                                                 <TableCell className='border border-[#e5e7eb]'>{sourcingPriceTotal}</TableCell>
                                                 <TableCell className='border border-[#e5e7eb]'>{material.mrpPrice}</TableCell>
                                                 <TableCell className='border border-[#e5e7eb]'>{mrpTotal}</TableCell>
-                                                <TableCell className='border border-[#e5e7eb]'>{operatingCost.toFixed(2)}</TableCell>
-                                                <TableCell className='border border-[#e5e7eb]'>{finalTotal.toFixed(2)}</TableCell>
                                                 <TableCell className='border border-[#e5e7eb]'>{marginAmount.toFixed(2)}</TableCell>
                                                 <TableCell className='border border-[#e5e7eb]'>{finalTotalwithMargin.toFixed(2)}</TableCell>
 

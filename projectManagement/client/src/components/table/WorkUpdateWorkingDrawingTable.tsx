@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/table";
 
 import { useRouter } from 'next/navigation';
+import { useAccessControl } from '@/hooks/useAccessControl';
 
 // Define the types for Employee and Project
 interface Employee {
@@ -34,6 +35,18 @@ interface PreProjectSiteVisitPlan {
 interface WorkingDrawingTableProps {
   projectId: number | null;
 }
+interface EmployeeDetails {
+    id: number;
+    name: string;
+    email: string;
+    phone: string;
+    dob: string;
+    gender: string;
+    companyId: string;
+    sisterConcernId: string;
+    photo: string;
+    employeeId: string;
+  }
 
 const WorkUpdateWorkingDrawingTable: React.FC<WorkingDrawingTableProps> = ({ projectId  }) => {
     const router = useRouter();
@@ -43,38 +56,86 @@ const WorkUpdateWorkingDrawingTable: React.FC<WorkingDrawingTableProps> = ({ pro
     const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
     const [updatedPercentage, setUpdatedPercentage] = useState<string>(''); // Track the updated percentage
     const [editingIndex, setEditingIndex] = useState<number | null>(null); // Track which row is being edited
+    const { accessData, fetchAccess } = useAccessControl();
+    const [employeeDetails, setEmployeeDetails] = useState<EmployeeDetails | null>(null);
 
+    const fetchEmployeeProfile = useCallback(async () => {
+        const token = localStorage.getItem('accessToken');
+        if (!token) {
+          router.push('/');
+          return;
+        }
+    
+        try {
+          const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}employee/auth/profile`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          const data = await response.json();
+          if (data.success) {
+            setEmployeeDetails(data.data);
+          }
+        } catch (error) {
+          console.error('Error fetching employee profile:', error);
+        }
+      }, [router]);
+    
+      useEffect(() => {
+        fetchEmployeeProfile();
+      }, [fetchEmployeeProfile]);
+      useEffect(() => {
+        if (employeeDetails) {
+          fetchAccess(employeeDetails.id);
+        }
+      }, [employeeDetails, fetchAccess]);
 
-    const fetchProjects = useCallback(async () => {
+      const fetchProjects = useCallback(async () => {
         if (!token) {
             router.push('/');
-        } else {
-            try {
-                const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}projects/designPlan?projectId=${projectId}&stepType=Working`, {
-                    headers: {
-                        'Authorization': token
-                    }
-                });
-
-                if (!response.ok) {
-                    throw new Error('Failed to fetch projects');
-                }
-
-                const data = await response.json();
-
-                if (data.success && Array.isArray(data.data)) {
-                    setProjects(data.data);
-                } else {
-                    throw new Error('Fetched data is not in expected format');
-                }
-            } catch (err) {
-                setError((err as Error).message);
-            } finally {
-                setLoading(false);
-            }
+            return;
         }
-    }, [token, router, projectId]);
+    
+        if (!employeeDetails) {
+            return;
+        }
+    
+        try {
+            let apiUrl = `${process.env.NEXT_PUBLIC_API_URL}projects/designPlan?projectId=${projectId}&stepType=Working&employeeId=${employeeDetails.id}`;
+    
+            if (accessData.some(access => access.permission_id === 16)) {
+                apiUrl = `${process.env.NEXT_PUBLIC_API_URL}projects/designPlan?projectId=${projectId}&stepType=Working`;
+            }
+    
+            const response = await fetch(apiUrl, {
+                headers: {
+                    'Authorization': token
+                }
+            });
+    
+            if (!response.ok) {
+                throw new Error('Failed to fetch projects');
+            }
+    
+            const data = await response.json();
+    
+            if (data.success && Array.isArray(data.data)) {
+                setProjects(data.data);
+            } else {
+                throw new Error('Fetched data is not in expected format');
+            }
+        } catch (err) {
+            setError((err as Error).message);
+        } finally {
+            setLoading(false);
+        }
+    }, [token, router, projectId, accessData, employeeDetails]);
+   
 
+    
+
+    useEffect(() => {
+        fetchProjects();
+    }, [fetchProjects]);
+   
     
 
    

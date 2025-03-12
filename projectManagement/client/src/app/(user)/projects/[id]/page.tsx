@@ -1,8 +1,9 @@
 'use client'
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { FaArrowLeft, FaEdit } from 'react-icons/fa';
 import Link from 'next/link';
 import { useRouter, useParams } from 'next/navigation';
+import { toast } from 'react-hot-toast';
 
 interface Project {
   id: number;
@@ -24,6 +25,31 @@ interface Project {
   estimatedBudget: string;
   assigned: { eName: string; eid: string; id: string }[]; // Stores selected employees
   design?: { stepName: string; stepType: string; startDate: string; endDate: string; completed: string; id: string; }[];
+}
+interface EmployeeDetails {
+  id: string;
+  name: string;
+  email: string;
+
+  phone: string;
+
+  dob: string;
+
+  gender: string;
+
+  companyId: string;
+
+  sisterConcernId: string;
+
+  photo: string;
+
+  employeeId: string;
+
+}
+interface Access {
+  id: number;
+  employee_id: number;
+  permission_id: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -35,10 +61,77 @@ export default function Page() {
   const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
   const [daysRemaining, setDaysRemaining] = useState<number | null>(null);
   const [daysPassed, setDaysPassed] = useState<number | null>(null);
+  const [employeeDetails, setEmployeeDetails] = useState<EmployeeDetails | null>(null);
+  const [accessData, setAccessData] = useState<Access[]>([]);
+
+  const fetchCompanyProfile = useCallback(async () => {
+    const token = localStorage.getItem('accessToken');
+    if (!token) {
+      router.push('/'); // Redirect to login page if token doesn't exist
+    }
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}employee/auth/profile`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await response.json();
+      if (data.success) {
+        setEmployeeDetails(data.data);
+      }
+      if (!response.ok) {
+        toast.error('No permission to login. First allocation permission !');
+
+        router.push('/');
+      }
+
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+    }
+  }, [router])
+
+
+  const fetchAccess = useCallback(async () => {
+    try {
+        if (!employeeDetails) {
+            return
+        }
+        const token = localStorage.getItem('accessToken');
+        if (!token) {
+            router.push('/');
+            return;
+        }
+        const response = await fetch(
+            `${process.env.NEXT_PUBLIC_API_URL_ADMIN}access/view-all/${employeeDetails?.id}`,
+            {
+                headers: { Authorization: `Bearer ${token}` },
+            }
+        );
+        const data = await response.json(); // Extract JSON data
+        setAccessData(data.data || []); // Store API response in state
+
+    } catch (error) {
+        console.error('Error fetching access:', error);
+    }
+}, [router, employeeDetails]);
   useEffect(() => {
+    fetchCompanyProfile()
+
+  }, [fetchCompanyProfile]);
+  useEffect(() => {
+    const token = localStorage.getItem('accessToken');
+
+    if (!token) {
+        router.push('/'); // Redirect to login page if token doesn't exist
+    } else {
+        fetchAccess();
+
+    }
+}, [router, fetchAccess]);
+
+  useEffect(() => {
+    const token = localStorage.getItem('accessToken');
+
     if (!token) {
       router.push('/'); // Redirect to login page if token doesn't exist
     } else {
@@ -49,11 +142,11 @@ export default function Page() {
               Authorization: token,
             },
           });
+
           if (!response.ok) {
             throw new Error('Failed to fetch project');
           }
           const data = await response.json();
-          console.log(data.data); // Log the response data
 
 
           setProject(data.data || null); // Set the project data
@@ -66,9 +159,11 @@ export default function Page() {
 
       fetchProject();
     }
-  }, [router, token, id]);
+  }, [router, id]);
+
 
   useEffect(() => {
+    fetchCompanyProfile()
     if (project) {
       // Convert string dates to Date objects
       const startDate = new Date(project.startDate); // Ensure valid date conversion
@@ -86,7 +181,7 @@ export default function Page() {
 
 
     }
-  }, [project]);
+  }, [project, fetchCompanyProfile]);
 
   const okay = (design: { stepName: string; stepType: string; completed: string }[]): [string, string] => {
     if (!design || design.length === 0) return ['N/A', 'N/A'];
@@ -189,12 +284,20 @@ export default function Page() {
           </div>
 
         </div>
-        <div className="flex justify-end items-center text-xl font-medium mt-12 text-[#868585]">
+
+        {accessData.some(access => access.permission_id === 1) && (
+          <div className="flex justify-end items-center text-xl font-medium mt-12 text-[#868585]">
           <Link href={`/editProjects/${id}`} className="flex justify-end items-center text-xl font-medium mt-12 text-[#868585]">
             <span className="mr-2"><FaEdit /></span>
             <span>Update</span>
           </Link>
         </div>
+      
+      
+      )}
+
+
+        
 
       </div>
 

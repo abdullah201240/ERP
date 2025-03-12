@@ -1,4 +1,6 @@
 import Employee from './employee'
+import EmployeeRole from './employeeRole';
+import Permission from './permission';
 import SisterConcern from './sisterConcern'
 
 Employee.belongsTo(SisterConcern, {
@@ -10,7 +12,17 @@ SisterConcern.hasMany(Employee, {
   foreignKey: 'sisterConcernId',
   as: 'employees',
 });
+// Define associations
+Employee.hasMany(EmployeeRole, { foreignKey: 'employee_id' });
+EmployeeRole.belongsTo(Employee, { foreignKey: 'employee_id' });
 
 
 
-export {Employee,SisterConcern };
+
+Employee.hasMany(EmployeeRole, { foreignKey: 'employee_id' });
+EmployeeRole.belongsTo(Employee, { foreignKey: 'employee_id' });
+
+
+
+
+export {Employee,SisterConcern , EmployeeRole,Permission};

@@ -1,21 +1,65 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useSelectedLayoutSegment } from 'next/navigation';
 import useScroll from '@/hooks/use-scroll';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
-import Logo from '@/app/assets/img/Logo.webp';
 import {  MdPerson, MdExitToApp } from 'react-icons/md'; // Example icons from React-Icons
 import { useRouter } from "next/navigation";
 import { toast } from 'react-hot-toast';
+interface EmployeeDetails {
+  id: number;
+
+  logo: string;
+ 
+}
 
 const Header = () => {
   const scrolled = useScroll(5);
   const selectedLayout = useSelectedLayoutSegment();
   const router = useRouter();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [employeeDetails, setEmployeeDetails] = useState<EmployeeDetails | null>(null);
+
+  useEffect(() => {
+    const checkTokenAndFetchProfile = async () => {
+      // Check if the access token exists in localStorage
+      const token = localStorage.getItem('accessTokenCompany');
+
+      // If the token does not exist, redirect to the login page
+      if (!token) {
+        router.push('/'); // Adjust the path to your login page
+        return; // Exit the function early
+      }
+
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}sisterConcern/auth/sisterConcern/profile`, {
+          headers: {
+            'Authorization': token
+          }
+        });
+
+        if (!response.ok) {
+          router.push('/'); // Adjust the path to your login page
+          return; // Exit the function early
+        }
+        const data = await response.json();
+        console.table(data.data)
+        if (data.success) {
+            setEmployeeDetails(data.data);
+        }
+        // Handle the response data here if needed
+      } catch (error) {
+        console.error(error);
+        // Handle error (e.g., show a notification)
+      }
+    };
+
+    checkTokenAndFetchProfile();
+  }, [router]);
+
 
   const handleLogout = async () => {
     if (isLoggingOut) return; // Prevent multiple clicks
@@ -69,7 +113,7 @@ const Header = () => {
             className="flex flex-row space-x-3 items-center justify-center md:hidden"
           >
             <Image
-              src={Logo}
+              src={`${process.env.NEXT_PUBLIC_API_URL}uploads/${employeeDetails?.logo}`}
               alt="Logo"
               width={50}
               height={50}

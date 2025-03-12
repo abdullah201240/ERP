@@ -57,7 +57,7 @@ app.use(
 // Define the routes
 app.use("",routes);
 
-app.use('/uploads', express.static('uploads'));
+app.use('//uploads', express.static('uploads'));
 
 
 // Basic route

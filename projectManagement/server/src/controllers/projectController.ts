@@ -115,7 +115,7 @@ export const getProjectById = asyncHandler(
                                 "WHEN stepType = '3D' THEN 2 " +
                                 "WHEN stepType = 'Rendering' THEN 3 " +
                                 "WHEN stepType = 'Animation' THEN 4 " +
-                                
+
                                 "WHEN stepType = 'Working' THEN 5 " +
                                 "ELSE 6 END"
                             ),
@@ -399,7 +399,7 @@ export const getProjectsPaginated = asyncHandler(
                                     "WHEN stepType = '3D' THEN 2 " +
                                     "WHEN stepType = 'Rendering' THEN 3 " +
                                     "WHEN stepType = 'Animation' THEN 4 " +
-                                    
+
                                     "WHEN stepType = 'Working' THEN 5 " +
                                     "ELSE 6 END"
                                 ),
@@ -622,7 +622,11 @@ export const createDesignPlan = asyncHandler(
 
 export const getDesignPlans = asyncHandler(
     async (req: Request, res: Response, next: NextFunction) => {
-        const { projectId, stepType } = req.query as { projectId: string; stepType: string };
+        const { projectId, stepType, employeeId } = req.query as {
+            projectId: string;
+            stepType: string;
+            employeeId?: string;
+        };
 
         // Check if the project exists
         const existingProject = await Project.findOne({ where: { id: projectId } });
@@ -637,7 +641,7 @@ export const getDesignPlans = asyncHandler(
         }
 
         // Fetch design plans without including Employee
-        const designPlans = await DesignPlan.findAll({
+        let designPlans = await DesignPlan.findAll({
             where: { stepType, projectId },
             include: [
                 {
@@ -655,10 +659,10 @@ export const getDesignPlans = asyncHandler(
         let employeeData: Record<string, any> = {};
         if (employeeIds.length > 0) {
             try {
-                const response = await axios.post(`${process.env.EXTERNAL_API_URL}sisterConcern/employees`,
-                    {
-                        employeeIds,
-                    });
+                const response = await axios.post(
+                    `${process.env.EXTERNAL_API_URL}sisterConcern/employees`,
+                    { employeeIds }
+                );
 
                 // Convert array to object for quick lookup
                 employeeData = response.data.employees.reduce(
@@ -675,10 +679,15 @@ export const getDesignPlans = asyncHandler(
         }
 
         // Attach employee details to design plans
-        const updatedDesignPlans = designPlans.map(plan => ({
+        let updatedDesignPlans = designPlans.map(plan => ({
             ...plan.toJSON(),
             employee: employeeData[plan.assignee] || null, // Attach employee details
         }));
+
+        // If employeeId is provided, filter only that employee's plans
+        if (employeeId) {
+            updatedDesignPlans = updatedDesignPlans.filter(plan => plan.assignee === employeeId);
+        }
 
         // Respond with the updated design plans
         return res.status(200).json(
@@ -686,6 +695,7 @@ export const getDesignPlans = asyncHandler(
         );
     }
 );
+
 
 
 export const getDesignPlansProject = asyncHandler(

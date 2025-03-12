@@ -42,6 +42,7 @@ export const createCompany = asyncHandler(
                 ErrorCodes.BAD_REQUEST.code
             );
         }
+        
         const mainEmail= process.env.MOTHER_EMAIL
         console.log("okay")
 

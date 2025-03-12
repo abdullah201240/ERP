@@ -43,5 +43,5 @@ src/config/config.json
 upload/
 uploadPdf/
 upload2/
-*.json
+
 ecosystem.config.js
