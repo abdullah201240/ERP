@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useSelectedLayoutSegment } from 'next/navigation';
 import useScroll from '@/hooks/use-scroll';
@@ -9,65 +9,31 @@ import Image from 'next/image';
 import {  MdPerson, MdExitToApp } from 'react-icons/md'; // Example icons from React-Icons
 import { useRouter } from "next/navigation";
 import { toast } from 'react-hot-toast';
-interface EmployeeDetails {
-  id: number;
-  name: string;
-  email: string;
-  phone: string;
-  dob: string;
-  gender: string;
-  companyId: string;
-  sisterConcernId: string;
-  photo: string;
-  employeeId: string;
-  logo: string;
-}
+import { useAuth } from '@/hooks/useAuth';
+import Loading from './loading';
+
 
 const Header = () => {
   const scrolled = useScroll(5);
   const selectedLayout = useSelectedLayoutSegment();
   const router = useRouter();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const { employeeDetails, loading } = useAuth(); // Destructure employeeDetails and loading
 
-  const [employeeDetails, setEmployeeDetails] = useState<EmployeeDetails | null>(null);
   useEffect(() => {
-    const token = localStorage.getItem('accessTokenAccounts');
+    const token = localStorage.getItem('accessTokenHr');
     if (!token) {
         console.log("no token");
         router.push('/');
     } 
 }, [router]);
 
-const fetchCompanyProfile = useCallback(async () => {
-  try {
-    const token = localStorage.getItem('accessTokenAccounts');
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}employee/auth/profile`, {
-          headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = await response.json();
-      console.table(data.data);
-      if (data.success) {
-          setEmployeeDetails(data.data);
-      }
-  } catch (error) {
-      console.error('Error fetching profile:', error);
-  }
-}, []);
-
-useEffect(() => {
-  const token = localStorage.getItem('accessTokenAccounts');
-  if (!token) {
-      router.push('/');
-  } else {
-      fetchCompanyProfile();
-  }
-}, [router, fetchCompanyProfile]);
 
   const handleLogout = async () => {
     if (isLoggingOut) return; // Prevent multiple clicks
     setIsLoggingOut(true);
-    const token = localStorage.getItem('accessTokenAccounts');
+    const token = localStorage.getItem('accessTokenHr');
 
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}employee/auth/logout`, {
@@ -80,7 +46,7 @@ useEffect(() => {
 
       if (response.ok) {
         // Remove token from localStorage
-        localStorage.removeItem("accessTokenAccounts");
+        localStorage.removeItem("accessTokenHr");
         toast.success('Log out successful');
 
         // Redirect to the login page
@@ -97,7 +63,9 @@ useEffect(() => {
       setIsLoggingOut(false);
     }
   };
-
+  if (loading) {
+    return <div><Loading/></div>; // Show a loading state while the profile is being fetched
+  }
 
   return (
     <div
@@ -116,7 +84,7 @@ useEffect(() => {
             className="flex flex-row space-x-3 items-center justify-center md:hidden"
           >
             <Image
-            src={`${process.env.NEXT_PUBLIC_API_URL_ADMIN}uploads/${employeeDetails?.logo}`}
+            src={`${process.env.NEXT_PUBLIC_API_URL_ADMIN_IMAGE}uploads/${employeeDetails?.logo}`}
             alt="Logo"
               width={50}
               height={50}

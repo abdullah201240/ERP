@@ -9,6 +9,10 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@heroui/card": "^2.2.15",
+    "@heroui/react": "^2.7.5",
+    "@heroui/system": "^2.4.12",
+    "@heroui/theme": "^2.4.12",
     "@iconify/react": "^5.2.0",
     "@radix-ui/react-alert-dialog": "^1.1.5",
     "@radix-ui/react-dialog": "^1.1.5",
@@ -16,7 +20,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
-    "framer-motion": "^12.0.8",
+    "framer-motion": "^12.5.0",
     "jspdf": "^3.0.0",
     "lucide-react": "^0.474.0",
     "next": "15.1.6",
